@@ -60,7 +60,7 @@ A **demo switcher** in the corner lets you toggle between the customer and admin
 ```bash
 # clone the repo
 git clone <repository-url>
-cd solarflow-dashboard
+cd solarflow-dashboard/frontend
 
 # install dependencies
 bun install
@@ -88,24 +88,31 @@ bun run format       # Prettier
 ## Project Structure
 
 ```
-src/
-├── components/
-│   ├── admin/       # Admin shell and layout
-│   ├── common/      # Shared components (Logo, DemoSwitcher, StatusPill)
-│   ├── site/        # Public site header/footer
-│   └── ui/          # shadcn/ui primitives
-├── data/
-│   └── mock.ts      # All mock data (replace with API calls later)
-├── hooks/           # Custom React hooks
-├── lib/             # Utilities and error handling
-├── routes/          # File-based routes (TanStack Router)
-│   ├── index.tsx    # /  (homepage)
-│   ├── qualify.tsx  # /qualify
-│   ├── estimate.tsx # /estimate
-│   ├── portal.tsx   # /portal
-│   └── admin.*      # /admin/* routes
-├── server.ts        # SSR server entry
-└── start.ts         # TanStack Start middleware
+solarflow-dashboard/
+├── frontend/
+│   ├── src/
+│   │   ├── components/
+│   │   │   ├── admin/       # Admin shell and layout
+│   │   │   ├── common/      # Shared components (Logo, DemoSwitcher, StatusPill)
+│   │   │   ├── site/        # Public site header/footer
+│   │   │   └── ui/          # shadcn/ui primitives
+│   │   ├── data/
+│   │   │   └── mock.ts      # All mock data (replace with API calls later)
+│   │   ├── hooks/           # Custom React hooks
+│   │   ├── lib/             # Utilities and error handling
+│   │   ├── routes/          # File-based routes (TanStack Router)
+│   │   │   ├── index.tsx    # /  (homepage)
+│   │   │   ├── qualify.tsx  # /qualify
+│   │   │   ├── estimate.tsx # /estimate
+│   │   │   ├── portal.tsx   # /portal
+│   │   │   └── admin.*      # /admin/* routes
+│   │   ├── server.ts        # SSR server entry
+│   │   └── start.ts         # TanStack Start middleware
+│   ├── public/              # Static assets
+│   ├── package.json
+│   ├── vite.config.ts
+│   └── tsconfig.json
+└── README.md
 ```
 
 ---
@@ -121,9 +128,9 @@ src/
 
 ## Replacing Mock Data
 
-All mock data lives in `src/data/mock.ts`. Each route imports directly from there. To wire up a real backend:
+All mock data lives in `frontend/src/data/mock.ts`. Each route imports directly from there. To wire up a real backend:
 
-1. Create API utility functions in `src/lib/api.ts`
+1. Create API utility functions in `frontend/src/lib/api.ts`
 2. Replace `mock.ts` imports in each route with TanStack Query `useQuery` hooks
 3. The UI components require no changes — they only consume typed props
 

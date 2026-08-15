@@ -15,7 +15,13 @@ import { Route as EstimateRouteImport } from './routes/estimate'
 import { Route as PortalRouteImport } from './routes/portal'
 import { Route as QualifyRouteImport } from './routes/qualify'
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
+import { Route as AdminAppointmentsRouteImport } from './routes/admin.appointments'
+import { Route as AdminConversationsRouteImport } from './routes/admin.conversations'
+import { Route as AdminCustomersRouteImport } from './routes/admin.customers'
 import { Route as AdminLeadsRouteImport } from './routes/admin.leads'
+import { Route as AdminNurtureRouteImport } from './routes/admin.nurture'
+import { Route as AdminProposalsRouteImport } from './routes/admin.proposals'
+import { Route as AdminTasksRouteImport } from './routes/admin.tasks'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -47,9 +53,39 @@ const AdminIndexRoute = AdminIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminAppointmentsRoute = AdminAppointmentsRouteImport.update({
+  id: '/appointments',
+  path: '/appointments',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminConversationsRoute = AdminConversationsRouteImport.update({
+  id: '/conversations',
+  path: '/conversations',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminCustomersRoute = AdminCustomersRouteImport.update({
+  id: '/customers',
+  path: '/customers',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminLeadsRoute = AdminLeadsRouteImport.update({
   id: '/leads',
   path: '/leads',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminNurtureRoute = AdminNurtureRouteImport.update({
+  id: '/nurture',
+  path: '/nurture',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminProposalsRoute = AdminProposalsRouteImport.update({
+  id: '/proposals',
+  path: '/proposals',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminTasksRoute = AdminTasksRouteImport.update({
+  id: '/tasks',
+  path: '/tasks',
   getParentRoute: () => AdminRoute,
 } as any)
 
@@ -59,7 +95,13 @@ export interface FileRoutesByFullPath {
   '/estimate': typeof EstimateRoute
   '/portal': typeof PortalRoute
   '/qualify': typeof QualifyRoute
+  '/admin/appointments': typeof AdminAppointmentsRoute
+  '/admin/conversations': typeof AdminConversationsRoute
+  '/admin/customers': typeof AdminCustomersRoute
   '/admin/leads': typeof AdminLeadsRoute
+  '/admin/nurture': typeof AdminNurtureRoute
+  '/admin/proposals': typeof AdminProposalsRoute
+  '/admin/tasks': typeof AdminTasksRoute
   '/admin/': typeof AdminIndexRoute
 }
 export interface FileRoutesByTo {
@@ -67,7 +109,13 @@ export interface FileRoutesByTo {
   '/estimate': typeof EstimateRoute
   '/portal': typeof PortalRoute
   '/qualify': typeof QualifyRoute
+  '/admin/appointments': typeof AdminAppointmentsRoute
+  '/admin/conversations': typeof AdminConversationsRoute
+  '/admin/customers': typeof AdminCustomersRoute
   '/admin/leads': typeof AdminLeadsRoute
+  '/admin/nurture': typeof AdminNurtureRoute
+  '/admin/proposals': typeof AdminProposalsRoute
+  '/admin/tasks': typeof AdminTasksRoute
   '/admin': typeof AdminIndexRoute
 }
 export interface FileRoutesById {
@@ -77,7 +125,13 @@ export interface FileRoutesById {
   '/estimate': typeof EstimateRoute
   '/portal': typeof PortalRoute
   '/qualify': typeof QualifyRoute
+  '/admin/appointments': typeof AdminAppointmentsRoute
+  '/admin/conversations': typeof AdminConversationsRoute
+  '/admin/customers': typeof AdminCustomersRoute
   '/admin/leads': typeof AdminLeadsRoute
+  '/admin/nurture': typeof AdminNurtureRoute
+  '/admin/proposals': typeof AdminProposalsRoute
+  '/admin/tasks': typeof AdminTasksRoute
   '/admin/': typeof AdminIndexRoute
 }
 export interface FileRouteTypes {
@@ -88,10 +142,28 @@ export interface FileRouteTypes {
     | '/estimate'
     | '/portal'
     | '/qualify'
+    | '/admin/appointments'
+    | '/admin/conversations'
+    | '/admin/customers'
     | '/admin/leads'
+    | '/admin/nurture'
+    | '/admin/proposals'
+    | '/admin/tasks'
     | '/admin/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/estimate' | '/portal' | '/qualify' | '/admin/leads' | '/admin'
+  to:
+    | '/'
+    | '/estimate'
+    | '/portal'
+    | '/qualify'
+    | '/admin/appointments'
+    | '/admin/conversations'
+    | '/admin/customers'
+    | '/admin/leads'
+    | '/admin/nurture'
+    | '/admin/proposals'
+    | '/admin/tasks'
+    | '/admin'
   id:
     | '__root__'
     | '/'
@@ -99,7 +171,13 @@ export interface FileRouteTypes {
     | '/estimate'
     | '/portal'
     | '/qualify'
+    | '/admin/appointments'
+    | '/admin/conversations'
+    | '/admin/customers'
     | '/admin/leads'
+    | '/admin/nurture'
+    | '/admin/proposals'
+    | '/admin/tasks'
     | '/admin/'
   fileRoutesById: FileRoutesById
 }
@@ -155,6 +233,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminIndexRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/appointments': {
+      id: '/admin/appointments'
+      path: '/appointments'
+      fullPath: '/admin/appointments'
+      preLoaderRoute: typeof AdminAppointmentsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/conversations': {
+      id: '/admin/conversations'
+      path: '/conversations'
+      fullPath: '/admin/conversations'
+      preLoaderRoute: typeof AdminConversationsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/customers': {
+      id: '/admin/customers'
+      path: '/customers'
+      fullPath: '/admin/customers'
+      preLoaderRoute: typeof AdminCustomersRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/leads': {
       id: '/admin/leads'
       path: '/leads'
@@ -162,16 +261,49 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminLeadsRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/nurture': {
+      id: '/admin/nurture'
+      path: '/nurture'
+      fullPath: '/admin/nurture'
+      preLoaderRoute: typeof AdminNurtureRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/proposals': {
+      id: '/admin/proposals'
+      path: '/proposals'
+      fullPath: '/admin/proposals'
+      preLoaderRoute: typeof AdminProposalsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/tasks': {
+      id: '/admin/tasks'
+      path: '/tasks'
+      fullPath: '/admin/tasks'
+      preLoaderRoute: typeof AdminTasksRouteImport
+      parentRoute: typeof AdminRoute
+    }
   }
 }
 
 interface AdminRouteChildren {
+  AdminAppointmentsRoute: typeof AdminAppointmentsRoute
+  AdminConversationsRoute: typeof AdminConversationsRoute
+  AdminCustomersRoute: typeof AdminCustomersRoute
   AdminLeadsRoute: typeof AdminLeadsRoute
+  AdminNurtureRoute: typeof AdminNurtureRoute
+  AdminProposalsRoute: typeof AdminProposalsRoute
+  AdminTasksRoute: typeof AdminTasksRoute
   AdminIndexRoute: typeof AdminIndexRoute
 }
 
 const AdminRouteChildren: AdminRouteChildren = {
+  AdminAppointmentsRoute: AdminAppointmentsRoute,
+  AdminConversationsRoute: AdminConversationsRoute,
+  AdminCustomersRoute: AdminCustomersRoute,
   AdminLeadsRoute: AdminLeadsRoute,
+  AdminNurtureRoute: AdminNurtureRoute,
+  AdminProposalsRoute: AdminProposalsRoute,
+  AdminTasksRoute: AdminTasksRoute,
   AdminIndexRoute: AdminIndexRoute,
 }
 

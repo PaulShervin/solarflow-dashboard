@@ -44,11 +44,11 @@ import { solarApi } from "@/lib/api";
 export const Route = createFileRoute("/estimate")({
   head: () => ({
     meta: [
-      { title: "Your Solar Savings Estimate & Pre-Design | SolarPeak" },
+      { title: "Auto Pre-Design Engine & Roof Mapping | SolarPeak Consultant Console" },
       {
         name: "description",
         content:
-          "Satellite pre-design, solar production calculations, and same-day proposal generation for your home.",
+          "Satellite pre-design, solar production calculations, and same-day proposal generation tool for solar consultants.",
       },
     ],
   }),
@@ -89,7 +89,7 @@ export function EstimatePage() {
       systemKw: systemSizeKw,
       battery: includeBattery,
       value: netSystemPrice,
-      sent: "Today",
+      sent: "Today (Auto Pre-Design Engine)",
       rep: "Dana Ruiz",
       status: "Sent",
     });
@@ -106,18 +106,18 @@ export function EstimatePage() {
         <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-4 sm:flex sm:flex-wrap sm:justify-between">
           <div className="min-w-0">
             <StatusPill tone="brand" dot>
-              Auto Pre-Design Engine
+              Step 4: Auto Pre-Design Engine (Consultant Tool)
             </StatusPill>
             <h1 className="mt-4 font-display text-3xl font-extrabold sm:text-4xl">
-              Solar Pre-Design & 25-Year Production Analysis
+              Satellite Roof Mapping & Same-Day Proposal Generator
             </h1>
             <p className="mt-3 max-w-2xl text-muted-foreground">
-              Satellite imagery analysis, roof layout optimization, and same-day proposal generator for your address.
+              Pulls roof data, computes solar energy production, and generates shareable PDF quote documents same-day (instead of 2 days).
             </p>
           </div>
-          <Button onClick={handleGenerateProposal} disabled={generatingPdf} className="gap-2">
+          <Button onClick={handleGenerateProposal} disabled={generatingPdf} className="gap-2 font-bold">
             <Download className="size-4" />
-            {generatingPdf ? "Building PDF Quote..." : "Generate PDF Proposal"}
+            {generatingPdf ? "Generating Proposal PDF..." : "Generate Proposal Quote (PDF)"}
           </Button>
         </div>
 
@@ -126,7 +126,7 @@ export function EstimatePage() {
             <div className="flex items-center justify-between border-b border-border pb-4">
               <div className="flex items-center gap-2 font-bold text-sm">
                 <MapPin className="size-4 text-primary" />
-                Satellite Roof Imagery Pre-Design
+                Satellite Imagery Roof Layout Analysis
               </div>
               <StatusPill tone="success">1,450 sq ft Usable Roof</StatusPill>
             </div>
@@ -153,7 +153,7 @@ export function EstimatePage() {
                   </div>
                 </div>
                 <div className="text-xs text-slate-200">
-                  <span className="font-bold text-primary">{panelCount} High-Efficiency Panels</span> mapped to South-Facing Asphalt Roof (18° Tilt, 180° Azimuth)
+                  <span className="font-bold text-primary">{panelCount} High-Efficiency Panels</span> mapped to South-Facing Roof (18° Tilt, 180° Azimuth)
                 </div>
               </div>
             </div>
@@ -177,12 +177,12 @@ export function EstimatePage() {
           <div className="surface-card p-6 space-y-5">
             <h2 className="font-display text-lg font-bold flex items-center gap-2">
               <Sparkles className="size-5 text-primary" />
-              Production & Savings Controls
+              Production & Financial Calculator
             </h2>
 
             <div>
               <div className="flex justify-between text-sm font-semibold">
-                <span>Monthly Electric Bill</span>
+                <span>Customer Monthly Bill</span>
                 <span className="text-primary font-bold">${currentBill}/mo</span>
               </div>
               <input
@@ -198,7 +198,7 @@ export function EstimatePage() {
 
             <div>
               <div className="flex justify-between text-sm font-semibold">
-                <span>Target Energy Offset</span>
+                <span>Target Offset %</span>
                 <span className="text-primary font-bold">{targetOffset}%</span>
               </div>
               <input
@@ -215,7 +215,7 @@ export function EstimatePage() {
             <div className="flex items-center justify-between rounded-xl border border-border p-3">
               <div>
                 <span className="block text-sm font-bold">Include 13.5 kWh Battery Storage</span>
-                <span className="text-xs text-muted-foreground">Provides 24/7 backup during outages</span>
+                <span className="text-xs text-muted-foreground">Provides 24/7 backup during grid outages</span>
               </div>
               <input
                 type="checkbox"
@@ -231,11 +231,11 @@ export function EstimatePage() {
                 <span className="font-bold">${grossSystemPrice.toLocaleString()}</span>
               </div>
               <div className="flex justify-between text-emerald-600 dark:text-emerald-400">
-                <span>30% Federal ITC Tax Credit:</span>
+                <span>30% Federal Clean Energy Tax Credit:</span>
                 <span className="font-bold">-${federalTaxCredit.toLocaleString()}</span>
               </div>
               <div className="border-t border-border pt-2 flex justify-between text-sm font-bold text-foreground">
-                <span>Net Out-of-Pocket:</span>
+                <span>Net System Price:</span>
                 <span className="text-primary">${netSystemPrice.toLocaleString()}</span>
               </div>
             </div>
@@ -244,10 +244,10 @@ export function EstimatePage() {
 
         <div className="mt-8 surface-card p-6">
           <h2 className="font-display text-lg font-extrabold mb-1">
-            25-Year Cumulative Savings vs Utility Escalation
+            25-Year Utility Escalation vs Fixed Solar Investment
           </h2>
           <p className="text-xs text-muted-foreground mb-6">
-            Comparing standard Arizona utility rates (+5% inflation/yr) against fixed solar system payment.
+            Comparing standard utility rates (+5%/yr) against fixed solar payment.
           </p>
 
           <div className="h-72 w-full">
@@ -271,7 +271,7 @@ export function EstimatePage() {
             <div className="flex items-center justify-between">
               <DialogTitle className="font-display text-xl font-bold flex items-center gap-2">
                 <FileCheck className="size-5 text-primary" />
-                Solar System Proposal Document
+                Auto-Generated Same-Day Proposal Quote
               </DialogTitle>
               <StatusPill tone="success">Proposal #{pdfProposalId}</StatusPill>
             </div>
@@ -282,11 +282,11 @@ export function EstimatePage() {
               <div className="flex justify-between items-start">
                 <div>
                   <h3 className="font-display text-2xl font-black text-white">SolarPeak</h3>
-                  <p className="text-xs text-navy-foreground/70">Official Home Solar Quote & Pre-Design</p>
+                  <p className="text-xs text-navy-foreground/70">Official Pre-Design Proposal & Contract Quote</p>
                 </div>
                 <div className="text-right text-xs">
                   <p className="font-bold">Prepared for: Marcus Whitfield</p>
-                  <p className="text-navy-foreground/70">Phoenix, Arizona</p>
+                  <p className="text-navy-foreground/70">Sales Consultant: Dana Ruiz</p>
                   <p className="text-navy-foreground/70">Date: {new Date().toLocaleDateString()}</p>
                 </div>
               </div>
@@ -340,7 +340,7 @@ export function EstimatePage() {
                     <td className="py-2.5 text-right">-${federalTaxCredit.toLocaleString()}</td>
                   </tr>
                   <tr className="font-bold text-sm text-foreground">
-                    <td className="pt-3">Total Net Investment</td>
+                    <td className="pt-3">Total Net System Investment</td>
                     <td className="pt-3 text-right text-primary">${netSystemPrice.toLocaleString()}</td>
                   </tr>
                 </tbody>
@@ -350,10 +350,10 @@ export function EstimatePage() {
             <div className="flex items-center justify-between pt-2">
               <Button variant="outline" onClick={() => window.print()} className="gap-2">
                 <Printer className="size-4" />
-                Print / Save PDF
+                Print / Download PDF Quote
               </Button>
               <Button onClick={() => setPdfModalOpen(false)}>
-                Accept & Sign Quote
+                Save to Proposal Pipeline
               </Button>
             </div>
           </div>

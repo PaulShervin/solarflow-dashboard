@@ -31,7 +31,7 @@ import crewImage from "@/assets/install-crew.jpg";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "SolarPeak — Home Solar Installation in Arizona" },
+      { title: "SolarPeak — Instant Response & Solar Operations Engine" },
       {
         name: "description",
         content:
@@ -82,20 +82,20 @@ const steps = [
   {
     icon: MessageSquareText,
     step: "01",
-    title: "Get your free estimate",
-    body: "Answer five quick questions and see a preliminary savings range for your address — no phone tag, no obligation.",
+    title: "Get your instant estimate",
+    body: "Answer five quick questions with our 24/7 AI assistant. Get qualified and auto-book a consultation in under 60 seconds.",
   },
   {
     icon: ClipboardList,
     step: "02",
-    title: "Meet your design consultant",
-    body: "We review your real usage, roof condition and shading, then build a system sized to your home, not a template.",
+    title: "Same-day pre-design quote",
+    body: "Our Auto Pre-Design engine pulls satellite roof imagery and builds your custom proposal for your assigned consultant.",
   },
   {
     icon: Wrench,
     step: "03",
-    title: "We install, you track it",
-    body: "Permitting, install and utility approval handled end-to-end, with every milestone visible in your customer portal.",
+    title: "Track your install live",
+    body: "Permitting, equipment ordering and utility approval updated step-by-step in your live customer status portal.",
   },
 ];
 
@@ -130,19 +130,18 @@ function HomePage() {
         <div className="mx-auto grid max-w-7xl items-center gap-10 px-4 py-16 sm:px-6 lg:grid-cols-[1.05fr_1fr] lg:gap-14 lg:px-8 lg:py-24">
           <div className="min-w-0">
             <StatusPill tone="brand" dot className="bg-primary/15 text-primary">
-              Now installing across the Phoenix metro
+              24/7 Instant Response & AI Solar Assistant
             </StatusPill>
             <h1 className="mt-5 font-display text-4xl leading-[1.05] font-extrabold text-navy-foreground sm:text-5xl lg:text-6xl">
               Save More. Live Better.{" "}
               <span className="text-primary">Go Solar.</span>
             </h1>
             <p className="mt-5 max-w-xl text-base leading-relaxed text-navy-foreground/70 sm:text-lg">
-              See exactly what rooftop solar would save on your home in about a minute.
-              Transparent pricing, licensed in-house crews and a 25-year production warranty —
-              no high-pressure sales.
+              Get an instant qualification and auto-book a consultation in under 60 seconds.
+              Transparent pricing, licensed in-house crews and a 25-year production warranty.
             </p>
             <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-              <Button asChild size="lg" className="h-12 px-7 text-[15px] shadow-lift">
+              <Button asChild size="lg" className="h-12 px-7 text-[15px] shadow-lift font-bold">
                 <Link to="/qualify">
                   Get My Free Estimate
                   <ArrowRight />
@@ -152,13 +151,13 @@ function HomePage() {
                 asChild
                 size="lg"
                 variant="outline"
-                className="h-12 border-navy-foreground/25 bg-transparent px-7 text-[15px] text-navy-foreground hover:bg-navy-muted hover:text-navy-foreground"
+                className="h-12 border-navy-foreground/25 bg-transparent px-7 text-[15px] text-navy-foreground hover:bg-navy-muted hover:text-navy-foreground font-semibold"
               >
-                <Link to="/estimate">Talk to an Expert</Link>
+                <Link to="/qualify">Chat with AI Qualifier</Link>
               </Button>
             </div>
             <ul className="mt-8 flex flex-wrap gap-x-6 gap-y-2 text-sm text-navy-foreground/65">
-              {["No cost, no obligation", "60-second estimate", "Licensed & insured"].map((t) => (
+              {["Instant 24/7 response", "60-second qualification", "Auto-book rep slot"].map((t) => (
                 <li key={t} className="flex items-center gap-2">
                   <CheckCircle2 className="size-4 text-primary" />
                   {t}
@@ -180,9 +179,9 @@ function HomePage() {
             <div className="mt-4 grid grid-cols-2 gap-3 sm:absolute sm:-bottom-6 sm:-left-6 sm:mt-0 sm:w-72 sm:grid-cols-1">
               <div className="rounded-xl border border-border bg-card p-4 shadow-lift">
                 <p className="text-xs font-semibold text-muted-foreground">
-                  Average monthly savings
+                  Instant Bot Response Time
                 </p>
-                <p className="font-display text-2xl font-extrabold text-foreground">$214</p>
+                <p className="font-display text-2xl font-extrabold text-foreground">&lt; 5 seconds</p>
               </div>
               <div className="rounded-xl border border-border bg-card p-4 shadow-lift">
                 <p className="text-xs font-semibold text-muted-foreground">Typical bill offset</p>
@@ -216,8 +215,7 @@ function HomePage() {
               The math has changed. Most Arizona homes now pay less with solar than without it.
             </h2>
             <p className="mt-4 text-muted-foreground">
-              We'll only recommend a system if the numbers work for your home. If they don't, we
-              will tell you that on the first call.
+              Our instant AI agent asks key qualifying questions up front to ensure solar is a great fit for your home.
             </p>
           </div>
           <div className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
@@ -244,11 +242,10 @@ function HomePage() {
             <div className="min-w-0">
               <StatusPill tone="info">How it works</StatusPill>
               <h2 className="mt-4 font-display text-3xl font-extrabold sm:text-4xl">
-                Three steps from curious to switched on
+                Three steps from inquiry to switched on
               </h2>
               <p className="mt-4 max-w-lg text-muted-foreground">
-                One point of contact from your first question through utility approval. You'll
-                always know what happens next and who's doing it.
+                Automated instant qualification, same-day satellite pre-design quotes for your rep, and live post-sale installation tracking.
               </p>
               <div className="mt-8 space-y-4">
                 {steps.map((s) => (
@@ -268,9 +265,9 @@ function HomePage() {
                   </div>
                 ))}
               </div>
-              <Button asChild size="lg" className="mt-8 h-12 px-7">
+              <Button asChild size="lg" className="mt-8 h-12 px-7 font-bold">
                 <Link to="/qualify">
-                  Start step one
+                  Start Step One Now
                   <ArrowRight />
                 </Link>
               </Button>
@@ -336,87 +333,6 @@ function HomePage() {
         </div>
       </section>
 
-      {/* Financing */}
-      <section className="border-y border-border bg-secondary/40 section-y">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="max-w-2xl">
-            <StatusPill tone="info">Financing</StatusPill>
-            <h2 className="mt-4 font-display text-3xl font-extrabold sm:text-4xl">
-              Three ways to pay. We'll show you all of them.
-            </h2>
-            <p className="mt-4 text-muted-foreground">
-              Every proposal includes a side-by-side comparison so you can see total cost, not
-              just the monthly number.
-            </p>
-          </div>
-          <div className="mt-10 grid gap-5 lg:grid-cols-3">
-            {financing.map((f, i) => (
-              <div
-                key={f.name}
-                className={
-                  i === 1
-                    ? "surface-card relative border-primary/40 p-6 shadow-lift ring-1 ring-primary/20"
-                    : "surface-card p-6"
-                }
-              >
-                <div className="flex items-center justify-between gap-3">
-                  <h3 className="text-lg font-bold">{f.name}</h3>
-                  <StatusPill tone={i === 1 ? "brand" : "neutral"}>{f.highlight}</StatusPill>
-                </div>
-                <p className="mt-3 text-sm leading-relaxed text-muted-foreground">{f.body}</p>
-                <ul className="mt-5 space-y-2.5">
-                  {f.points.map((p) => (
-                    <li key={p} className="flex items-start gap-2 text-sm">
-                      <BadgeCheck className="mt-0.5 size-4 shrink-0 text-primary" />
-                      {p}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ))}
-          </div>
-          <p className="mt-6 text-xs text-muted-foreground">
-            Financing subject to credit approval. Terms shown are illustrative and vary by lender.
-          </p>
-        </div>
-      </section>
-
-      {/* FAQ */}
-      <section className="section-y">
-        <div className="mx-auto grid max-w-7xl gap-10 px-4 sm:px-6 lg:grid-cols-[0.8fr_1.2fr] lg:px-8">
-          <div className="min-w-0">
-            <StatusPill tone="brand">FAQ</StatusPill>
-            <h2 className="mt-4 font-display text-3xl font-extrabold sm:text-4xl">
-              Straight answers to the questions we get most
-            </h2>
-            <p className="mt-4 text-muted-foreground">
-              Still unsure about something? Our assistant can answer in the chat, or a real
-              consultant will call you back the same day.
-            </p>
-            <div className="mt-6 flex flex-wrap gap-3">
-              <Button asChild>
-                <Link to="/qualify">Ask the assistant</Link>
-              </Button>
-              <Button asChild variant="outline">
-                <Link to="/estimate">See a sample estimate</Link>
-              </Button>
-            </div>
-          </div>
-          <Accordion type="single" collapsible className="w-full">
-            {faqs.map((f, i) => (
-              <AccordionItem key={f.q} value={`faq-${i}`}>
-                <AccordionTrigger className="text-left text-base font-semibold">
-                  {f.q}
-                </AccordionTrigger>
-                <AccordionContent className="text-sm leading-relaxed text-muted-foreground">
-                  {f.a}
-                </AccordionContent>
-              </AccordionItem>
-            ))}
-          </Accordion>
-        </div>
-      </section>
-
       {/* CTA */}
       <section className="mx-auto max-w-7xl px-4 pb-16 sm:px-6 lg:px-8">
         <div className="overflow-hidden rounded-2xl border border-border bg-navy px-6 py-12 text-center shadow-lift sm:px-12">
@@ -425,11 +341,10 @@ function HomePage() {
             Find out what your roof is worth
           </h2>
           <p className="mx-auto mt-4 max-w-xl text-navy-foreground/70">
-            A free, preliminary savings estimate takes about a minute and doesn't commit you to
-            anything.
+            Our free 60-second qualification assistant takes about a minute and doesn't commit you to anything.
           </p>
           <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
-            <Button asChild size="lg" className="h-12 px-7">
+            <Button asChild size="lg" className="h-12 px-7 font-bold">
               <Link to="/qualify">
                 Get My Free Estimate
                 <ArrowRight />

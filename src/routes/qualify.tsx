@@ -61,7 +61,7 @@ function QualifyPage() {
     {
       id: "b-0",
       role: "assistant",
-      text: "Hi! I'm Sunny, SolarPeak's autonomous solar assistant. I'll analyze your roof, bill, and financing options to build a 25-year solar estimate. Type a message or click an option below!",
+      text: "Hi! I'm Sunny, SolarPeak's autonomous instant-response assistant. I'll ask five quick qualifying questions and trigger our Auto Pre-Design engine for your consultant. Click an option or type a message!",
       time: "Just now",
     },
     { id: "b-1", role: "assistant", text: qualifyQuestions[0].prompt, time: "Just now" },
@@ -86,9 +86,21 @@ function QualifyPage() {
 
   useEffect(() => {
     if (done) {
+      // 1. Qualify Lead
       solarApi.qualifyLead("LD-4821", answers, score);
+
+      // 2. Auto Pre-Design Engine triggers same-day proposal quote for consultant
+      solarApi.createProposal({
+        customer: answers.name || "Marcus Whitfield",
+        systemKw: 9.6,
+        battery: true,
+        value: 24800,
+        sent: "Today (Auto Pre-Design Engine)",
+        rep: assignedRep,
+        status: "Sent",
+      });
     }
-  }, [done, answers, score]);
+  }, [done, answers, score, assignedRep]);
 
   function submitUserMessage(userMsg: string) {
     if (typing || !userMsg.trim()) return;
@@ -113,7 +125,7 @@ function QualifyPage() {
         replyText = qualifyQuestions[next]!.prompt;
       } else {
         replyText =
-          "Outstanding! Your preliminary calculations are complete and synced to our CRM. Choose a consultation slot below to lock in your federal clean energy tax credit with your specialist.";
+          `Great news! You have been qualified (AI Score: ${score}/100) and synced with our CRM. Our Auto Pre-Design engine has generated your same-day proposal quote for your senior consultant ${assignedRep}. Select a time slot below to confirm your consultation!`;
       }
 
       setBubbles((b) => [
@@ -121,7 +133,6 @@ function QualifyPage() {
         { id: `reply-${Date.now()}`, role: "assistant", text: replyText, time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) },
       ]);
 
-      // Save to server database
       if (conversations[0]?.id) {
         solarApi.sendMessage(conversations[0].id, "user", userMsg);
         solarApi.sendMessage(conversations[0].id, "bot", replyText);
@@ -156,10 +167,10 @@ function QualifyPage() {
 
   const qualification =
     score >= 70
-      ? { label: "High Priority Lead", tone: "success" as const }
+      ? { label: "Qualified High Intent", tone: "success" as const }
       : score >= 45
-        ? { label: "Standard Qualification", tone: "warning" as const }
-        : { label: "Review Required", tone: "neutral" as const };
+        ? { label: "Qualified Standard", tone: "warning" as const }
+        : { label: "Human Escalation Flagged", tone: "danger" as const };
 
   return (
     <div className="min-h-screen bg-background flex flex-col justify-between">
@@ -168,13 +179,13 @@ function QualifyPage() {
       <main className="mx-auto w-full max-w-7xl px-4 py-8 sm:px-6 lg:px-8 lg:py-12 flex-1">
         <div className="mx-auto max-w-3xl text-center">
           <StatusPill tone="brand" dot className="px-3 py-1 font-bold">
-            ⚡ Instant Response AI Agent & 2-Way CRM Sync
+            ⚡ Step 2 & 3: Instant 24/7 Response & Lead Qualification
           </StatusPill>
           <h1 className="mt-4 font-display text-3xl font-black tracking-tight sm:text-4xl lg:text-5xl text-foreground">
-            Calculate Your Solar Savings in 60 Seconds
+            Fast Solar Qualification Assistant
           </h1>
           <p className="mt-3 text-muted-foreground text-sm sm:text-base leading-relaxed">
-            Chat with Sunny AI or answer quick prompts below. Writes back to client CRM instantly.
+            Eliminates slow callbacks & filters non-buyers automatically.
           </p>
         </div>
 
@@ -189,11 +200,11 @@ function QualifyPage() {
                 </span>
                 <div className="min-w-0">
                   <div className="flex items-center gap-2">
-                    <span className="truncate text-sm font-bold text-foreground">Sunny · SolarPeak Assistant</span>
-                    <StatusPill tone="success" className="text-[10px]">Online</StatusPill>
+                    <span className="truncate text-sm font-bold text-foreground">Sunny · Instant Response Bot</span>
+                    <StatusPill tone="success" className="text-[10px]">Active</StatusPill>
                   </div>
                   <p className="truncate text-xs text-muted-foreground">
-                    Connected to CRM Integration Adapter · Response latency: &lt;150ms
+                    Auto-responder active · 2-Way CRM Sync Enabled
                   </p>
                 </div>
               </div>
@@ -206,7 +217,7 @@ function QualifyPage() {
             {/* Progress */}
             <div className="border-b border-border bg-card px-5 py-2.5">
               <div className="mb-1.5 flex items-center justify-between text-xs font-semibold text-muted-foreground">
-                <span>Step {Math.min(step + 1, qualifyQuestions.length)} of {qualifyQuestions.length}</span>
+                <span>Question {Math.min(step + 1, qualifyQuestions.length)} of {qualifyQuestions.length}</span>
                 <span>{progress}% Completed</span>
               </div>
               <Progress value={progress} className="h-2" />
@@ -304,8 +315,8 @@ function QualifyPage() {
 
                   <div className="flex flex-col gap-2 sm:flex-row">
                     <Button asChild size="lg" className="flex-1 font-bold gap-2">
-                      <Link to="/estimate">
-                        View 25-Year Proposal Analysis
+                      <Link to="/admin/proposals">
+                        View Generated Pre-Design Quote (Consultant Console)
                         <ArrowRight className="size-4" />
                       </Link>
                     </Button>
@@ -319,7 +330,7 @@ function QualifyPage() {
                   {qualifyQuestions[step] ? (
                     <div>
                       <p className="mb-2 text-xs font-bold text-muted-foreground uppercase tracking-wider">
-                        Quick Select Options:
+                        Select Answer Option:
                       </p>
                       <div className="grid gap-2 sm:grid-cols-2">
                         {qualifyQuestions[step].options.map((o) => (
@@ -340,7 +351,7 @@ function QualifyPage() {
                     <Input
                       value={inputText}
                       onChange={(e) => setInputText(e.target.value)}
-                      placeholder="Or type custom response (e.g., '$280/mo bill, tile roof')..."
+                      placeholder="Or type custom response..."
                       className="flex-1 text-xs"
                       disabled={typing}
                     />
@@ -360,19 +371,19 @@ function QualifyPage() {
               <div className="flex items-center justify-between">
                 <h2 className="text-sm font-bold flex items-center gap-2">
                   <Zap className="size-4 text-primary" />
-                  Live Intent Score Engine
+                  Intent Scoring Engine
                 </h2>
                 <StatusPill tone={qualification.tone}>{qualification.label}</StatusPill>
               </div>
 
               <div className="rounded-xl bg-secondary/60 p-4 border border-border">
                 <div className="flex items-center justify-between text-sm font-bold">
-                  <span>Calculated AI Score</span>
+                  <span>Computed Intent Score</span>
                   <span className="text-primary text-base">{score}/100</span>
                 </div>
                 <Progress value={score} className="mt-2 h-2" />
                 <p className="mt-2 text-[11px] text-muted-foreground">
-                  Score updates dynamically after every answer. Automatically routes to rep calendar or flags human escalation.
+                  Filters non-buyers automatically. Renters & low scores trigger human manager escalation.
                 </p>
               </div>
 
@@ -392,7 +403,7 @@ function QualifyPage() {
               <div className="flex items-start gap-3">
                 <Lock className="mt-0.5 size-4 text-primary shrink-0" />
                 <p className="text-xs text-muted-foreground leading-relaxed">
-                  <strong>2-Way Sync Active</strong>: Answers and booked appointments automatically sync with your client's CRM timeline (HubSpot/Salesforce/GoHighLevel).
+                  <strong>2-Way CRM Sync</strong>: Inbound answers write to CRM, reserve rep calendar slots, and trigger Auto Pre-Design proposal generation.
                 </p>
               </div>
             </div>

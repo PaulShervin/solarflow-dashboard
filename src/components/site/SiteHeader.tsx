@@ -8,9 +8,8 @@ import { useAuth } from "@/lib/authContext";
 
 const nav = [
   { label: "Home", to: "/" as const },
-  { label: "Solar Pre-Design", to: "/estimate" as const },
-  { label: "60s AI Qualifier", to: "/qualify" as const },
-  { label: "Customer Portal", to: "/portal" as const },
+  { label: "Get Free Estimate", to: "/qualify" as const },
+  { label: "Track Installation", to: "/portal" as const },
 ];
 
 export function SiteHeader() {
@@ -54,7 +53,7 @@ export function SiteHeader() {
               <Button variant="outline" size="sm" asChild className="gap-1.5 font-bold border-primary/40 bg-primary-soft">
                 <Link to="/admin">
                   <ShieldCheck className="size-4 text-primary" />
-                  Admin Console
+                  Rep & Admin Console
                 </Link>
               </Button>
               <Button variant="ghost" size="icon" onClick={() => logout()} title="Sign Out">
@@ -65,13 +64,13 @@ export function SiteHeader() {
             <Button variant="outline" size="sm" asChild className="hidden sm:inline-flex gap-1.5 font-semibold">
               <Link to="/login">
                 <LogIn className="size-4 text-primary" />
-                Sign In
+                Consultant Login
               </Link>
             </Button>
           )}
 
           <Button asChild size="sm" className="hidden sm:inline-flex font-bold shadow-md bg-primary hover:bg-primary/90">
-            <Link to="/estimate">Free Solar Quote →</Link>
+            <Link to="/qualify">Get My Free Estimate →</Link>
           </Button>
 
           <Button
@@ -104,19 +103,19 @@ export function SiteHeader() {
             {isAuthenticated ? (
               <Button asChild variant="outline" className="w-full">
                 <Link to="/admin" onClick={() => setOpen(false)}>
-                  Admin Console ({session?.name})
+                  Rep & Admin Console ({session?.name})
                 </Link>
               </Button>
             ) : (
               <Button asChild variant="outline" className="w-full">
                 <Link to="/login" onClick={() => setOpen(false)}>
-                  Sign In / Employee Login
+                  Consultant Sign In
                 </Link>
               </Button>
             )}
             <Button asChild className="w-full">
-              <Link to="/estimate" onClick={() => setOpen(false)}>
-                Free Solar Quote
+              <Link to="/qualify" onClick={() => setOpen(false)}>
+                Get My Free Estimate
               </Link>
             </Button>
           </div>

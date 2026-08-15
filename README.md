@@ -1,141 +1,166 @@
-# SolarFlow Dashboard
+# SolarFlow / SolarPeak — Enterprise Agentic Solar Platform
 
-A production-grade solar company platform — public marketing site, AI-assisted customer qualification flow, customer portal, and internal admin/sales CRM. Frontend-only with mock data, architected for clean backend integration later.
+[![Build Status](https://img.shields.io/badge/Build-Passing-emerald)](https://github.com/PaulShervin/solarflow-dashboard)
+[![Stack](https://img.shields.io/badge/Stack-Vite%20%7C%20TanStack%20Start%20%7C%20TypeScript-blue)](https://tanstack.com/start)
+[![Auth](https://img.shields.io/badge/Auth-PBKDF2%20%2B%20Session%20Tokens-purple)](https://github.com/PaulShervin/solarflow-dashboard)
+[![CRM](https://img.shields.io/badge/CRM-HubSpot%20%7C%20Salesforce%20%7C%20GoHighLevel-orange)](https://github.com/PaulShervin/solarflow-dashboard)
+
+A production-grade, fullstack **Agentic AI Solar Operations Platform & CRM** built for enterprise scale. Featuring a **100% functional backend server engine**, persistent disk database storage, multi-provider 2-way CRM synchronization, industrial PBKDF2 authentication, and 5 autonomous agent modules.
 
 ---
 
-## What's Inside
+## Key Architecture & Core Capabilities
+
+### 1. ⚡ Instant Response Agent
+- **Inbound Webhooks**: Ingests lead payloads from HubSpot, Salesforce, GoHighLevel, or Custom Webhooks at `/api/webhooks/lead`.
+- **Quantitative Intent Scoring**: Computes lead quality score (0–100) based on homeownership, monthly bill, roof type, and timeline.
+- **Calendar Auto-Booking**: Automatically reserves consultant time slots on the sales rep availability matrix.
+- **Human Handoff Alert**: Automatically flags low-intent (< 45) or renter leads and transfers ownership to `Human Rep (Escalated)`.
+
+### 2. ☀️ Auto Pre-Design Engine
+- **Satellite Roof Pre-Design**: Visual roof array mapping 400W monocrystalline panel layouts with tilt (18°) and azimuth (180°) parameters.
+- **Solar Engineering Math**:
+  $$\text{Daily kWh} = \frac{\text{Monthly Bill}}{0.16} \times \frac{1}{30}$$
+  $$\text{Required kW System Capacity} = \frac{\text{Daily kWh} \times (\text{Target Offset \%} / 100)}{5.5 \text{ Peak Sun Hours}}$$
+- **Automated PDF Quotes**: Server renders downloadable, printable HTML/PDF proposal documents at `/api/proposals/:id/pdf`.
+
+### 3. 🎯 Contextual Nurture Engine
+- **Stage-Tied Sequences**: Executes drip sequences tied to lead lifecycle stages.
+- **Trigger Rule Evaluator**: Scans leads for idle conditions and dispatches follow-ups via `POST /api/agent/nurture/run-rules`.
+- **Dynamic Template Compiler**: Personalizes templates replacing `{{first_name}}`, `{{monthly_bill}}`, `{{roof_type}}`, `{{city}}`, `{{est_savings}}`, and `{{rep_name}}`.
+
+### 4. 🛠️ Post-Sale Status Agent & Customer Portal
+- **7-Stage Project Lifecycle**: Tracks progress across Consultation, Site Audit, Design, Permitting, Installation, Inspection, and PTO.
+- **Cancellation Risk Index**:
+  $$\text{Risk Score} = \min(100, \text{Stalled Days} \times 12 + \text{Inquiries} \times 15)$$
+- **Auto Notifications**: Dispatches automated customer SMS alerts on stage advancement and updates the live `/portal`.
+
+### 5. 🎙️ Call Coaching & Speech-to-Text Module
+- **STT Diarization**: Aligns speaker turns (Rep vs Customer) with precise line timestamps.
+- **Objection Extraction**: Tagging for *Tile Roof Labor Fee*, *Installation Timeline*, and *Net Metering Rate Tier*.
+- **Scorecard & Talk Ratio**: Calculates talk/listen split (e.g. 52% Rep / 48% Customer) and pitch scorecards (0-100).
+
+### 6. 🔒 Industrial PBKDF2 Authentication
+- **Salted Password Hashing**: Cryptographic PBKDF2 hashing with SHA-512 salting.
+- **Session Token Engine**: Cryptographically secure 256-bit token issuing and header validation (`Authorization: Bearer <token>` or `X-Session-Token`).
+- **Protected Admin Console**: Enforces authentication on `/admin/*` routes.
+
+---
+
+## 🔐 Pre-seeded Enterprise Credentials
+
+| User Email | Password | Role | Description |
+| :--- | :--- | :--- | :--- |
+| `admin@solarpeak.com` | `SolarPeak2026!` | `admin` | Enterprise Platform Administrator |
+| `dana@solarpeak.com` | `SolarPeak2026!` | `consultant` | Senior Solar Consultant / Sales Rep |
+| `marcus@solarpeak.com` | `SolarPeak2026!` | `customer` | Verified Customer Account |
+
+---
+
+## 🗺️ Application Routes
 
 ### Customer Experience
 | Route | Description |
 |---|---|
-| `/` | Public marketing homepage — hero, trust indicators, testimonials, FAQ, financing |
-| `/qualify` | Conversational solar qualification assistant with progress tracking |
-| `/estimate` | Personalized savings estimate — system size, payback period, annual production |
-| `/portal` | Customer portal — project status, milestones, documents, appointments, payments |
+| `/` | Public marketing homepage — hero, trust indicators, financing, interactive calculator |
+| `/qualify` | 60-second conversational solar qualifying wizard with instant CRM auto-booking |
+| `/estimate` | Pre-design analysis — system kW capacity, panel layout, 25-yr NPV curve |
+| `/portal` | Customer portal — live installation milestones, documents, messages, payments |
+| `/login` | Industrial secure sign-in portal |
 
-### Admin / Sales CRM
+### Admin & Sales Operations Console (`/admin/*`)
 | Route | Description |
 |---|---|
-| `/admin` | KPI dashboard — leads, appointments, proposals, revenue, conversion funnel |
-| `/admin/leads` | Lead list with qualification scores and AI summaries |
-| `/admin/conversations` | Message threads per lead |
-| `/admin/appointments` | Calendar and list view |
-| `/admin/proposals` | Proposal pipeline |
-| `/admin/customers` | Customer profiles |
-| `/admin/nurture` | Campaign list and detail |
-| `/admin/tasks` | Priority action queue |
-| `/admin/call-coaching` | Call recordings, transcripts, strengths/improvements |
-| `/admin/reports` | Analytics and performance reporting |
-| `/admin/settings` | System settings |
-
-A **demo switcher** in the corner lets you toggle between the customer and admin views without any auth.
+| `/admin` | Executive KPI dashboard — conversion funnel, intent scores, pipeline value |
+| `/admin/leads` | Inbound webhook lead list, AI intent scores & human handoff alerts |
+| `/admin/conversations` | 2-way CRM message threads & SMS/Call logs |
+| `/admin/appointments` | Rep calendar scheduling and consultation bookings |
+| `/admin/proposals` | Same-day proposal pipeline & PDF proposal quote viewer |
+| `/admin/customers` | Post-sale milestone stage control & Cancellation Risk Index |
+| `/admin/nurture` | Contextual drip sequence builder & trigger rule evaluator |
+| `/admin/call-coaching` | Speech-to-text call recordings, objection tags & talk ratio scorecards |
+| `/admin/settings` | CRM Integration Adapter settings (HubSpot, Salesforce, GoHighLevel, Custom) |
 
 ---
 
-## Tech Stack
+## 🛠️ Technology Stack
 
-| Layer | Tech |
+| Layer | Technology |
 |---|---|
-| Framework | [TanStack Start](https://tanstack.com/start) (SSR) |
-| Routing | [TanStack Router](https://tanstack.com/router) (file-based) |
-| UI | [shadcn/ui](https://ui.shadcn.com) + [Radix UI](https://radix-ui.com) |
-| Styling | [Tailwind CSS v4](https://tailwindcss.com) |
-| Charts | [Recharts](https://recharts.org) |
-| Forms | [React Hook Form](https://react-hook-form.com) + [Zod](https://zod.dev) |
-| Data Fetching | [TanStack Query](https://tanstack.com/query) |
-| Language | TypeScript 5 |
-| Runtime | Node.js / Bun |
+| **Framework** | [TanStack Start](https://tanstack.com/start) (SSR + Nitro Server Gateway) |
+| **Routing** | [TanStack Router](https://tanstack.com/router) (File-based routing) |
+| **UI Components** | [shadcn/ui](https://ui.shadcn.com) + [Radix UI](https://radix-ui.com) |
+| **Styling** | [Tailwind CSS v4](https://tailwindcss.com) |
+| **Charts** | [Recharts](https://recharts.org) |
+| **Database & Persistence** | Persistent Disk Store (`server_db.json`) |
+| **Authentication** | Cryptographic PBKDF2 + Session Token Engine |
+| **CRM Integration** | Multi-Provider CRM Adapter (`crmAdapter.ts`) |
 
 ---
 
-## Getting Started
+## 🚀 Getting Started
 
 ### Prerequisites
+- Node.js 20+ installed
 
-- Node.js 20+ or [Bun](https://bun.sh)
-
-### Install & Run
-
+### Setup & Run
 ```bash
-# clone the repo
-git clone <repository-url>
-cd solarflow-dashboard/frontend
+# Clone the repository
+git clone https://github.com/PaulShervin/solarflow-dashboard.git
+cd solarflow-dashboard
 
-# install dependencies
-bun install
-# or: npm install
+# Install dependencies
+npm install
 
-# start dev server
-bun run dev
-# or: npm run dev
+# Start local development server
+npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000).
+Open [http://localhost:3000](http://localhost:3000) in your browser.
 
-### Other Commands
+### Commands
 
 ```bash
-bun run build        # production build
-bun run build:dev    # development build
-bun run preview      # preview production build locally
-bun run lint         # ESLint
-bun run format       # Prettier
+npm run build      # Production SSR build (client & server)
+npm run preview    # Preview production build locally
+npm run lint       # Run ESLint validation
 ```
 
 ---
 
-## Project Structure
+## 📂 Project Structure
 
 ```
 solarflow-dashboard/
-├── frontend/
-│   ├── src/
-│   │   ├── components/
-│   │   │   ├── admin/       # Admin shell and layout
-│   │   │   ├── common/      # Shared components (Logo, DemoSwitcher, StatusPill)
-│   │   │   ├── site/        # Public site header/footer
-│   │   │   └── ui/          # shadcn/ui primitives
-│   │   ├── data/
-│   │   │   └── mock.ts      # All mock data (replace with API calls later)
-│   │   ├── hooks/           # Custom React hooks
-│   │   ├── lib/             # Utilities and error handling
-│   │   ├── routes/          # File-based routes (TanStack Router)
-│   │   │   ├── index.tsx    # /  (homepage)
-│   │   │   ├── qualify.tsx  # /qualify
-│   │   │   ├── estimate.tsx # /estimate
-│   │   │   ├── portal.tsx   # /portal
-│   │   │   └── admin.*      # /admin/* routes
-│   │   ├── server.ts        # SSR server entry
-│   │   └── start.ts         # TanStack Start middleware
-│   ├── public/              # Static assets
-│   ├── package.json
-│   ├── vite.config.ts
-│   └── tsconfig.json
-└── README.md
+├── README.md                       # Comprehensive Platform Overview
+├── walkthrough.md                  # Detailed Handoff & API Endpoint Specifications
+├── package.json                    # Enterprise Dependencies & Build Scripts
+├── vite.config.ts                  # Vite + TanStack Start SSR Configuration
+├── tsconfig.json                   # TypeScript Path Aliases (@/*)
+├── public/                         # Static Assets & Web Manifest
+└── src/
+    ├── routes/                     # TanStack Start Route Handlers
+    │   ├── index.tsx               # Public Marketing Homepage
+    │   ├── qualify.tsx             # Qualification Wizard
+    │   ├── estimate.tsx            # Solar Pre-Design & NPV Calculations
+    │   ├── portal.tsx              # Customer Live Milestone Portal
+    │   ├── login.tsx               # Industrial Secure Login Page
+    │   └── admin.*.tsx             # Executive Control Panels
+    ├── server/                     # Backend Agentic Engine & API Router
+    │   ├── agents/                 # 5 Autonomous Agent Engines
+    │   ├── apiRouter.ts            # HTTP API Router (/api/*)
+    │   ├── crmAdapter.ts           # HubSpot/Salesforce/GHL 2-Way Sync Adapter
+    │   ├── dbStore.ts              # Persistent Disk Store (server_db.json)
+    │   └── authStore.ts           # PBKDF2 Password Hashing & Sessions
+    ├── components/                 # UI Design System Components
+    ├── hooks/                      # Custom Hooks (useSolarDB, useMobile)
+    ├── lib/                        # Fetch API Client & Auth Context
+    ├── data/                       # Mock Seed Data Fixtures
+    └── server.ts                   # Nitro/Vite SSR Entry Point
 ```
 
 ---
 
-## Design System
-
-- **Colors**: clean white surfaces, deep navy/charcoal frames, solar green primary action, subtle blue accents
-- **Typography**: crisp modern sans-serif, generous whitespace, consistent scale
-- **Components**: rounded professional cards, soft shadows, hover states, skeleton/loading states, empty states
-- **Responsive**: desktop, tablet, and mobile layouts throughout
-
----
-
-## Replacing Mock Data
-
-All mock data lives in `frontend/src/data/mock.ts`. Each route imports directly from there. To wire up a real backend:
-
-1. Create API utility functions in `frontend/src/lib/api.ts`
-2. Replace `mock.ts` imports in each route with TanStack Query `useQuery` hooks
-3. The UI components require no changes — they only consume typed props
-
----
-
-## License
+## 📄 License
 
 MIT

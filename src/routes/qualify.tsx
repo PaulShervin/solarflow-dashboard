@@ -1,14 +1,28 @@
 import { useEffect, useRef, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowRight, Bot, Calendar, CheckCircle2, Lock, RotateCcw, Send, Sparkles, User } from "lucide-react";
+import {
+  ArrowRight,
+  Bot,
+  Calendar,
+  CheckCircle2,
+  Lock,
+  MessageSquare,
+  RotateCcw,
+  Send,
+  Sparkles,
+  User,
+  Zap,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
+import { Input } from "@/components/ui/input";
 import { SiteHeader } from "@/components/site/SiteHeader";
 import { SiteFooter } from "@/components/site/SiteFooter";
 import { StatusPill } from "@/components/common/StatusPill";
 import { qualifyQuestions } from "@/data/mock";
-import { cn } from "@/lib/utils";
+import { useSolarDB } from "@/hooks/useSolarDB";
 import { solarApi } from "@/lib/api";
+import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/qualify")({
   head: () => ({
@@ -17,14 +31,14 @@ export const Route = createFileRoute("/qualify")({
       {
         name: "description",
         content:
-          "Answer five quick questions about your home and get a preliminary solar savings estimate. No cost, no obligation.",
+          "Answer five quick questions or chat with Sunny AI to get your preliminary solar savings estimate. Instant CRM sync & calendar auto-booking.",
       },
     ],
   }),
   component: QualifyPage,
 });
 
-type Bubble = { id: number; role: "assistant" | "user"; text: string };
+type Bubble = { id: string; role: "assistant" | "user"; text: string; time: string };
 
 const SCORE_WEIGHTS: Record<string, Record<string, number>> = {
   homeowner: { "Yes, I own it": 30, "No, I rent": 0, "I'm buying soon": 12 },
@@ -40,16 +54,20 @@ const SCORE_WEIGHTS: Record<string, Record<string, number>> = {
 };
 
 function QualifyPage() {
+  const { conversations } = useSolarDB();
   const [step, setStep] = useState(0);
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [bubbles, setBubbles] = useState<Bubble[]>([
     {
-      id: 0,
+      id: "b-0",
       role: "assistant",
-      text: "Hi! I'm Sunny, SolarPeak's solar assistant. I'll ask five quick questions and put together a preliminary savings estimate for your home. It takes about a minute.",
+      text: "Hi! I'm Sunny, SolarPeak's autonomous solar assistant. I'll analyze your roof, bill, and financing options to build a 25-year solar estimate. Type a message or click an option below!",
+      time: "Just now",
     },
-    { id: 1, role: "assistant", text: qualifyQuestions[0].prompt },
+    { id: "b-1", role: "assistant", text: qualifyQuestions[0].prompt, time: "Just now" },
   ]);
+
+  const [inputText, setInputText] = useState("");
   const [typing, setTyping] = useState(false);
   const [bookedSlot, setBookedSlot] = useState<string | null>(null);
   const [assignedRep] = useState("Dana Ruiz");
@@ -72,29 +90,52 @@ function QualifyPage() {
     }
   }, [done, answers, score]);
 
-  function choose(option: string) {
-    if (done || typing) return;
-    const current = qualifyQuestions[step]!;
-    const updatedAnswers = { ...answers, [current.key]: option };
-    setAnswers(updatedAnswers);
-    setBubbles((b) => [...b, { id: b.length + 10, role: "user", text: option }]);
+  function submitUserMessage(userMsg: string) {
+    if (typing || !userMsg.trim()) return;
+
+    const timeStr = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+    const currentQ = qualifyQuestions[step];
+    if (currentQ) {
+      setAnswers((prev) => ({ ...prev, [currentQ.key]: userMsg }));
+    }
+
+    setBubbles((b) => [...b, { id: `msg-${Date.now()}`, role: "user", text: userMsg, time: timeStr }]);
+    setInputText("");
     setTyping(true);
 
     window.setTimeout(() => {
       const next = step + 1;
       setTyping(false);
       setStep(next);
+
+      let replyText = "";
+      if (next < qualifyQuestions.length) {
+        replyText = qualifyQuestions[next]!.prompt;
+      } else {
+        replyText =
+          "Outstanding! Your preliminary calculations are complete and synced to our CRM. Choose a consultation slot below to lock in your federal clean energy tax credit with your specialist.";
+      }
+
       setBubbles((b) => [
         ...b,
-        next < qualifyQuestions.length
-          ? { id: b.length + 20, role: "assistant", text: qualifyQuestions[next]!.prompt }
-          : {
-              id: b.length + 20,
-              role: "assistant",
-              text: "Perfect — that's everything I need! Your responses have been synced with our CRM and instant response engine. Select a calendar slot below to lock in a consultation with our senior design specialist.",
-            },
+        { id: `reply-${Date.now()}`, role: "assistant", text: replyText, time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) },
       ]);
-    }, 700);
+
+      // Save to server database
+      if (conversations[0]?.id) {
+        solarApi.sendMessage(conversations[0].id, "user", userMsg);
+        solarApi.sendMessage(conversations[0].id, "bot", replyText);
+      }
+    }, 650);
+  }
+
+  function handleOptionClick(option: string) {
+    submitUserMessage(option);
+  }
+
+  function handleCustomSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    submitUserMessage(inputText);
   }
 
   function reset() {
@@ -103,8 +144,8 @@ function QualifyPage() {
     setTyping(false);
     setBookedSlot(null);
     setBubbles([
-      { id: 0, role: "assistant", text: "Let's start over. Do you own your home?" },
-      { id: 1, role: "assistant", text: qualifyQuestions[0].prompt },
+      { id: "b-0", role: "assistant", text: "Let's restart your estimate. Do you own your home?", time: "Just now" },
+      { id: "b-1", role: "assistant", text: qualifyQuestions[0].prompt, time: "Just now" },
     ]);
   }
 
@@ -115,61 +156,64 @@ function QualifyPage() {
 
   const qualification =
     score >= 70
-      ? { label: "Strong fit", tone: "success" as const }
+      ? { label: "High Priority Lead", tone: "success" as const }
       : score >= 45
-        ? { label: "Possible fit", tone: "warning" as const }
-        : { label: "Needs review", tone: "neutral" as const };
+        ? { label: "Standard Qualification", tone: "warning" as const }
+        : { label: "Review Required", tone: "neutral" as const };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background flex flex-col justify-between">
       <SiteHeader />
 
-      <main className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8 lg:py-14">
-        <div className="mx-auto max-w-2xl text-center">
-          <StatusPill tone="brand" dot>
-            Free · 60 seconds · No obligation
+      <main className="mx-auto w-full max-w-7xl px-4 py-8 sm:px-6 lg:px-8 lg:py-12 flex-1">
+        <div className="mx-auto max-w-3xl text-center">
+          <StatusPill tone="brand" dot className="px-3 py-1 font-bold">
+            ⚡ Instant Response AI Agent & 2-Way CRM Sync
           </StatusPill>
-          <h1 className="mt-4 font-display text-3xl font-extrabold sm:text-4xl">
-            Let's see what solar would save you
+          <h1 className="mt-4 font-display text-3xl font-black tracking-tight sm:text-4xl lg:text-5xl text-foreground">
+            Calculate Your Solar Savings in 60 Seconds
           </h1>
-          <p className="mt-3 text-muted-foreground">
-            Five questions about your home. Powered by instant CRM sync & calendar auto-booking.
+          <p className="mt-3 text-muted-foreground text-sm sm:text-base leading-relaxed">
+            Chat with Sunny AI or answer quick prompts below. Writes back to client CRM instantly.
           </p>
         </div>
 
-        <div className="mt-10 grid gap-6 lg:grid-cols-[1.5fr_1fr]">
-          <div className="surface-card flex min-w-0 flex-col overflow-hidden">
-            <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-4 border-b border-border px-5 py-4">
+        <div className="mt-8 grid gap-6 lg:grid-cols-[1.6fr_1fr]">
+          <div className="surface-card flex min-w-0 flex-col overflow-hidden border-border/80 shadow-2xl">
+            {/* Header */}
+            <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-4 border-b border-border bg-secondary/30 px-5 py-4">
               <div className="flex min-w-0 items-center gap-3">
-                <span className="grid size-10 shrink-0 place-items-center rounded-full bg-primary-soft text-primary">
-                  <Sparkles className="size-5" />
+                <span className="relative grid size-10 shrink-0 place-items-center rounded-2xl bg-primary text-primary-foreground shadow-md">
+                  <Bot className="size-5" />
+                  <span className="absolute -top-0.5 -right-0.5 size-3 rounded-full bg-emerald-500 ring-2 ring-background" />
                 </span>
-                <span className="min-w-0">
-                  <span className="block truncate text-sm font-bold">Sunny · Instant Response Bot</span>
-                  <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                    <span className="size-1.5 rounded-full bg-primary" />
-                    2-Way CRM Sync Active
-                  </span>
-                </span>
+                <div className="min-w-0">
+                  <div className="flex items-center gap-2">
+                    <span className="truncate text-sm font-bold text-foreground">Sunny · SolarPeak Assistant</span>
+                    <StatusPill tone="success" className="text-[10px]">Online</StatusPill>
+                  </div>
+                  <p className="truncate text-xs text-muted-foreground">
+                    Connected to CRM Integration Adapter · Response latency: &lt;150ms
+                  </p>
+                </div>
               </div>
-              <Button variant="ghost" size="sm" onClick={reset} className="shrink-0">
-                <RotateCcw />
-                Restart
+              <Button variant="ghost" size="sm" onClick={reset} className="shrink-0 text-xs">
+                <RotateCcw className="size-3.5" />
+                Reset
               </Button>
             </div>
 
-            <div className="border-b border-border px-5 py-3">
-              <div className="mb-2 flex items-center justify-between text-xs font-semibold text-muted-foreground">
-                <span>
-                  Question {Math.min(step + 1, qualifyQuestions.length)} of{" "}
-                  {qualifyQuestions.length}
-                </span>
-                <span>{progress}% complete</span>
+            {/* Progress */}
+            <div className="border-b border-border bg-card px-5 py-2.5">
+              <div className="mb-1.5 flex items-center justify-between text-xs font-semibold text-muted-foreground">
+                <span>Step {Math.min(step + 1, qualifyQuestions.length)} of {qualifyQuestions.length}</span>
+                <span>{progress}% Completed</span>
               </div>
-              <Progress value={progress} className="h-1.5" />
+              <Progress value={progress} className="h-2" />
             </div>
 
-            <div className="flex-1 space-y-4 overflow-y-auto bg-secondary/30 px-5 py-6 max-h-[26rem] min-h-[22rem]">
+            {/* Chat Body */}
+            <div className="flex-1 space-y-4 overflow-y-auto bg-slate-950/20 px-5 py-6 max-h-[28rem] min-h-[22rem]">
               {bubbles.map((b) => (
                 <div
                   key={b.id}
@@ -177,7 +221,7 @@ function QualifyPage() {
                 >
                   <span
                     className={cn(
-                      "grid size-8 shrink-0 place-items-center rounded-full",
+                      "grid size-8 shrink-0 place-items-center rounded-full text-xs font-bold shadow-sm",
                       b.role === "user"
                         ? "bg-navy text-navy-foreground"
                         : "bg-primary text-primary-foreground",
@@ -185,30 +229,35 @@ function QualifyPage() {
                   >
                     {b.role === "user" ? <User className="size-4" /> : <Bot className="size-4" />}
                   </span>
-                  <div
-                    className={cn(
-                      "max-w-[78%] rounded-2xl px-4 py-2.5 text-sm leading-relaxed shadow-card",
-                      b.role === "user"
-                        ? "rounded-br-sm bg-navy text-navy-foreground"
-                        : "rounded-bl-sm bg-card text-foreground",
-                    )}
-                  >
-                    {b.text}
+                  <div className="flex flex-col gap-1 max-w-[80%]">
+                    <div
+                      className={cn(
+                        "rounded-2xl px-4 py-3 text-sm leading-relaxed shadow-card",
+                        b.role === "user"
+                          ? "rounded-br-none bg-navy text-white font-medium"
+                          : "rounded-bl-none bg-card text-foreground border border-border/80",
+                      )}
+                    >
+                      {b.text}
+                    </div>
+                    <span className={cn("text-[10px] text-muted-foreground/70 px-1", b.role === "user" && "text-right")}>
+                      {b.time}
+                    </span>
                   </div>
                 </div>
               ))}
 
               {typing ? (
                 <div className="flex items-end gap-2.5">
-                  <span className="grid size-8 shrink-0 place-items-center rounded-full bg-primary text-primary-foreground">
+                  <span className="grid size-8 shrink-0 place-items-center rounded-full bg-primary text-primary-foreground shadow-sm">
                     <Bot className="size-4" />
                   </span>
-                  <div className="flex gap-1 rounded-2xl rounded-bl-sm bg-card px-4 py-3.5 shadow-card">
+                  <div className="flex gap-1.5 rounded-2xl rounded-bl-none bg-card border border-border px-4 py-3.5 shadow-card">
                     {[0, 1, 2].map((i) => (
                       <span
                         key={i}
-                        className="size-1.5 animate-bounce rounded-full bg-muted-foreground/60"
-                        style={{ animationDelay: `${i * 120}ms` }}
+                        className="size-2 animate-bounce rounded-full bg-primary"
+                        style={{ animationDelay: `${i * 140}ms` }}
                       />
                     ))}
                   </div>
@@ -217,25 +266,26 @@ function QualifyPage() {
               <div ref={endRef} />
             </div>
 
-            <div className="border-t border-border p-4">
+            {/* Input & Option Pills */}
+            <div className="border-t border-border bg-card p-4 space-y-3">
               {done ? (
                 <div className="space-y-4">
-                  <div className="rounded-xl border border-primary/30 bg-primary-soft/40 p-4">
+                  <div className="rounded-2xl border border-primary/40 bg-primary-soft/60 p-4 shadow-sm">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
                         <Calendar className="size-5 text-primary" />
-                        <span className="text-sm font-bold">Auto-Book Consultation Slot</span>
+                        <span className="text-sm font-extrabold text-foreground">Auto-Book Consultation Slot</span>
                       </div>
-                      <span className="text-xs text-muted-foreground">Assigned: {assignedRep}</span>
+                      <span className="text-xs text-muted-foreground font-semibold">Assigned Rep: {assignedRep}</span>
                     </div>
 
                     {bookedSlot ? (
-                      <div className="mt-3 flex items-center justify-between rounded-lg bg-card p-3 text-sm border border-emerald-500/30 text-emerald-700 dark:text-emerald-400">
-                        <span className="flex items-center gap-2 font-medium">
-                          <CheckCircle2 className="size-4 text-emerald-500" />
-                          Consultation Locked: Tomorrow at {bookedSlot}
+                      <div className="mt-3 flex items-center justify-between rounded-xl bg-card p-3 text-sm border border-emerald-500/40 text-emerald-700 dark:text-emerald-400 font-bold">
+                        <span className="flex items-center gap-2">
+                          <CheckCircle2 className="size-5 text-emerald-500" />
+                          Consultation Confirmed: Tomorrow at {bookedSlot}
                         </span>
-                        <StatusPill tone="success">Calendar Synced</StatusPill>
+                        <StatusPill tone="success">CRM Synced ✓</StatusPill>
                       </div>
                     ) : (
                       <div className="mt-3 grid grid-cols-3 gap-2">
@@ -243,7 +293,7 @@ function QualifyPage() {
                           <button
                             key={slot}
                             onClick={() => handleBook(slot)}
-                            className="rounded-lg border border-border bg-card px-3 py-2 text-xs font-semibold hover:border-primary hover:bg-primary-soft transition-colors"
+                            className="rounded-xl border border-border bg-card px-3 py-2.5 text-xs font-bold hover:border-primary hover:bg-primary-soft transition-all shadow-sm"
                           >
                             Tomorrow {slot}
                           </button>
@@ -252,84 +302,97 @@ function QualifyPage() {
                     )}
                   </div>
 
-                  <div className="flex flex-col gap-3 sm:flex-row">
-                    <Button asChild size="lg" className="flex-1">
+                  <div className="flex flex-col gap-2 sm:flex-row">
+                    <Button asChild size="lg" className="flex-1 font-bold gap-2">
                       <Link to="/estimate">
-                        See my personalized estimate
-                        <ArrowRight />
+                        View 25-Year Proposal Analysis
+                        <ArrowRight className="size-4" />
                       </Link>
                     </Button>
                     <Button variant="outline" size="lg" onClick={reset}>
-                      Start over
+                      Start Over
                     </Button>
                   </div>
                 </div>
               ) : (
                 <>
-                  <p className="mb-2.5 text-xs font-semibold text-muted-foreground">
-                    Choose an answer
-                  </p>
-                  <div className="grid gap-2 sm:grid-cols-2">
-                    {qualifyQuestions[step]!.options.map((o) => (
-                      <button
-                        key={o}
-                        onClick={() => choose(o)}
-                        disabled={typing}
-                        className="rounded-lg border border-border bg-card px-4 py-3 text-left text-sm font-medium transition-colors hover:border-primary hover:bg-primary-soft disabled:opacity-50"
-                      >
-                        {o}
-                      </button>
-                    ))}
-                  </div>
-                  <div className="mt-3 flex items-center gap-2 rounded-lg border border-border bg-secondary/50 px-3 py-2.5 text-sm text-muted-foreground">
-                    <Send className="size-4 shrink-0 text-primary" />
-                    <span className="truncate">
-                      Real-time responses write back into CRM & trigger automated follow-ups.
-                    </span>
-                  </div>
+                  {qualifyQuestions[step] ? (
+                    <div>
+                      <p className="mb-2 text-xs font-bold text-muted-foreground uppercase tracking-wider">
+                        Quick Select Options:
+                      </p>
+                      <div className="grid gap-2 sm:grid-cols-2">
+                        {qualifyQuestions[step].options.map((o) => (
+                          <button
+                            key={o}
+                            onClick={() => handleOptionClick(o)}
+                            disabled={typing}
+                            className="rounded-xl border border-border/80 bg-secondary/50 px-3.5 py-2.5 text-left text-xs font-semibold text-foreground transition-all hover:border-primary hover:bg-primary-soft hover:shadow-sm disabled:opacity-50"
+                          >
+                            {o}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  ) : null}
+
+                  <form onSubmit={handleCustomSubmit} className="flex gap-2 pt-1">
+                    <Input
+                      value={inputText}
+                      onChange={(e) => setInputText(e.target.value)}
+                      placeholder="Or type custom response (e.g., '$280/mo bill, tile roof')..."
+                      className="flex-1 text-xs"
+                      disabled={typing}
+                    />
+                    <Button type="submit" disabled={typing || !inputText.trim()} size="sm" className="gap-1.5 font-bold">
+                      <Send className="size-3.5" />
+                      Send
+                    </Button>
+                  </form>
                 </>
               )}
             </div>
           </div>
 
+          {/* Right Panel Metrics */}
           <div className="min-w-0 space-y-5">
-            <div className="surface-card p-5">
-              <div className="flex items-center justify-between gap-3">
-                <h2 className="text-sm font-bold">Your answers so far</h2>
+            <div className="surface-card p-6 space-y-4">
+              <div className="flex items-center justify-between">
+                <h2 className="text-sm font-bold flex items-center gap-2">
+                  <Zap className="size-4 text-primary" />
+                  Live Intent Score Engine
+                </h2>
                 <StatusPill tone={qualification.tone}>{qualification.label}</StatusPill>
               </div>
-              <dl className="mt-4 space-y-3">
+
+              <div className="rounded-xl bg-secondary/60 p-4 border border-border">
+                <div className="flex items-center justify-between text-sm font-bold">
+                  <span>Calculated AI Score</span>
+                  <span className="text-primary text-base">{score}/100</span>
+                </div>
+                <Progress value={score} className="mt-2 h-2" />
+                <p className="mt-2 text-[11px] text-muted-foreground">
+                  Score updates dynamically after every answer. Automatically routes to rep calendar or flags human escalation.
+                </p>
+              </div>
+
+              <dl className="space-y-2.5 text-xs">
                 {qualifyQuestions.map((q) => (
-                  <div
-                    key={q.key}
-                    className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 border-b border-border pb-3 last:border-0 last:pb-0"
-                  >
-                    <dt className="min-w-0 truncate text-sm capitalize text-muted-foreground">
-                      {q.key === "homeType" ? "home type" : q.key}
-                    </dt>
-                    <dd className="shrink-0 text-sm font-semibold">
-                      {answers[q.key] ?? <span className="text-muted-foreground/60">—</span>}
+                  <div key={q.key} className="flex items-center justify-between border-b border-border pb-2">
+                    <dt className="text-muted-foreground capitalize font-medium">{q.key}</dt>
+                    <dd className="font-bold text-foreground">
+                      {answers[q.key] ?? <span className="text-muted-foreground/50">—</span>}
                     </dd>
                   </div>
                 ))}
               </dl>
-              <div className="mt-5 rounded-xl bg-secondary/60 p-4">
-                <div className="flex items-center justify-between text-sm font-semibold">
-                  <span>AI Intent Score</span>
-                  <span className="text-primary">{score}/100</span>
-                </div>
-                <Progress value={score} className="mt-2 h-1.5" />
-                <p className="mt-2 text-xs text-muted-foreground">
-                  Score updates live & triggers automatic rep assignment & calendar routing.
-                </p>
-              </div>
             </div>
 
             <div className="surface-card p-5">
               <div className="flex items-start gap-3">
-                <Lock className="mt-0.5 size-4 shrink-0 text-primary" />
-                <p className="text-sm leading-relaxed text-muted-foreground">
-                  Two-way sync: every answer and calendar appointment writes instantly to your SolarFlow CRM without manual entry.
+                <Lock className="mt-0.5 size-4 text-primary shrink-0" />
+                <p className="text-xs text-muted-foreground leading-relaxed">
+                  <strong>2-Way Sync Active</strong>: Answers and booked appointments automatically sync with your client's CRM timeline (HubSpot/Salesforce/GoHighLevel).
                 </p>
               </div>
             </div>

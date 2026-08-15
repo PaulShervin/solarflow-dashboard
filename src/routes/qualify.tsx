@@ -70,7 +70,7 @@ function QualifyPage() {
 
   function choose(option: string) {
     if (done || typing) return;
-    const current = qualifyQuestions[step];
+    const current = qualifyQuestions[step]!;
     setAnswers((a) => ({ ...a, [current.key]: option }));
     setBubbles((b) => [...b, { id: b.length + 10, role: "user", text: option }]);
     setTyping(true);
@@ -82,7 +82,7 @@ function QualifyPage() {
       setBubbles((b) => [
         ...b,
         next < qualifyQuestions.length
-          ? { id: b.length + 20, role: "assistant", text: qualifyQuestions[next].prompt }
+          ? { id: b.length + 20, role: "assistant", text: qualifyQuestions[next]!.prompt }
           : {
               id: b.length + 20,
               role: "assistant",
@@ -225,7 +225,7 @@ function QualifyPage() {
                     Choose an answer
                   </p>
                   <div className="grid gap-2 sm:grid-cols-2">
-                    {qualifyQuestions[step].options.map((o) => (
+                    {qualifyQuestions[step]!.options.map((o) => (
                       <button
                         key={o}
                         onClick={() => choose(o)}

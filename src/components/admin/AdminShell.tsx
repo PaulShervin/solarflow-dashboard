@@ -22,7 +22,15 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
-const navGroups = [
+type NavItem = {
+  to: string;
+  label: string;
+  icon: typeof LayoutDashboard;
+  exact?: boolean;
+  badge?: string;
+};
+
+const navGroups: { label: string; items: NavItem[] }[] = [
   {
     label: "Operate",
     items: [
@@ -90,7 +98,7 @@ export function AdminShell() {
                   return (
                     <li key={item.to}>
                       <Link
-                        to={item.to}
+                        to={item.to as "/admin"}
                         onClick={() => setOpen(false)}
                         className={cn(
                           "grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
@@ -103,7 +111,7 @@ export function AdminShell() {
                           className={cn("size-4 shrink-0", active && "text-sidebar-primary")}
                         />
                         <span className="truncate">{item.label}</span>
-                        {"badge" in item && item.badge ? (
+                        {item.badge ? (
                           <span className="shrink-0 rounded-full bg-sidebar-primary px-1.5 py-0.5 text-[10px] font-bold text-sidebar-primary-foreground">
                             {item.badge}
                           </span>

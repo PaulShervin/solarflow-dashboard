@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as EstimateRouteImport } from './routes/estimate'
+import { Route as LoginRouteImport } from './routes/login'
 import { Route as PortalRouteImport } from './routes/portal'
 import { Route as QualifyRouteImport } from './routes/qualify'
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
@@ -39,6 +40,11 @@ const AdminRoute = AdminRouteImport.update({
 const EstimateRoute = EstimateRouteImport.update({
   id: '/estimate',
   path: '/estimate',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LoginRoute = LoginRouteImport.update({
+  id: '/login',
+  path: '/login',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PortalRoute = PortalRouteImport.update({
@@ -111,6 +117,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/admin': typeof AdminRouteWithChildren
   '/estimate': typeof EstimateRoute
+  '/login': typeof LoginRoute
   '/portal': typeof PortalRoute
   '/qualify': typeof QualifyRoute
   '/admin/appointments': typeof AdminAppointmentsRoute
@@ -128,6 +135,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/estimate': typeof EstimateRoute
+  '/login': typeof LoginRoute
   '/portal': typeof PortalRoute
   '/qualify': typeof QualifyRoute
   '/admin/appointments': typeof AdminAppointmentsRoute
@@ -147,6 +155,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/admin': typeof AdminRouteWithChildren
   '/estimate': typeof EstimateRoute
+  '/login': typeof LoginRoute
   '/portal': typeof PortalRoute
   '/qualify': typeof QualifyRoute
   '/admin/appointments': typeof AdminAppointmentsRoute
@@ -167,6 +176,7 @@ export interface FileRouteTypes {
     | '/'
     | '/admin'
     | '/estimate'
+    | '/login'
     | '/portal'
     | '/qualify'
     | '/admin/appointments'
@@ -184,6 +194,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/estimate'
+    | '/login'
     | '/portal'
     | '/qualify'
     | '/admin/appointments'
@@ -202,6 +213,7 @@ export interface FileRouteTypes {
     | '/'
     | '/admin'
     | '/estimate'
+    | '/login'
     | '/portal'
     | '/qualify'
     | '/admin/appointments'
@@ -221,6 +233,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AdminRoute: typeof AdminRouteWithChildren
   EstimateRoute: typeof EstimateRoute
+  LoginRoute: typeof LoginRoute
   PortalRoute: typeof PortalRoute
   QualifyRoute: typeof QualifyRoute
 }
@@ -246,6 +259,13 @@ declare module '@tanstack/react-router' {
       path: '/estimate'
       fullPath: '/estimate'
       preLoaderRoute: typeof EstimateRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/portal': {
@@ -376,6 +396,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AdminRoute: AdminRouteWithChildren,
   EstimateRoute: EstimateRoute,
+  LoginRoute: LoginRoute,
   PortalRoute: PortalRoute,
   QualifyRoute: QualifyRoute,
 }

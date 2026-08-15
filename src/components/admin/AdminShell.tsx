@@ -1,11 +1,12 @@
 import { useState, type ReactNode } from "react";
-import { Link, Outlet, useRouterState } from "@tanstack/react-router";
+import { Link, Outlet, useRouterState, useNavigate } from "@tanstack/react-router";
 import {
   Bell,
   CalendarDays,
   ClipboardCheck,
   FileText,
   LayoutDashboard,
+  LogOut,
   Megaphone,
   MessagesSquare,
   Menu,
@@ -13,6 +14,7 @@ import {
   PieChart,
   Search,
   Settings,
+  ShieldCheck,
   Users,
   UserSquare2,
   X,
@@ -20,6 +22,8 @@ import {
 import { Logo } from "@/components/common/Logo";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { StatusPill } from "@/components/common/StatusPill";
+import { useAuth } from "@/lib/authContext";
 import { cn } from "@/lib/utils";
 
 type NavItem = {
@@ -60,6 +64,21 @@ const navGroups: { label: string; items: NavItem[] }[] = [
 export function AdminShell() {
   const [open, setOpen] = useState(false);
   const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const { session, logout, isAuthenticated } = useAuth();
+  const navigate = useNavigate();
+
+  async function handleLogout() {
+    await logout();
+    navigate({ to: "/login" });
+  }
+
+  const userInitials = session?.name
+    ? session.name
+        .split(" ")
+        .map((n) => n[0])
+        .join("")
+        .slice(0, 2)
+    : "DR";
 
   return (
     <div className="min-h-screen bg-secondary/40">
@@ -126,17 +145,32 @@ export function AdminShell() {
             </div>
           ))}
         </nav>
-        <div className="shrink-0 border-t border-sidebar-border p-3">
-          <div className="flex items-center gap-3 rounded-lg px-2 py-2">
-            <span className="grid size-9 shrink-0 place-items-center rounded-full bg-sidebar-accent text-xs font-bold text-sidebar-accent-foreground">
-              DR
-            </span>
-            <div className="min-w-0">
-              <p className="truncate text-sm font-semibold text-sidebar-accent-foreground">
-                Dana Ruiz
-              </p>
-              <p className="truncate text-xs text-sidebar-foreground/50">Sales Manager</p>
+
+        <div className="shrink-0 border-t border-sidebar-border p-3 space-y-2">
+          <div className="flex items-center justify-between rounded-lg px-2 py-2">
+            <div className="flex items-center gap-2.5 min-w-0">
+              <span className="grid size-8 shrink-0 place-items-center rounded-full bg-sidebar-accent text-xs font-bold text-sidebar-accent-foreground">
+                {userInitials}
+              </span>
+              <div className="min-w-0">
+                <p className="truncate text-xs font-bold text-sidebar-accent-foreground">
+                  {session?.name || "Dana Ruiz"}
+                </p>
+                <p className="truncate text-[10px] text-sidebar-foreground/50 capitalize">
+                  Role: {session?.role || "Consultant"}
+                </p>
+              </div>
             </div>
+
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={handleLogout}
+              className="text-sidebar-foreground/70 hover:text-sidebar-accent-foreground size-8"
+              title="Sign Out"
+            >
+              <LogOut className="size-4" />
+            </Button>
           </div>
         </div>
       </aside>
@@ -167,7 +201,10 @@ export function AdminShell() {
               <Input placeholder="Search leads, customers, proposals…" className="pl-9" />
             </div>
           </div>
-          <div className="flex shrink-0 items-center gap-2">
+          <div className="flex shrink-0 items-center gap-3">
+            <StatusPill tone="brand" dot className="hidden sm:inline-flex">
+              Auth Active: {session?.email || "admin@solarpeak.com"}
+            </StatusPill>
             <Button variant="ghost" size="icon" aria-label="Notifications" className="relative">
               <Bell />
               <span className="absolute top-2 right-2 size-2 rounded-full bg-destructive" />

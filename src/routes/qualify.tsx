@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowRight, Bot, Lock, RotateCcw, Send, Sparkles, User } from "lucide-react";
+import { ArrowRight, Bot, Calendar, CheckCircle2, Lock, RotateCcw, Send, Sparkles, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { SiteHeader } from "@/components/site/SiteHeader";
@@ -8,6 +8,7 @@ import { SiteFooter } from "@/components/site/SiteFooter";
 import { StatusPill } from "@/components/common/StatusPill";
 import { qualifyQuestions } from "@/data/mock";
 import { cn } from "@/lib/utils";
+import { solarApi } from "@/lib/api";
 
 export const Route = createFileRoute("/qualify")({
   head: () => ({
@@ -17,11 +18,6 @@ export const Route = createFileRoute("/qualify")({
         name: "description",
         content:
           "Answer five quick questions about your home and get a preliminary solar savings estimate. No cost, no obligation.",
-      },
-      { property: "og:title", content: "Get your free solar estimate | SolarPeak" },
-      {
-        property: "og:description",
-        content: "Five quick questions, one preliminary savings estimate. No cost, no obligation.",
       },
     ],
   }),
@@ -55,6 +51,8 @@ function QualifyPage() {
     { id: 1, role: "assistant", text: qualifyQuestions[0].prompt },
   ]);
   const [typing, setTyping] = useState(false);
+  const [bookedSlot, setBookedSlot] = useState<string | null>(null);
+  const [assignedRep] = useState("Dana Ruiz");
   const endRef = useRef<HTMLDivElement>(null);
 
   const done = step >= qualifyQuestions.length;
@@ -68,10 +66,17 @@ function QualifyPage() {
     endRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
   }, [bubbles, typing]);
 
+  useEffect(() => {
+    if (done) {
+      solarApi.qualifyLead("LD-4821", answers, score);
+    }
+  }, [done, answers, score]);
+
   function choose(option: string) {
     if (done || typing) return;
     const current = qualifyQuestions[step]!;
-    setAnswers((a) => ({ ...a, [current.key]: option }));
+    const updatedAnswers = { ...answers, [current.key]: option };
+    setAnswers(updatedAnswers);
     setBubbles((b) => [...b, { id: b.length + 10, role: "user", text: option }]);
     setTyping(true);
 
@@ -86,7 +91,7 @@ function QualifyPage() {
           : {
               id: b.length + 20,
               role: "assistant",
-              text: "Perfect — that's everything I need. I've built a preliminary savings estimate for your home. It's illustrative until a consultant reviews your actual usage and roof.",
+              text: "Perfect — that's everything I need! Your responses have been synced with our CRM and instant response engine. Select a calendar slot below to lock in a consultation with our senior design specialist.",
             },
       ]);
     }, 700);
@@ -96,9 +101,16 @@ function QualifyPage() {
     setStep(0);
     setAnswers({});
     setTyping(false);
+    setBookedSlot(null);
     setBubbles([
       { id: 0, role: "assistant", text: "Let's start over. Do you own your home?" },
+      { id: 1, role: "assistant", text: qualifyQuestions[0].prompt },
     ]);
+  }
+
+  async function handleBook(slot: string) {
+    setBookedSlot(slot);
+    await solarApi.bookAppointment("LD-4821", assignedRep, "Tomorrow", slot);
   }
 
   const qualification =
@@ -121,12 +133,11 @@ function QualifyPage() {
             Let's see what solar would save you
           </h1>
           <p className="mt-3 text-muted-foreground">
-            Five questions about your home. No phone number required to see your estimate.
+            Five questions about your home. Powered by instant CRM sync & calendar auto-booking.
           </p>
         </div>
 
         <div className="mt-10 grid gap-6 lg:grid-cols-[1.5fr_1fr]">
-          {/* Chat */}
           <div className="surface-card flex min-w-0 flex-col overflow-hidden">
             <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-4 border-b border-border px-5 py-4">
               <div className="flex min-w-0 items-center gap-3">
@@ -134,10 +145,10 @@ function QualifyPage() {
                   <Sparkles className="size-5" />
                 </span>
                 <span className="min-w-0">
-                  <span className="block truncate text-sm font-bold">Sunny · Solar Assistant</span>
+                  <span className="block truncate text-sm font-bold">Sunny · Instant Response Bot</span>
                   <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
                     <span className="size-1.5 rounded-full bg-primary" />
-                    Online now
+                    2-Way CRM Sync Active
                   </span>
                 </span>
               </div>
@@ -208,16 +219,50 @@ function QualifyPage() {
 
             <div className="border-t border-border p-4">
               {done ? (
-                <div className="flex flex-col gap-3 sm:flex-row">
-                  <Button asChild size="lg" className="flex-1">
-                    <Link to="/estimate">
-                      See my personalized estimate
-                      <ArrowRight />
-                    </Link>
-                  </Button>
-                  <Button variant="outline" size="lg" onClick={reset}>
-                    Start over
-                  </Button>
+                <div className="space-y-4">
+                  <div className="rounded-xl border border-primary/30 bg-primary-soft/40 p-4">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <Calendar className="size-5 text-primary" />
+                        <span className="text-sm font-bold">Auto-Book Consultation Slot</span>
+                      </div>
+                      <span className="text-xs text-muted-foreground">Assigned: {assignedRep}</span>
+                    </div>
+
+                    {bookedSlot ? (
+                      <div className="mt-3 flex items-center justify-between rounded-lg bg-card p-3 text-sm border border-emerald-500/30 text-emerald-700 dark:text-emerald-400">
+                        <span className="flex items-center gap-2 font-medium">
+                          <CheckCircle2 className="size-4 text-emerald-500" />
+                          Consultation Locked: Tomorrow at {bookedSlot}
+                        </span>
+                        <StatusPill tone="success">Calendar Synced</StatusPill>
+                      </div>
+                    ) : (
+                      <div className="mt-3 grid grid-cols-3 gap-2">
+                        {["9:00 AM", "1:30 PM", "4:00 PM"].map((slot) => (
+                          <button
+                            key={slot}
+                            onClick={() => handleBook(slot)}
+                            className="rounded-lg border border-border bg-card px-3 py-2 text-xs font-semibold hover:border-primary hover:bg-primary-soft transition-colors"
+                          >
+                            Tomorrow {slot}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="flex flex-col gap-3 sm:flex-row">
+                    <Button asChild size="lg" className="flex-1">
+                      <Link to="/estimate">
+                        See my personalized estimate
+                        <ArrowRight />
+                      </Link>
+                    </Button>
+                    <Button variant="outline" size="lg" onClick={reset}>
+                      Start over
+                    </Button>
+                  </div>
                 </div>
               ) : (
                 <>
@@ -237,9 +282,9 @@ function QualifyPage() {
                     ))}
                   </div>
                   <div className="mt-3 flex items-center gap-2 rounded-lg border border-border bg-secondary/50 px-3 py-2.5 text-sm text-muted-foreground">
-                    <Send className="size-4 shrink-0" />
+                    <Send className="size-4 shrink-0 text-primary" />
                     <span className="truncate">
-                      Prefer to type? Free-text chat arrives with the live assistant.
+                      Real-time responses write back into CRM & trigger automated follow-ups.
                     </span>
                   </div>
                 </>
@@ -247,7 +292,6 @@ function QualifyPage() {
             </div>
           </div>
 
-          {/* Side summary */}
           <div className="min-w-0 space-y-5">
             <div className="surface-card p-5">
               <div className="flex items-center justify-between gap-3">
@@ -271,12 +315,12 @@ function QualifyPage() {
               </dl>
               <div className="mt-5 rounded-xl bg-secondary/60 p-4">
                 <div className="flex items-center justify-between text-sm font-semibold">
-                  <span>Estimate readiness</span>
-                  <span className="text-primary">{score}%</span>
+                  <span>AI Intent Score</span>
+                  <span className="text-primary">{score}/100</span>
                 </div>
                 <Progress value={score} className="mt-2 h-1.5" />
                 <p className="mt-2 text-xs text-muted-foreground">
-                  Illustrative readiness indicator, not a credit or approval decision.
+                  Score updates live & triggers automatic rep assignment & calendar routing.
                 </p>
               </div>
             </div>
@@ -285,8 +329,7 @@ function QualifyPage() {
               <div className="flex items-start gap-3">
                 <Lock className="mt-0.5 size-4 shrink-0 text-primary" />
                 <p className="text-sm leading-relaxed text-muted-foreground">
-                  Your answers are used only to build your estimate. We never sell your
-                  information, and you won't get a call unless you ask for one.
+                  Two-way sync: every answer and calendar appointment writes instantly to your SolarFlow CRM without manual entry.
                 </p>
               </div>
             </div>

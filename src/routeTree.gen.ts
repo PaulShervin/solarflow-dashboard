@@ -10,33 +10,219 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AdminRouteImport } from './routes/admin'
+import { Route as EstimateRouteImport } from './routes/estimate'
+import { Route as PortalRouteImport } from './routes/portal'
+import { Route as QualifyRouteImport } from './routes/qualify'
+import { Route as AdminIndexRouteImport } from './routes/admin.index'
+import { Route as AdminAppointmentsRouteImport } from './routes/admin.appointments'
+import { Route as AdminCallCoachingRouteImport } from './routes/admin.call-coaching'
+import { Route as AdminConversationsRouteImport } from './routes/admin.conversations'
+import { Route as AdminCustomersRouteImport } from './routes/admin.customers'
+import { Route as AdminLeadsRouteImport } from './routes/admin.leads'
+import { Route as AdminNurtureRouteImport } from './routes/admin.nurture'
+import { Route as AdminProposalsRouteImport } from './routes/admin.proposals'
+import { Route as AdminReportsRouteImport } from './routes/admin.reports'
+import { Route as AdminSettingsRouteImport } from './routes/admin.settings'
+import { Route as AdminTasksRouteImport } from './routes/admin.tasks'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminRoute = AdminRouteImport.update({
+  id: '/admin',
+  path: '/admin',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const EstimateRoute = EstimateRouteImport.update({
+  id: '/estimate',
+  path: '/estimate',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PortalRoute = PortalRouteImport.update({
+  id: '/portal',
+  path: '/portal',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const QualifyRoute = QualifyRouteImport.update({
+  id: '/qualify',
+  path: '/qualify',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminIndexRoute = AdminIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminAppointmentsRoute = AdminAppointmentsRouteImport.update({
+  id: '/appointments',
+  path: '/appointments',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminCallCoachingRoute = AdminCallCoachingRouteImport.update({
+  id: '/call-coaching',
+  path: '/call-coaching',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminConversationsRoute = AdminConversationsRouteImport.update({
+  id: '/conversations',
+  path: '/conversations',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminCustomersRoute = AdminCustomersRouteImport.update({
+  id: '/customers',
+  path: '/customers',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminLeadsRoute = AdminLeadsRouteImport.update({
+  id: '/leads',
+  path: '/leads',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminNurtureRoute = AdminNurtureRouteImport.update({
+  id: '/nurture',
+  path: '/nurture',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminProposalsRoute = AdminProposalsRouteImport.update({
+  id: '/proposals',
+  path: '/proposals',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminReportsRoute = AdminReportsRouteImport.update({
+  id: '/reports',
+  path: '/reports',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminSettingsRoute = AdminSettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminTasksRoute = AdminTasksRouteImport.update({
+  id: '/tasks',
+  path: '/tasks',
+  getParentRoute: () => AdminRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/admin': typeof AdminRouteWithChildren
+  '/estimate': typeof EstimateRoute
+  '/portal': typeof PortalRoute
+  '/qualify': typeof QualifyRoute
+  '/admin/appointments': typeof AdminAppointmentsRoute
+  '/admin/call-coaching': typeof AdminCallCoachingRoute
+  '/admin/conversations': typeof AdminConversationsRoute
+  '/admin/customers': typeof AdminCustomersRoute
+  '/admin/leads': typeof AdminLeadsRoute
+  '/admin/nurture': typeof AdminNurtureRoute
+  '/admin/proposals': typeof AdminProposalsRoute
+  '/admin/reports': typeof AdminReportsRoute
+  '/admin/settings': typeof AdminSettingsRoute
+  '/admin/tasks': typeof AdminTasksRoute
+  '/admin/': typeof AdminIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/estimate': typeof EstimateRoute
+  '/portal': typeof PortalRoute
+  '/qualify': typeof QualifyRoute
+  '/admin/appointments': typeof AdminAppointmentsRoute
+  '/admin/call-coaching': typeof AdminCallCoachingRoute
+  '/admin/conversations': typeof AdminConversationsRoute
+  '/admin/customers': typeof AdminCustomersRoute
+  '/admin/leads': typeof AdminLeadsRoute
+  '/admin/nurture': typeof AdminNurtureRoute
+  '/admin/proposals': typeof AdminProposalsRoute
+  '/admin/reports': typeof AdminReportsRoute
+  '/admin/settings': typeof AdminSettingsRoute
+  '/admin/tasks': typeof AdminTasksRoute
+  '/admin': typeof AdminIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/admin': typeof AdminRouteWithChildren
+  '/estimate': typeof EstimateRoute
+  '/portal': typeof PortalRoute
+  '/qualify': typeof QualifyRoute
+  '/admin/appointments': typeof AdminAppointmentsRoute
+  '/admin/call-coaching': typeof AdminCallCoachingRoute
+  '/admin/conversations': typeof AdminConversationsRoute
+  '/admin/customers': typeof AdminCustomersRoute
+  '/admin/leads': typeof AdminLeadsRoute
+  '/admin/nurture': typeof AdminNurtureRoute
+  '/admin/proposals': typeof AdminProposalsRoute
+  '/admin/reports': typeof AdminReportsRoute
+  '/admin/settings': typeof AdminSettingsRoute
+  '/admin/tasks': typeof AdminTasksRoute
+  '/admin/': typeof AdminIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/admin'
+    | '/estimate'
+    | '/portal'
+    | '/qualify'
+    | '/admin/appointments'
+    | '/admin/call-coaching'
+    | '/admin/conversations'
+    | '/admin/customers'
+    | '/admin/leads'
+    | '/admin/nurture'
+    | '/admin/proposals'
+    | '/admin/reports'
+    | '/admin/settings'
+    | '/admin/tasks'
+    | '/admin/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to:
+    | '/'
+    | '/estimate'
+    | '/portal'
+    | '/qualify'
+    | '/admin/appointments'
+    | '/admin/call-coaching'
+    | '/admin/conversations'
+    | '/admin/customers'
+    | '/admin/leads'
+    | '/admin/nurture'
+    | '/admin/proposals'
+    | '/admin/reports'
+    | '/admin/settings'
+    | '/admin/tasks'
+    | '/admin'
+  id:
+    | '__root__'
+    | '/'
+    | '/admin'
+    | '/estimate'
+    | '/portal'
+    | '/qualify'
+    | '/admin/appointments'
+    | '/admin/call-coaching'
+    | '/admin/conversations'
+    | '/admin/customers'
+    | '/admin/leads'
+    | '/admin/nurture'
+    | '/admin/proposals'
+    | '/admin/reports'
+    | '/admin/settings'
+    | '/admin/tasks'
+    | '/admin/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AdminRoute: typeof AdminRouteWithChildren
+  EstimateRoute: typeof EstimateRoute
+  PortalRoute: typeof PortalRoute
+  QualifyRoute: typeof QualifyRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -48,11 +234,150 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin': {
+      id: '/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AdminRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/estimate': {
+      id: '/estimate'
+      path: '/estimate'
+      fullPath: '/estimate'
+      preLoaderRoute: typeof EstimateRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/portal': {
+      id: '/portal'
+      path: '/portal'
+      fullPath: '/portal'
+      preLoaderRoute: typeof PortalRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/qualify': {
+      id: '/qualify'
+      path: '/qualify'
+      fullPath: '/qualify'
+      preLoaderRoute: typeof QualifyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/': {
+      id: '/admin/'
+      path: '/'
+      fullPath: '/admin/'
+      preLoaderRoute: typeof AdminIndexRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/appointments': {
+      id: '/admin/appointments'
+      path: '/appointments'
+      fullPath: '/admin/appointments'
+      preLoaderRoute: typeof AdminAppointmentsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/call-coaching': {
+      id: '/admin/call-coaching'
+      path: '/call-coaching'
+      fullPath: '/admin/call-coaching'
+      preLoaderRoute: typeof AdminCallCoachingRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/conversations': {
+      id: '/admin/conversations'
+      path: '/conversations'
+      fullPath: '/admin/conversations'
+      preLoaderRoute: typeof AdminConversationsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/customers': {
+      id: '/admin/customers'
+      path: '/customers'
+      fullPath: '/admin/customers'
+      preLoaderRoute: typeof AdminCustomersRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/leads': {
+      id: '/admin/leads'
+      path: '/leads'
+      fullPath: '/admin/leads'
+      preLoaderRoute: typeof AdminLeadsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/nurture': {
+      id: '/admin/nurture'
+      path: '/nurture'
+      fullPath: '/admin/nurture'
+      preLoaderRoute: typeof AdminNurtureRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/proposals': {
+      id: '/admin/proposals'
+      path: '/proposals'
+      fullPath: '/admin/proposals'
+      preLoaderRoute: typeof AdminProposalsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/reports': {
+      id: '/admin/reports'
+      path: '/reports'
+      fullPath: '/admin/reports'
+      preLoaderRoute: typeof AdminReportsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/settings': {
+      id: '/admin/settings'
+      path: '/settings'
+      fullPath: '/admin/settings'
+      preLoaderRoute: typeof AdminSettingsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/tasks': {
+      id: '/admin/tasks'
+      path: '/tasks'
+      fullPath: '/admin/tasks'
+      preLoaderRoute: typeof AdminTasksRouteImport
+      parentRoute: typeof AdminRoute
+    }
   }
 }
 
+interface AdminRouteChildren {
+  AdminAppointmentsRoute: typeof AdminAppointmentsRoute
+  AdminCallCoachingRoute: typeof AdminCallCoachingRoute
+  AdminConversationsRoute: typeof AdminConversationsRoute
+  AdminCustomersRoute: typeof AdminCustomersRoute
+  AdminLeadsRoute: typeof AdminLeadsRoute
+  AdminNurtureRoute: typeof AdminNurtureRoute
+  AdminProposalsRoute: typeof AdminProposalsRoute
+  AdminReportsRoute: typeof AdminReportsRoute
+  AdminSettingsRoute: typeof AdminSettingsRoute
+  AdminTasksRoute: typeof AdminTasksRoute
+  AdminIndexRoute: typeof AdminIndexRoute
+}
+
+const AdminRouteChildren: AdminRouteChildren = {
+  AdminAppointmentsRoute: AdminAppointmentsRoute,
+  AdminCallCoachingRoute: AdminCallCoachingRoute,
+  AdminConversationsRoute: AdminConversationsRoute,
+  AdminCustomersRoute: AdminCustomersRoute,
+  AdminLeadsRoute: AdminLeadsRoute,
+  AdminNurtureRoute: AdminNurtureRoute,
+  AdminProposalsRoute: AdminProposalsRoute,
+  AdminReportsRoute: AdminReportsRoute,
+  AdminSettingsRoute: AdminSettingsRoute,
+  AdminTasksRoute: AdminTasksRoute,
+  AdminIndexRoute: AdminIndexRoute,
+}
+
+const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AdminRoute: AdminRouteWithChildren,
+  EstimateRoute: EstimateRoute,
+  PortalRoute: PortalRoute,
+  QualifyRoute: QualifyRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

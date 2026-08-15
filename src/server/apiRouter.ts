@@ -100,6 +100,26 @@ export async function handleApiRequest(request: Request, url: URL): Promise<Resp
       path.startsWith("/api/agent/status/") ||
       path.startsWith("/api/agent/call-coaching/");
 
+    // --- MODULE 03 NURTURE BACKEND PROXY ---
+    if (path.startsWith("/api/nurture/")) {
+      try {
+        const backendUrl = `http://localhost:3001${path}${url.search}`;
+        const init: RequestInit = {
+          method,
+          headers: { "Content-Type": "application/json" },
+        };
+        if (method === "POST" || method === "PATCH" || method === "PUT") {
+          const bodyText = await request.text();
+          if (bodyText) init.body = bodyText;
+        }
+        const backendRes = await fetch(backendUrl, init);
+        const data = await backendRes.json();
+        return jsonResponse(data, backendRes.status);
+      } catch (err) {
+        console.warn("Backend 3001 unavailable, falling back:", err);
+      }
+    }
+
     if (isProtected && !activeSession) {
       // For developer demonstration compatibility, allow if local dev header missing or validate token
     }
@@ -111,7 +131,9 @@ export async function handleApiRequest(request: Request, url: URL): Promise<Resp
 
     if (path === "/api/agent/nurture/preview" && method === "POST") {
       const body = await request.json();
-      const lead = serverDb.getLeadById(body.leadId) || serverDb.getLeads()[0];
+      const leads = serverDb.getLeads();
+      const lead = serverDb.getLeadById(body.leadId) || leads[0];
+      if (!lead) return jsonResponse({ error: "No lead found" }, 400);
       const compiled = nurtureAgent.compilePersonalizedTemplate(body.template, lead);
       return jsonResponse({ success: true, compiled, lead });
     }

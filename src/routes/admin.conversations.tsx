@@ -45,7 +45,7 @@ function ConversationsPage() {
       "Sounds good. When is the site auditor coming out to measure our roof?",
       "I reviewed the quote with my spouse and we'd like to proceed with the 13.5 kWh battery package.",
     ];
-    const randomReply = replies[Math.floor(Math.random() * replies.length)];
+    const randomReply = replies[Math.floor(Math.random() * replies.length)] ?? "Thanks for the information!";
     await solarApi.sendMessage(active.id, "user", randomReply, "SMS");
   }
 
@@ -91,14 +91,14 @@ function ConversationsPage() {
                   )}
                 >
                   <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2">
-                    <span className="truncate text-sm font-bold text-foreground">{c.customer || (c as any).name}</span>
+                    <span className="truncate text-sm font-bold text-foreground">{c.customer || c.name}</span>
                     <span className="shrink-0 text-[10px] text-muted-foreground font-mono">
-                      {c.lastTime || (c as any).updatedAt}
+                      {c.lastTime || c.updatedAt}
                     </span>
                   </div>
-                  <p className="mt-1 truncate text-xs text-muted-foreground">{c.lastMessage || (c as any).preview}</p>
+                  <p className="mt-1 truncate text-xs text-muted-foreground">{c.lastMessage || c.preview}</p>
                   <div className="mt-2 flex flex-wrap items-center gap-1.5">
-                    <StatusPill tone={toneForText(c.stage || (c as any).status)}>{c.stage || (c as any).status}</StatusPill>
+                    <StatusPill tone={toneForText(c.stage || c.status)}>{c.stage || c.status}</StatusPill>
                     <StatusPill tone="neutral" className="text-[10px]">{c.channel}</StatusPill>
                     {c.unread ? <StatusPill tone="danger" className="text-[10px]">Unread</StatusPill> : null}
                   </div>
@@ -111,13 +111,13 @@ function ConversationsPage() {
         <div className="surface-card flex min-w-0 flex-col overflow-hidden border-border/80 shadow-card">
           <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-4 border-b border-border px-5 py-4 bg-secondary/30">
             <div className="min-w-0">
-              <h2 className="truncate text-base font-extrabold text-foreground">{active.customer || (active as any).name}</h2>
+              <h2 className="truncate text-base font-extrabold text-foreground">{active.customer || active.name}</h2>
               <p className="truncate text-xs text-muted-foreground">
                 Phone: {active.phone || "(480) 555-0142"} · Primary Channel: {active.channel}
               </p>
             </div>
             <div className="flex shrink-0 items-center gap-2">
-              <StatusPill tone="brand">Stage: {active.stage || (active as any).status}</StatusPill>
+              <StatusPill tone="brand">Stage: {active.stage || active.status}</StatusPill>
               <Button size="sm" variant="outline" onClick={handleSimulateCustomerReply} className="gap-1 text-xs">
                 <PhoneCall className="size-3.5 text-primary" />
                 Simulate Call Pickup
@@ -127,7 +127,7 @@ function ConversationsPage() {
 
           <div className="flex-1 space-y-4 bg-slate-950/20 px-5 py-6 max-h-[420px] min-h-[320px] overflow-y-auto">
             {active.messages.map((m) => {
-              const senderType = m.sender || (m as any).from;
+              const senderType = m.sender || m.from;
               const isCustomer = senderType === "user" || senderType === "customer";
               const isRep = senderType === "rep";
 
@@ -147,7 +147,7 @@ function ConversationsPage() {
                     {m.text}
                   </div>
                   <span className="text-[10px] text-muted-foreground capitalize flex items-center gap-1 px-1">
-                    {senderType} · {m.time || (m as any).at} {m.channel ? `· ${m.channel}` : ""}
+                    {senderType} · {m.time || m.at} {m.channel ? `· ${m.channel}` : ""}
                   </span>
                 </div>
               );

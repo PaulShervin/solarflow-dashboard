@@ -3,17 +3,17 @@ import type { Lead } from "@/data/mock";
 
 export class NurtureAgent {
   public compilePersonalizedTemplate(template: string, lead: Lead): string {
-    const firstName = lead.name.split(" ")[0];
-    const estSavings = Math.round(lead.monthlyBill * 8.5).toLocaleString();
+    const firstName = (lead.name || "").split(" ")[0] || "Customer";
+    const estSavings = Math.round((lead.monthlyBill || 0) * 8.5).toLocaleString();
 
     return template
       .replace(/\{\{first_name\}\}/gi, firstName)
-      .replace(/\{\{full_name\}\}/gi, lead.name)
-      .replace(/\{\{monthly_bill\}\}/gi, `$${lead.monthlyBill}/mo`)
-      .replace(/\{\{roof_type\}\}/gi, lead.roof)
-      .replace(/\{\{city\}\}/gi, lead.city)
+      .replace(/\{\{full_name\}\}/gi, lead.name || "")
+      .replace(/\{\{monthly_bill\}\}/gi, `$${lead.monthlyBill || 0}/mo`)
+      .replace(/\{\{roof_type\}\}/gi, lead.roof || "")
+      .replace(/\{\{city\}\}/gi, lead.city || "")
       .replace(/\{\{est_savings\}\}/gi, `$${estSavings}`)
-      .replace(/\{\{rep_name\}\}/gi, lead.owner);
+      .replace(/\{\{rep_name\}\}/gi, lead.owner || "Representative");
   }
 
   public async evaluateTriggerRules(): Promise<{ executedCount: number; logs: string[] }> {

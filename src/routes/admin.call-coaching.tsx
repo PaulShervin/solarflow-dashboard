@@ -224,12 +224,16 @@ function CallCoachingPage() {
               <div className="space-y-2 text-xs">
                 <div className="flex justify-between">
                   <span>Sales Rep</span>
-                  <span className="font-bold text-primary">{selectedCall?.talkRatio?.rep || 54}%</span>
+                  <span className="font-bold text-primary">
+                    {typeof selectedCall?.talkRatio === "object" ? selectedCall.talkRatio.rep : (selectedCall?.talkRatio ?? 54)}%
+                  </span>
                 </div>
-                <Progress value={selectedCall?.talkRatio?.rep || 54} className="h-2" />
+                <Progress value={typeof selectedCall?.talkRatio === "object" ? selectedCall.talkRatio.rep : (selectedCall?.talkRatio ?? 54)} className="h-2" />
                 <div className="flex justify-between">
                   <span>Customer</span>
-                  <span className="font-bold text-navy">{selectedCall?.talkRatio?.customer || 46}%</span>
+                  <span className="font-bold text-navy">
+                    {typeof selectedCall?.talkRatio === "object" ? selectedCall.talkRatio.customer : (100 - (typeof selectedCall?.talkRatio === "number" ? selectedCall.talkRatio : 54))}%
+                  </span>
                 </div>
               </div>
             </aside>

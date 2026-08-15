@@ -16,8 +16,9 @@ export class PostSaleAgent {
       };
     }
 
-    if (milestones[stepIndex + 1]) {
-      milestones[stepIndex + 1].status = "current";
+    const nextMilestone = milestones[stepIndex + 1];
+    if (nextMilestone) {
+      nextMilestone.status = "current";
     }
 
     const completedCount = milestones.filter((m) => m.status === "complete").length;

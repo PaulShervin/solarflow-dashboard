@@ -3,17 +3,32 @@ import type { Lead, Conversation, Proposal, Campaign, Call, Appointment, Task, P
 
 async function postJson(endpoint: string, data?: any) {
   try {
-    const res = await fetch(endpoint, {
+    const options: RequestInit = {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: data ? JSON.stringify(data) : undefined,
-    });
+    };
+    if (data !== undefined) {
+      options.body = JSON.stringify(data);
+    }
+    const res = await fetch(endpoint, options);
     if (res.ok) {
       const json = await res.json();
       return json;
     }
   } catch (err) {
     console.warn(`Fetch to ${endpoint} failed, falling back to local database store:`, err);
+  }
+  return null;
+}
+
+async function getJson(endpoint: string) {
+  try {
+    const res = await fetch(endpoint);
+    if (res.ok) {
+      return await res.json();
+    }
+  } catch (err) {
+    console.warn(`Fetch to ${endpoint} failed:`, err);
   }
   return null;
 }
@@ -87,7 +102,7 @@ export const solarApi = {
     return db.createProposal(data);
   },
 
-  // --- NURTURE ---
+  // --- NURTURE (MODULE 03 BACKEND INTEGRATION) ---
   async getCampaigns(): Promise<Campaign[]> {
     return db.getCampaigns();
   },
@@ -99,6 +114,70 @@ export const solarApi = {
       return remote;
     }
     return db.triggerNurtureRulesCheck();
+  },
+
+  async getNurtureAnalytics() {
+    const res = await getJson("/api/nurture/analytics");
+    return res?.analytics || {
+      totalWorkflows: 4,
+      activeEnrollments: 3,
+      sentMessages: 12,
+      deliveryRate: 98.4,
+      optOutRate: 0.8,
+      reEngagedLeads: 5,
+    };
+  },
+
+  async getNurtureWorkflows() {
+    const res = await getJson("/api/nurture/workflows");
+    return res?.workflows || [];
+  },
+
+  async createNurtureWorkflow(workflowData: any) {
+    return await postJson("/api/nurture/workflows", workflowData);
+  },
+
+  async getNurtureMessages() {
+    const res = await getJson("/api/nurture/messages");
+    return res?.messages || [];
+  },
+
+  async getNurtureTemplates() {
+    const res = await getJson("/api/nurture/templates");
+    return res?.templates || [];
+  },
+
+  async createNurtureTemplate(templateData: any) {
+    return await postJson("/api/nurture/templates", templateData);
+  },
+
+  async getLeadNurture(leadId: string) {
+    const res = await getJson(`/api/nurture/leads/${leadId}`);
+    return res || null;
+  },
+
+  async enrollLeadInNurture(leadId: string, workflowId: string) {
+    return await postJson(`/api/nurture/leads/${leadId}/enroll`, { workflowId });
+  },
+
+  async pauseLeadNurture(leadId: string, enrollmentId: string) {
+    return await postJson(`/api/nurture/leads/${leadId}/pause`, { enrollmentId });
+  },
+
+  async resumeLeadNurture(leadId: string, enrollmentId: string) {
+    return await postJson(`/api/nurture/leads/${leadId}/resume`, { enrollmentId });
+  },
+
+  async cancelLeadNurture(leadId: string, enrollmentId: string) {
+    return await postJson(`/api/nurture/leads/${leadId}/cancel`, { enrollmentId });
+  },
+
+  async simulateSmsWebhook(from: string, body: string) {
+    return await postJson("/api/nurture/webhooks/sms", { from, body });
+  },
+
+  async simulateEmailWebhook(from: string, subject: string, body: string) {
+    return await postJson("/api/nurture/webhooks/email", { from, subject, body });
   },
 
   // --- PORTAL & MILESTONES ---

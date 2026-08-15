@@ -47,12 +47,18 @@ export class InstantResponseAgent {
     const convId = `CV-${Math.floor(100 + Math.random() * 900)}`;
     const newConv: Conversation = {
       id: convId,
+      leadId: newLead.id,
+      name: newLead.name,
       customer: newLead.name,
       phone: newLead.phone,
       channel: "SMS",
+      status: "Active",
+      score: newLead.score,
+      preview: `Hi ${newLead.name.split(" ")[0]}! Thanks for reaching out...`,
+      updatedAt: "Just now",
       lastMessage: `Hi ${newLead.name.split(" ")[0]}! This is Sunny from SolarPeak. Got your request for your home in ${newLead.city}. Do you have 60 seconds to lock in your 25-yr solar estimate?`,
       lastTime: "Just now",
-      unread: true,
+      unread: 1,
       stage: initialStatus as any,
       messages: [
         {
@@ -132,7 +138,7 @@ export class InstantResponseAgent {
       rep,
       date,
       time,
-      type: "In-home consultation",
+      type: "In-home consult",
       status: "Confirmed",
       notes: "Auto-booked by Instant Response Agent following qualification flow.",
     };

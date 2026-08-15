@@ -226,7 +226,7 @@ class ServerDatabaseStore {
     this.data.portalProject = project;
     this.data.portalMilestones = milestones;
     if (newMessage) {
-      this.data.portalMessages.unshift(newMessage);
+      (this.data.portalMessages as any[]).unshift(newMessage);
     }
     this.writeToDisk();
   }

@@ -161,7 +161,7 @@ function PortalPage() {
               <h3 className="text-base font-bold mb-4">Project Documents</h3>
               <div className="grid gap-3 sm:grid-cols-2">
                 {portalDocuments.map((doc) => (
-                  <div key={doc.id} className="flex items-center justify-between rounded-xl border border-border p-4">
+                  <div key={doc.name} className="flex items-center justify-between rounded-xl border border-border p-4">
                     <div>
                       <p className="font-bold text-sm">{doc.name}</p>
                       <p className="text-xs text-muted-foreground">{doc.date} · {doc.size}</p>

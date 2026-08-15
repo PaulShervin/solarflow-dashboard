@@ -353,15 +353,21 @@ export const callCoachingSummary = {
 
 export type ConversationMessage = {
   id: string;
-  from: "customer" | "assistant" | "rep";
+  from?: "customer" | "assistant" | "rep";
+  sender?: string;
   text: string;
-  at: string;
+  at?: string;
+  time?: string;
+  channel?: string;
 };
+
+export type Message = ConversationMessage;
 
 export type Conversation = {
   id: string;
   leadId: string;
   name: string;
+  customer?: string;
   channel: "Web chat" | "SMS" | "Email";
   status: "Active" | "Awaiting reply" | "Closed";
   score: number;
@@ -369,6 +375,19 @@ export type Conversation = {
   updatedAt: string;
   unread: number;
   messages: ConversationMessage[];
+  lastMessage?: string;
+  lastTime?: string;
+  stage?: string;
+  phone?: string;
+};
+
+export type PortalMilestone = {
+  title: string;
+  date: string;
+  state?: string;
+  status?: string;
+  detail?: string;
+  description?: string;
 };
 
 export const conversations: Conversation[] = [
@@ -444,13 +463,16 @@ export const conversations: Conversation[] = [
 export type Appointment = {
   id: string;
   customer: string;
+  email?: string;
+  phone?: string;
+  notes?: string;
   type: "In-home consult" | "Virtual consult" | "Site survey" | "Install walkthrough";
   date: string;
-  day: string;
+  day?: string;
   time: string;
   rep: string;
   status: "Confirmed" | "Pending" | "Rescheduled" | "Completed";
-  address: string;
+  address?: string;
   risk?: string;
 };
 
@@ -620,11 +642,16 @@ export type Call = {
   duration: string;
   score: number;
   outcome: string;
-  talkRatio: number;
-  strengths: string[];
-  improvements: string[];
-  metrics: { label: string; value: number }[];
-  transcript: { at: string; speaker: string; text: string }[];
+  talkRatio: number | { rep: number; customer: number };
+  audioUrl?: string;
+  sentiment?: string;
+  strengths?: string[];
+  improvements?: string[];
+  metrics?: { label: string; value: number }[];
+  transcript: { at?: string; time?: string; speaker: string; text: string }[];
+  objections?: { topic: string; RepHandled?: boolean; repHandled?: boolean; note: string }[];
+  coachingNotes?: string[];
+  keyMoments?: { time: string; speaker: string; tag: string; text: string }[];
 };
 
 export const calls: Call[] = [
@@ -726,6 +753,7 @@ export const portalProject = {
   systemKw: 12.4,
   panels: 31,
   battery: "13.5 kWh backup",
+  contractValue: 46900,
   status: "Permitting in progress",
   statusDetail: "Your permit was submitted to the City of Scottsdale on Aug 11. Typical approval takes 10–15 business days.",
   progress: 45,
@@ -735,15 +763,15 @@ export const portalProject = {
   consultant: { name: "Dana Ruiz", role: "Senior Solar Consultant", phone: "(480) 555-0170" },
 };
 
-export const portalMilestones = [
-  { title: "Agreement signed", date: "Aug 2, 2026", state: "done", detail: "12.4 kW system with battery backup." },
-  { title: "Site survey", date: "Aug 8, 2026", state: "done", detail: "Roof, attic, and electrical panel measured and photographed." },
-  { title: "Engineering & design", date: "Aug 10, 2026", state: "done", detail: "Final layout approved by our design team." },
-  { title: "Permitting", date: "In progress", state: "active", detail: "Submitted to the City of Scottsdale on Aug 11." },
-  { title: "Installation", date: "Sep 12, 2026", state: "upcoming", detail: "Estimated 1–2 days on site." },
-  { title: "Inspection", date: "Late Sep 2026", state: "upcoming", detail: "City inspector verifies the installation." },
-  { title: "Utility approval (PTO)", date: "Oct 2026", state: "upcoming", detail: "Permission to operate — your system switches on." },
-] as const;
+export const portalMilestones: PortalMilestone[] = [
+  { title: "Agreement signed", date: "Aug 2, 2026", state: "done", status: "complete", detail: "12.4 kW system with battery backup.", description: "12.4 kW system with battery backup." },
+  { title: "Site survey", date: "Aug 8, 2026", state: "done", status: "complete", detail: "Roof, attic, and electrical panel measured and photographed.", description: "Roof, attic, and electrical panel measured and photographed." },
+  { title: "Engineering & design", date: "Aug 10, 2026", state: "done", status: "complete", detail: "Final layout approved by our design team.", description: "Final layout approved by our design team." },
+  { title: "Permitting", date: "In progress", state: "active", status: "current", detail: "Submitted to the City of Scottsdale on Aug 11.", description: "Submitted to the City of Scottsdale on Aug 11." },
+  { title: "Installation", date: "Sep 12, 2026", state: "upcoming", status: "upcoming", detail: "Estimated 1–2 days on site.", description: "Estimated 1–2 days on site." },
+  { title: "Inspection", date: "Late Sep 2026", state: "upcoming", status: "upcoming", detail: "City inspector verifies the installation.", description: "City inspector verifies the installation." },
+  { title: "Utility approval (PTO)", date: "Oct 2026", state: "upcoming", status: "upcoming", detail: "Permission to operate — your system switches on.", description: "Permission to operate — your system switches on." },
+];
 
 export const portalDocuments = [
   { name: "Solar Purchase Agreement", type: "PDF", size: "1.4 MB", date: "Aug 2, 2026", status: "Signed" },

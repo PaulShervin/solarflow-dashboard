@@ -61,7 +61,7 @@ class DatabaseStore {
   private tasks: Task[] = [];
   private portalProject = { ...defaultPortalProject };
   private portalMilestones: PortalMilestone[] = [];
-  private portalMessages: ChatMessage[] = [];
+  private portalMessages: any[] = [];
   private portalAppointments = [...defaultPortalAppointments];
   private portalDocuments = [...defaultPortalDocuments];
   private portalPayments = [...defaultPortalPayments];
@@ -209,7 +209,7 @@ class DatabaseStore {
 
   // --- LEADS ---
   public getLeads(): Lead[] {
-    return [...this.leads];
+    return this.leads;
   }
 
   public getLeadById(id: string): Lead | undefined {
@@ -278,12 +278,18 @@ class DatabaseStore {
     const conversationId = `CV-${Math.floor(100 + Math.random() * 900)}`;
     const newConv: Conversation = {
       id: conversationId,
+      leadId: newLead.id,
+      name: newLead.name,
       customer: newLead.name,
       phone: newLead.phone,
       channel: "SMS",
+      status: "Active",
+      score: newLead.score,
+      preview: `Hi ${newLead.name.split(" ")[0]}! Thanks for reaching out...`,
+      updatedAt: "Just now",
       lastMessage: `Hi ${newLead.name.split(" ")[0]}! This is Sunny from SolarPeak. Got your request — do you own your home?`,
       lastTime: "Just now",
-      unread: true,
+      unread: 1,
       stage: "new",
       messages: [
         {
@@ -362,7 +368,7 @@ class DatabaseStore {
       rep,
       date,
       time,
-      type: "In-home consultation",
+      type: "In-home consult",
       status: "Confirmed",
       notes: "Auto-booked via Instant Response Agent after qualification flow.",
     };
@@ -392,7 +398,7 @@ class DatabaseStore {
 
   // --- CONVERSATIONS & MESSAGES ---
   public getConversations(): Conversation[] {
-    return [...this.conversations];
+    return this.conversations;
   }
 
   public addMessage(conversationId: string, sender: "bot" | "user" | "rep" | "system", text: string, channel: "SMS" | "Voice Call" | "Webchat" = "SMS"): Conversation | undefined {
@@ -422,7 +428,7 @@ class DatabaseStore {
 
   // --- PROPOSALS ---
   public getProposals(): Proposal[] {
-    return [...this.proposals];
+    return this.proposals;
   }
 
   public createProposal(data: Omit<Proposal, "id" | "views">): Proposal {
@@ -448,7 +454,7 @@ class DatabaseStore {
 
   // --- NURTURE CAMPAIGNS & TRIGGER RULES ---
   public getCampaigns(): Campaign[] {
-    return [...this.campaigns];
+    return this.campaigns;
   }
 
   public triggerNurtureRulesCheck(): { executedCount: number; logs: string[] } {
@@ -479,11 +485,11 @@ class DatabaseStore {
 
   // --- POST-SALE MILESTONE TRACKER & PORTAL ---
   public getPortalProject() {
-    return { ...this.portalProject };
+    return this.portalProject;
   }
 
   public getPortalMilestones(): PortalMilestone[] {
-    return [...this.portalMilestones];
+    return this.portalMilestones;
   }
 
   public updateCustomerMilestone(stepIndex: number, status: "complete" | "current" | "upcoming", detail?: string): { project: typeof defaultPortalProject; milestones: PortalMilestone[] } {
@@ -534,7 +540,7 @@ class DatabaseStore {
 
   // --- CALL COACHING MODULE ---
   public getCalls(): Call[] {
-    return [...this.calls];
+    return this.calls;
   }
 
   public addCallRecording(rep: string, customer: string, duration: string, outcome: string): Call {
@@ -587,7 +593,7 @@ class DatabaseStore {
 
   // --- AUDIT LOGS & APPOINTMENTS / TASKS ---
   public getAuditLogs(): AuditLogEntry[] {
-    return [...this.auditLogs];
+    return this.auditLogs;
   }
 
   public addAuditLog(entry: Omit<AuditLogEntry, "id" | "timestamp">) {
@@ -601,15 +607,15 @@ class DatabaseStore {
   }
 
   public getAppointments(): Appointment[] {
-    return [...this.appointments];
+    return this.appointments;
   }
 
   public getTasks(): Task[] {
-    return [...this.tasks];
+    return this.tasks;
   }
 
   public getPortalMessages(): ChatMessage[] {
-    return [...this.portalMessages];
+    return this.portalMessages;
   }
 }
 

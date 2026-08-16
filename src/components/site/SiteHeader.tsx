@@ -1,9 +1,8 @@
 import { useState } from "react";
 import { Link } from "@tanstack/react-router";
-import { LogIn, LogOut, Menu, Phone, ShieldCheck, Sun, User, X } from "lucide-react";
+import { LogIn, LogOut, Menu, Phone, ShieldCheck, Sun, User, X, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Logo } from "@/components/common/Logo";
-import { StatusPill } from "@/components/common/StatusPill";
 import { useAuth } from "@/lib/authContext";
 
 const nav = [
@@ -17,21 +16,21 @@ export function SiteHeader() {
   const { session, isAuthenticated, logout } = useAuth();
 
   return (
-    <header className="sticky top-0 z-40 border-b border-border/80 bg-background/90 backdrop-blur-md transition-all">
-      <div className="mx-auto grid max-w-7xl grid-cols-[minmax(0,1fr)_auto] items-center gap-4 px-4 py-3 sm:px-6 lg:px-8">
-        <div className="flex min-w-0 items-center gap-8">
+    <header className="sticky top-0 z-40 bg-transparent px-4 pt-3 pb-1 sm:px-6 lg:px-8">
+      <div className="mx-auto flex max-w-7xl items-center justify-between rounded-full border border-slate-200/80 bg-white/95 px-5 py-2.5 shadow-sm backdrop-blur-md transition-all sm:px-6">
+        <div className="flex items-center gap-8">
           <Link to="/" className="shrink-0 transition-transform duration-200 hover:scale-[1.02]">
             <Logo />
           </Link>
-          <nav className="hidden items-center gap-1 lg:flex">
+          <nav className="hidden items-center gap-2 md:flex">
             {nav.map((item) => (
               <Link
                 key={item.to}
                 to={item.to}
                 activeOptions={{ exact: item.to === "/" }}
-                activeProps={{ className: "text-primary font-bold bg-primary-soft shadow-xs" }}
-                inactiveProps={{ className: "text-muted-foreground hover:text-foreground hover:bg-secondary/60" }}
-                className="rounded-lg px-3.5 py-2 text-sm font-medium transition-all duration-150"
+                activeProps={{ className: "text-emerald-800 font-bold bg-emerald-100/70" }}
+                inactiveProps={{ className: "text-slate-600 hover:text-slate-900 hover:bg-slate-100" }}
+                className="rounded-full px-4 py-1.5 text-xs sm:text-sm font-semibold transition-all duration-150"
               >
                 {item.label}
               </Link>
@@ -39,88 +38,82 @@ export function SiteHeader() {
           </nav>
         </div>
 
-        <div className="flex shrink-0 items-center gap-3">
-          <div className="hidden xl:flex items-center gap-1.5 rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">
-            <span className="size-2 rounded-full bg-primary animate-pulse" />
+        <div className="flex items-center gap-3">
+          <div className="hidden lg:flex items-center gap-1.5 rounded-full bg-emerald-50 border border-emerald-200/60 px-3.5 py-1 text-xs font-semibold text-emerald-700">
+            <span className="size-2 rounded-full bg-emerald-500 animate-pulse" />
             Instant AI Quotes Live
           </div>
 
-          <a
-            href="tel:+14805550170"
-            className="hidden items-center gap-2 rounded-lg border border-border px-3 py-1.5 text-xs font-bold text-muted-foreground transition-all duration-150 hover:border-primary/50 hover:bg-secondary/40 hover:text-foreground md:inline-flex"
-          >
-            <Phone className="size-3.5 text-primary" />
-            (480) 555-0170
-          </a>
-
           {isAuthenticated ? (
             <div className="hidden sm:flex items-center gap-2">
-              <Button variant="outline" size="sm" asChild className="gap-1.5 font-bold border-primary/40 bg-primary-soft">
+              <Button variant="outline" size="sm" asChild className="gap-1.5 font-bold border-emerald-300 bg-emerald-50 text-emerald-800 rounded-full">
                 <Link to="/admin">
-                  <ShieldCheck className="size-4 text-primary" />
-                  Rep & Admin Console
+                  <ShieldCheck className="size-4 text-emerald-600" />
+                  Rep Console
                 </Link>
               </Button>
-              <Button variant="ghost" size="icon" onClick={() => logout()} title="Sign Out">
+              <Button variant="ghost" size="icon" onClick={() => logout()} title="Sign Out" className="rounded-full">
                 <LogOut className="size-4 text-muted-foreground" />
               </Button>
             </div>
           ) : (
-            <Button variant="outline" size="sm" asChild className="hidden sm:inline-flex gap-1.5 font-semibold">
+            <Button variant="ghost" size="sm" asChild className="hidden sm:inline-flex text-xs font-semibold text-slate-600 hover:text-slate-900 rounded-full">
               <Link to="/login">
-                <LogIn className="size-4 text-primary" />
-                Consultant Login
+                Rep Login
               </Link>
             </Button>
           )}
 
-          <Button asChild size="sm" className="hidden sm:inline-flex font-bold shadow-md bg-primary hover:bg-primary/90">
-            <Link to="/qualify">Get My Free Estimate →</Link>
+          <Button asChild size="sm" className="font-bold shadow-sm bg-emerald-600 hover:bg-emerald-700 text-white rounded-full px-5 py-2 text-xs sm:text-sm">
+            <Link to="/qualify">
+              Get Started
+              <ArrowRight className="ml-1 size-3.5" />
+            </Link>
           </Button>
 
           <Button
-            variant="outline"
+            variant="ghost"
             size="icon"
-            className="lg:hidden"
+            className="md:hidden rounded-full"
             aria-label="Toggle menu"
             onClick={() => setOpen((v) => !v)}
           >
-            {open ? <X /> : <Menu />}
+            {open ? <X className="size-5" /> : <Menu className="size-5" />}
           </Button>
         </div>
       </div>
 
       {open ? (
-        <div className="border-t border-border bg-background/95 backdrop-blur p-4 lg:hidden space-y-3">
+        <div className="mt-2 mx-auto max-w-7xl rounded-3xl border border-slate-200 bg-white/98 p-4 shadow-xl backdrop-blur-md md:hidden space-y-3">
           <nav className="flex flex-col gap-1">
             {nav.map((item) => (
               <Link
                 key={item.to}
                 to={item.to}
                 onClick={() => setOpen(false)}
-                className="rounded-lg px-3 py-2.5 text-sm font-semibold text-muted-foreground hover:bg-secondary hover:text-foreground"
+                className="rounded-2xl px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-100 hover:text-slate-950"
               >
                 {item.label}
               </Link>
             ))}
           </nav>
-          <div className="border-t border-border pt-3 flex flex-col gap-2">
+          <div className="border-t border-slate-100 pt-3 flex flex-col gap-2">
             {isAuthenticated ? (
-              <Button asChild variant="outline" className="w-full">
+              <Button asChild variant="outline" className="w-full rounded-2xl">
                 <Link to="/admin" onClick={() => setOpen(false)}>
                   Rep & Admin Console ({session?.name})
                 </Link>
               </Button>
             ) : (
-              <Button asChild variant="outline" className="w-full">
+              <Button asChild variant="outline" className="w-full rounded-2xl">
                 <Link to="/login" onClick={() => setOpen(false)}>
-                  Consultant Sign In
+                  Rep Sign In
                 </Link>
               </Button>
             )}
-            <Button asChild className="w-full">
+            <Button asChild className="w-full bg-emerald-600 hover:bg-emerald-700 text-white rounded-2xl">
               <Link to="/qualify" onClick={() => setOpen(false)}>
-                Get My Free Estimate
+                Get Started
               </Link>
             </Button>
           </div>

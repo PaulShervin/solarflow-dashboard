@@ -249,4 +249,62 @@ export const solarApi = {
     }
     return settings;
   },
+
+  // --- MODULE 04: POST-SALE RETENTION ---
+  async getAdminProjects(status?: string) {
+    const url = status ? `/api/admin/projects?status=${encodeURIComponent(status)}` : "/api/admin/projects";
+    const res = await getJson(url);
+    return res?.projects || [];
+  },
+
+  async getAdminProject(projectId: string) {
+    const res = await getJson(`/api/admin/projects/${projectId}`);
+    return res || null;
+  },
+
+  async getAdminProjectMilestones(projectId: string) {
+    const res = await getJson(`/api/admin/projects/${projectId}/milestones`);
+    return res?.milestones || [];
+  },
+
+  async startAdminMilestone(projectId: string, milestone: string) {
+    return await postJson(`/api/admin/projects/${projectId}/milestones/${milestone}/start`);
+  },
+
+  async completeAdminMilestone(projectId: string, milestone: string, notes?: string) {
+    return await postJson(`/api/admin/projects/${projectId}/milestones/${milestone}/complete`, { notes });
+  },
+
+  async getAdminProjectUpdates(projectId: string) {
+    const res = await getJson(`/api/admin/projects/${projectId}/updates`);
+    return res?.updates || [];
+  },
+
+  async createAdminProjectUpdate(projectId: string, message: string, visibleToCustomer: boolean = true) {
+    return await postJson(`/api/admin/projects/${projectId}/updates`, { message, visibleToCustomer });
+  },
+
+  async getAdminProjectRisk(projectId: string) {
+    const res = await getJson(`/api/admin/projects/${projectId}/risk`);
+    return res?.risk || null;
+  },
+
+  async recalculateAdminProjectRisk(projectId: string) {
+    return await postJson(`/api/admin/projects/${projectId}/risk/recalculate`);
+  },
+
+  async getCustomerPortalProject(projectId: string) {
+    const res = await getJson(`/api/projects/${projectId}`);
+    return res?.project || null;
+  },
+
+  async getCustomerPortalMilestones(projectId: string) {
+    const res = await getJson(`/api/projects/${projectId}/milestones`);
+    return res?.milestones || [];
+  },
+
+  async getCustomerPortalUpdates(projectId: string) {
+    const res = await getJson(`/api/projects/${projectId}/updates`);
+    return res?.updates || [];
+  },
 };

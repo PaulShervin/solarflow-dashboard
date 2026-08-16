@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import {
   CalendarDays,
@@ -18,6 +19,7 @@ import {
   portalDocuments,
 } from "@/data/mock";
 import { useSolarDB } from "@/hooks/useSolarDB";
+import { solarApi } from "@/lib/api";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/portal")({
@@ -35,7 +37,65 @@ export const Route = createFileRoute("/portal")({
 });
 
 function PortalPage() {
-  const { portalProject: project, portalMilestones, portalMessages } = useSolarDB();
+  const { portalProject: defaultProject, portalMilestones: defaultMilestones, portalMessages: defaultMessages } = useSolarDB();
+  const [realProject, setRealProject] = useState<any>(null);
+  const [realMilestones, setRealMilestones] = useState<any[]>([]);
+  const [realUpdates, setRealUpdates] = useState<any[]>([]);
+
+  useEffect(() => {
+    async function syncBackendData() {
+      // Attempt to load from Module 04 backend for PROJ-101 or first project
+      const projectsList = await solarApi.getAdminProjects();
+      if (projectsList && projectsList.length > 0) {
+        const targetProj = projectsList[0];
+        setRealProject(targetProj);
+        const [mList, uList] = await Promise.all([
+          solarApi.getCustomerPortalMilestones(targetProj.id),
+          solarApi.getCustomerPortalUpdates(targetProj.id),
+        ]);
+        if (mList && mList.length > 0) {
+          setRealMilestones(mList);
+        }
+        if (uList && uList.length > 0) {
+          setRealUpdates(uList);
+        }
+      }
+    }
+    syncBackendData();
+  }, []);
+
+  const project = realProject
+    ? {
+        customer: "Sarah Jenkins",
+        address: "742 Evergreen Terrace, Scottsdale, AZ 85251",
+        status: realProject.currentMilestone ? `Stage: ${realProject.currentMilestone}` : realProject.status,
+        statusDetail: `Your solar project is actively being managed by our post-sale retention engine. Current stage: ${realProject.currentMilestone}.`,
+        progress: realProject.status === "COMPLETED" ? 100 : 45,
+        systemKw: "9.6",
+        panels: 24,
+        battery: "Tesla Powerwall 2",
+        projectedInstall: "Aug 24, 2026",
+        estMonthlySavings: 285,
+      }
+    : defaultProject;
+
+  const displayMilestones = realMilestones.length > 0
+    ? realMilestones.map((m: any) => ({
+        title: m.milestoneType.replace(/_/g, " "),
+        date: m.completedAt ? new Date(m.completedAt).toLocaleDateString() : m.startedAt ? "In Progress" : "Pending",
+        description: `Status: ${m.status}${m.notes ? ` · Note: ${m.notes}` : ""}`,
+        status: m.status === "COMPLETED" ? "complete" : m.status === "IN_PROGRESS" ? "current" : "upcoming",
+      }))
+    : defaultMilestones;
+
+  const displayMessages = realUpdates.length > 0
+    ? realUpdates.map((u: any) => ({
+        id: u.id,
+        text: u.message,
+        time: new Date(u.createdAt).toLocaleTimeString(),
+        channel: `Portal (${u.createdBy})`,
+      }))
+    : defaultMessages;
 
   return (
     <div className="min-h-screen bg-secondary/30">
@@ -123,9 +183,9 @@ function PortalPage() {
             <div className="surface-card min-w-0 p-6">
               <h3 className="text-base font-bold">Post-Sale Installation Milestones</h3>
               <ol className="mt-6 space-y-0">
-                {portalMilestones.map((m, i) => (
+                {displayMilestones.map((m, i) => (
                   <li key={m.title} className="relative flex gap-4 pb-7 last:pb-0">
-                    {i < portalMilestones.length - 1 ? (
+                    {i < displayMilestones.length - 1 ? (
                       <span
                         className={cn(
                           "absolute top-6 left-3.5 -ml-px h-full w-0.5",
@@ -179,7 +239,7 @@ function PortalPage() {
             <div className="surface-card p-6 space-y-4">
               <h3 className="text-base font-bold">Project Updates & SMS Log</h3>
               <div className="space-y-3 max-h-[350px] overflow-y-auto bg-secondary/30 p-4 rounded-xl">
-                {portalMessages.map((msg) => (
+                {displayMessages.map((msg) => (
                   <div key={msg.id} className="rounded-lg border border-border bg-card p-3 text-xs">
                     <p className="font-semibold text-primary">{msg.text}</p>
                     <span className="mt-1 block text-[10px] text-muted-foreground">{msg.time} via {msg.channel}</span>

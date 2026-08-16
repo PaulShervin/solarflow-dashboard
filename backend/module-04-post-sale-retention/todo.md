@@ -77,3 +77,18 @@
 - [x] Write unit tests for `services/cancellation-risk.service.ts` (score calculation logic).
 - [x] Write API integration tests for both Admin and Customer routes.
 - [x] Referral tests.
+
+### Phase 13: Frontend Integration (UI & API Wiring)
+- [x] **API Client Extension (`src/lib/api.ts`)**: Add fetcher functions for the new `/api/admin/projects` and `/api/projects` endpoints.
+- [x] **Admin Sidebar Navigation**: Update `src/components/admin/AdminShell.tsx` to add a "Post-Sale Projects" (or similar) link in the navigation menu.
+- [x] **Admin Projects Page (`src/routes/admin.projects.tsx`)**: 
+  - Create the main listing page using TanStack Router.
+  - Implement a data table displaying project status, current milestone, and cancellation risk score (similar to `admin.leads.tsx`).
+- [x] **Admin Project Detail View (`Sheet` Modal)**:
+  - Implement a slide-out `<Sheet>` to view complete project details.
+  - Display the milestone state machine (SITE_SURVEY to PTO) and highlight the active step.
+  - Add interactive buttons for admins to execute `Complete Milestone` actions.
+  - Display the cancellation risk history and provide a manual "Recalculate Risk" button.
+- [x] **Customer Portal Wiring (`src/routes/portal.tsx`)**:
+  - Replace mock data `portalMilestones` and `portalMessages` in `useSolarDB` with real data fetched from `/api/projects/:projectId`.
+  - Ensure the milestone timeline renders the real status from the database (`COMPLETED`, `IN_PROGRESS`, `PENDING`).

@@ -23,6 +23,7 @@ import { Route as AdminCustomersRouteImport } from './routes/admin.customers'
 import { Route as AdminLeadsRouteImport } from './routes/admin.leads'
 import { Route as AdminNurtureRouteImport } from './routes/admin.nurture'
 import { Route as AdminPreDesignRouteImport } from './routes/admin.pre-design'
+import { Route as AdminProjectsRouteImport } from './routes/admin.projects'
 import { Route as AdminProposalsRouteImport } from './routes/admin.proposals'
 import { Route as AdminReportsRouteImport } from './routes/admin.reports'
 import { Route as AdminSettingsRouteImport } from './routes/admin.settings'
@@ -96,6 +97,11 @@ const AdminNurtureRoute = AdminNurtureRouteImport.update({
 const AdminPreDesignRoute = AdminPreDesignRouteImport.update({
   id: '/pre-design',
   path: '/pre-design',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminProjectsRoute = AdminProjectsRouteImport.update({
+  id: '/projects',
+  path: '/projects',
   getParentRoute: () => AdminRoute,
 } as any)
 const AdminProposalsRoute = AdminProposalsRouteImport.update({
@@ -350,6 +356,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminPreDesignRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/projects': {
+      id: '/admin/projects'
+      path: '/projects'
+      fullPath: '/admin/projects'
+      preLoaderRoute: typeof AdminProjectsRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/proposals': {
       id: '/admin/proposals'
       path: '/proposals'
@@ -389,6 +402,7 @@ interface AdminRouteChildren {
   AdminLeadsRoute: typeof AdminLeadsRoute
   AdminNurtureRoute: typeof AdminNurtureRoute
   AdminPreDesignRoute: typeof AdminPreDesignRoute
+  AdminProjectsRoute: typeof AdminProjectsRoute
   AdminProposalsRoute: typeof AdminProposalsRoute
   AdminReportsRoute: typeof AdminReportsRoute
   AdminSettingsRoute: typeof AdminSettingsRoute
@@ -404,6 +418,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminLeadsRoute: AdminLeadsRoute,
   AdminNurtureRoute: AdminNurtureRoute,
   AdminPreDesignRoute: AdminPreDesignRoute,
+  AdminProjectsRoute: AdminProjectsRoute,
   AdminProposalsRoute: AdminProposalsRoute,
   AdminReportsRoute: AdminReportsRoute,
   AdminSettingsRoute: AdminSettingsRoute,

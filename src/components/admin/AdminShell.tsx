@@ -46,6 +46,7 @@ const navGroups: { label: string; items: NavItem[] }[] = [
       { to: "/admin/conversations" as const, label: "Conversations", icon: MessagesSquare, badge: "3" },
       { to: "/admin/appointments" as const, label: "Appointments", icon: CalendarDays },
       { to: "/admin/proposals" as const, label: "Proposals", icon: FileText },
+      { to: "/admin/projects" as const, label: "Post-Sale Projects", icon: ShieldCheck, badge: "Mod 4" },
       { to: "/admin/customers" as const, label: "Customers", icon: UserSquare2 },
     ],
   },

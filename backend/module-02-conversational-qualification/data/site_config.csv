@@ -1,0 +1,6 @@
+config_key,value,unit,notes
+avg_peak_sun_hours,5,hours/day,default peak sun hours per day across India
+usable_roof_fraction,0.75,ratio,accounts for roof edges setbacks and parapet shadows
+packing_efficiency,0.85,ratio,panel packing density within usable rooftop area
+performance_ratio,0.78,ratio,system losses including inverter wiring dust and temperature
+assumed_evening_load_kw,1.2,kW,default evening load for estimating battery outage backup hours

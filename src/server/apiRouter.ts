@@ -100,8 +100,8 @@ export async function handleApiRequest(request: Request, url: URL): Promise<Resp
       path.startsWith("/api/agent/status/") ||
       path.startsWith("/api/agent/call-coaching/");
 
-    // --- MODULE 03 NURTURE BACKEND PROXY ---
-    if (path.startsWith("/api/nurture/")) {
+    // --- MODULE 02 PRE-DESIGN & MODULE 03 NURTURE BACKEND PROXY ---
+    if (path.startsWith("/api/nurture/") || path.startsWith("/api/pre-design")) {
       try {
         const backendUrl = `http://localhost:3001${path}${url.search}`;
         const init: RequestInit = {
@@ -116,7 +116,7 @@ export async function handleApiRequest(request: Request, url: URL): Promise<Resp
         const data = await backendRes.json();
         return jsonResponse(data, backendRes.status);
       } catch (err) {
-        console.warn("Backend 3001 unavailable, falling back:", err);
+        console.warn("Backend 3001 proxy failed:", err);
       }
     }
 

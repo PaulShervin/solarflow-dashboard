@@ -1,0 +1,7 @@
+region_id,region_name,rate_per_kwh,feed_in_rate_per_kwh,notes
+MH,Maharashtra (MSEDCL / Adani),9.5,3.5,Standard slab tariff average
+KA,Karnataka (BESCOM),8.8,3.2,Bangalore urban slab tariff
+DL,Delhi (BSES / TPDDL),8.0,3.0,Delhi DISCOM residential tariff
+TN,Tamil Nadu (TANGEDCO),7.5,2.8,Tamil Nadu residential average
+GJ,Gujarat (UGVCL / Torrent),7.2,3.0,Gujarat DISCOM net metering rate
+IN_DEF,National Average (India Default),8.5,3.0,Default fallback rate per kWh

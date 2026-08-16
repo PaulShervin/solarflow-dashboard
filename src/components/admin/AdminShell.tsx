@@ -4,6 +4,7 @@ import {
   Bell,
   CalendarDays,
   ClipboardCheck,
+  Compass,
   FileText,
   LayoutDashboard,
   LogOut,
@@ -15,6 +16,7 @@ import {
   Search,
   Settings,
   ShieldCheck,
+  Sun,
   Users,
   UserSquare2,
   X,
@@ -39,6 +41,7 @@ const navGroups: { label: string; items: NavItem[] }[] = [
     label: "Operate",
     items: [
       { to: "/admin" as const, label: "Dashboard", icon: LayoutDashboard, exact: true },
+      { to: "/admin/pre-design" as const, label: "Pre-Design Engine", icon: Sun, badge: "Mod 2" },
       { to: "/admin/leads" as const, label: "Leads", icon: Users, badge: "23" },
       { to: "/admin/conversations" as const, label: "Conversations", icon: MessagesSquare, badge: "3" },
       { to: "/admin/appointments" as const, label: "Appointments", icon: CalendarDays },

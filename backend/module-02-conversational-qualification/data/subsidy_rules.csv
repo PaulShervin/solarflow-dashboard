@@ -1,0 +1,3 @@
+tier_id,min_kw,max_kw,rate_per_kw_inr,notes
+T1,0,2,30000,PM Surya Ghar tier 1 for first 2kW
+T2,2,3,18000,PM Surya Ghar tier 2 for additional 1kW up to 3kW cap

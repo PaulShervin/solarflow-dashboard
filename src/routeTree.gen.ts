@@ -22,6 +22,7 @@ import { Route as AdminConversationsRouteImport } from './routes/admin.conversat
 import { Route as AdminCustomersRouteImport } from './routes/admin.customers'
 import { Route as AdminLeadsRouteImport } from './routes/admin.leads'
 import { Route as AdminNurtureRouteImport } from './routes/admin.nurture'
+import { Route as AdminPreDesignRouteImport } from './routes/admin.pre-design'
 import { Route as AdminProposalsRouteImport } from './routes/admin.proposals'
 import { Route as AdminReportsRouteImport } from './routes/admin.reports'
 import { Route as AdminSettingsRouteImport } from './routes/admin.settings'
@@ -92,6 +93,11 @@ const AdminNurtureRoute = AdminNurtureRouteImport.update({
   path: '/nurture',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminPreDesignRoute = AdminPreDesignRouteImport.update({
+  id: '/pre-design',
+  path: '/pre-design',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminProposalsRoute = AdminProposalsRouteImport.update({
   id: '/proposals',
   path: '/proposals',
@@ -126,6 +132,7 @@ export interface FileRoutesByFullPath {
   '/admin/customers': typeof AdminCustomersRoute
   '/admin/leads': typeof AdminLeadsRoute
   '/admin/nurture': typeof AdminNurtureRoute
+  '/admin/pre-design': typeof AdminPreDesignRoute
   '/admin/proposals': typeof AdminProposalsRoute
   '/admin/reports': typeof AdminReportsRoute
   '/admin/settings': typeof AdminSettingsRoute
@@ -144,6 +151,7 @@ export interface FileRoutesByTo {
   '/admin/customers': typeof AdminCustomersRoute
   '/admin/leads': typeof AdminLeadsRoute
   '/admin/nurture': typeof AdminNurtureRoute
+  '/admin/pre-design': typeof AdminPreDesignRoute
   '/admin/proposals': typeof AdminProposalsRoute
   '/admin/reports': typeof AdminReportsRoute
   '/admin/settings': typeof AdminSettingsRoute
@@ -164,6 +172,7 @@ export interface FileRoutesById {
   '/admin/customers': typeof AdminCustomersRoute
   '/admin/leads': typeof AdminLeadsRoute
   '/admin/nurture': typeof AdminNurtureRoute
+  '/admin/pre-design': typeof AdminPreDesignRoute
   '/admin/proposals': typeof AdminProposalsRoute
   '/admin/reports': typeof AdminReportsRoute
   '/admin/settings': typeof AdminSettingsRoute
@@ -185,6 +194,7 @@ export interface FileRouteTypes {
     | '/admin/customers'
     | '/admin/leads'
     | '/admin/nurture'
+    | '/admin/pre-design'
     | '/admin/proposals'
     | '/admin/reports'
     | '/admin/settings'
@@ -203,6 +213,7 @@ export interface FileRouteTypes {
     | '/admin/customers'
     | '/admin/leads'
     | '/admin/nurture'
+    | '/admin/pre-design'
     | '/admin/proposals'
     | '/admin/reports'
     | '/admin/settings'
@@ -222,6 +233,7 @@ export interface FileRouteTypes {
     | '/admin/customers'
     | '/admin/leads'
     | '/admin/nurture'
+    | '/admin/pre-design'
     | '/admin/proposals'
     | '/admin/reports'
     | '/admin/settings'
@@ -331,6 +343,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminNurtureRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/pre-design': {
+      id: '/admin/pre-design'
+      path: '/pre-design'
+      fullPath: '/admin/pre-design'
+      preLoaderRoute: typeof AdminPreDesignRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/proposals': {
       id: '/admin/proposals'
       path: '/proposals'
@@ -369,6 +388,7 @@ interface AdminRouteChildren {
   AdminCustomersRoute: typeof AdminCustomersRoute
   AdminLeadsRoute: typeof AdminLeadsRoute
   AdminNurtureRoute: typeof AdminNurtureRoute
+  AdminPreDesignRoute: typeof AdminPreDesignRoute
   AdminProposalsRoute: typeof AdminProposalsRoute
   AdminReportsRoute: typeof AdminReportsRoute
   AdminSettingsRoute: typeof AdminSettingsRoute
@@ -383,6 +403,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminCustomersRoute: AdminCustomersRoute,
   AdminLeadsRoute: AdminLeadsRoute,
   AdminNurtureRoute: AdminNurtureRoute,
+  AdminPreDesignRoute: AdminPreDesignRoute,
   AdminProposalsRoute: AdminProposalsRoute,
   AdminReportsRoute: AdminReportsRoute,
   AdminSettingsRoute: AdminSettingsRoute,

@@ -1,0 +1,5 @@
+config_key,value,unit,notes
+cost_per_kw_low,55000,INR/kW,pre-subsidy budget equipment tier
+cost_per_kw_high,85000,INR/kW,pre-subsidy premium equipment tier
+cost_per_kw_default,65000,INR/kW,standard residential turnkey installer pricing
+subsidy_cap_inr,78000,INR,maximum PM Surya Ghar subsidy cap for residential roofs

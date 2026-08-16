@@ -102,5 +102,16 @@ export function createPreDesignExpressRouter(): Router {
     }
   });
 
+  // 5. POST /api/property/confirm - Store normalized property geometry & metadata
+  router.post("/confirm", (req: Request, res: Response) => {
+    try {
+      const { PropertyRepository } = require("../repositories/property.repository");
+      const record = PropertyRepository.saveConfirmedProperty(req.body);
+      res.json({ success: true, property: record });
+    } catch (err: any) {
+      res.status(400).json({ error: err.message || "Failed to confirm property record" });
+    }
+  });
+
   return router;
 }

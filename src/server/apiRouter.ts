@@ -100,10 +100,13 @@ export async function handleApiRequest(request: Request, url: URL): Promise<Resp
       path.startsWith("/api/agent/status/") ||
       path.startsWith("/api/agent/call-coaching/");
 
-    // --- MODULE 02 PRE-DESIGN & MODULE 03 NURTURE BACKEND PROXY ---
-    if (path.startsWith("/api/nurture/") || path.startsWith("/api/pre-design")) {
+    // --- MODULE 02 PRE-DESIGN, PROPERTY & MODULE 03 NURTURE BACKEND PROXY ---
+    if (path.startsWith("/api/nurture/") || path.startsWith("/api/pre-design") || path.startsWith("/api/property")) {
+      const targetPath = path.startsWith("/api/property")
+        ? path.replace("/api/property", "/api/pre-design")
+        : path;
       try {
-        const backendUrl = `http://localhost:3001${path}${url.search}`;
+        const backendUrl = `http://localhost:3001${targetPath}${url.search}`;
         const init: RequestInit = {
           method,
           headers: { "Content-Type": "application/json" },

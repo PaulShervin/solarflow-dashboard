@@ -16,12 +16,16 @@ import {
   CheckCircle2,
   AlertCircle,
   Layers,
-  ArrowRight
+  ArrowRight,
+  TrendingUp,
+  Award,
+  Globe,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { PageHeader } from "@/components/admin/AdminShell";
 import { toast } from "sonner";
+import { UnifiedPropertyMap } from "@/components/common/UnifiedPropertyMap";
 
 interface ConfigData {
   panels: Array<{
@@ -90,10 +94,10 @@ export function PreDesignEngineView() {
   const [config, setConfig] = useState<ConfigData | null>(null);
 
   // Form State
-  const [roofMode, setRoofMode] = useState<"dimensions" | "area" | "map">("dimensions");
+  const [roofMode, setRoofMode] = useState<"dimensions" | "area" | "map">("map");
   const [lengthM, setLengthM] = useState<number>(10);
   const [widthM, setWidthM] = useState<number>(6);
-  const [roofAreaM2, setRoofAreaM2] = useState<number>(60);
+  const [roofAreaM2, setRoofAreaM2] = useState<number>(68.5);
   
   const [billMode, setBillMode] = useState<"bill" | "units">("bill");
   const [monthlyBill, setMonthlyBill] = useState<number>(4500);
@@ -114,15 +118,6 @@ export function PreDesignEngineView() {
   const [calculating, setCalculating] = useState(false);
   const [result, setResult] = useState<CalculationResult | null>(null);
   const [generatingProposal, setGeneratingProposal] = useState(false);
-
-  // Map Polygon Tracing State
-  const [mapAddress, setMapAddress] = useState("Flat 402, Green Acres, Mumbai");
-  const [tracedPoints, setTracedPoints] = useState<Array<{ lat: number; lng: number }>>([
-    { lat: 19.076, lng: 72.8777 },
-    { lat: 19.0762, lng: 72.8781 },
-    { lat: 19.0758, lng: 72.8783 },
-    { lat: 19.0756, lng: 72.8779 },
-  ]);
 
   // Load config on mount
   useEffect(() => {
@@ -169,7 +164,7 @@ export function PreDesignEngineView() {
       roofInputMode: roofMode === "map" ? "area" : roofMode,
       lengthM: Number(lengthM),
       widthM: Number(widthM),
-      roofAreaM2: roofMode === "map" ? 68.5 : Number(roofAreaM2),
+      roofAreaM2: Number(roofAreaM2),
       billInputMode: billMode,
       monthlyBillInr: Number(monthlyBill),
       monthlyUnitsKwh: Number(monthlyUnits),
@@ -192,7 +187,6 @@ export function PreDesignEngineView() {
         const data = await res.json();
         setResult(data.result);
       } else {
-        // Fallback local calculation logic if backend offline
         fallbackCalculate(payload);
       }
     } catch {
@@ -250,7 +244,7 @@ export function PreDesignEngineView() {
           roofInputMode: roofMode === "map" ? "area" : roofMode,
           lengthM: Number(lengthM),
           widthM: Number(widthM),
-          roofAreaM2: roofMode === "map" ? 68.5 : Number(roofAreaM2),
+          roofAreaM2: Number(roofAreaM2),
           billInputMode: billMode,
           monthlyBillInr: Number(monthlyBill),
           monthlyUnitsKwh: Number(monthlyUnits),
@@ -294,48 +288,64 @@ export function PreDesignEngineView() {
     new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 }).format(num);
 
   return (
-    <div className="space-y-6 pb-12">
+    <div className="space-y-6 pb-16">
+      
+      {/* Top Banner Header */}
       <PageHeader
         title="Auto Pre-Design Engine (Module 02)"
         subtitle="Instant parametric rooftop solar size estimation, PM Surya Ghar subsidy modeling & PDF proposal generator"
         actions={
-          <Button onClick={handleDownloadProposal} disabled={generatingProposal || !result} className="gap-2 shadow-sm">
-            <Download className="h-4 w-4" />
-            {generatingProposal ? "Generating..." : "Download Proposal PDF"}
-          </Button>
+          <div className="flex items-center gap-2">
+            <span className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 text-xs font-semibold">
+              <Award className="h-3.5 w-3.5" />
+              PM Surya Ghar Compliant
+            </span>
+            <Button
+              onClick={handleDownloadProposal}
+              disabled={generatingProposal || !result}
+              className="gap-2 shadow-md bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl h-10 px-5 font-semibold text-xs transition-all"
+            >
+              <Download className="h-4 w-4" />
+              {generatingProposal ? "Generating..." : "Download Proposal PDF"}
+            </Button>
+          </div>
         }
       />
 
-      {/* Main Grid: Controls Left, Visual Results Right */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+      {/* Main Grid: Split Layout */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
         
-        {/* Left Column: Input Panel */}
-        <div className="lg:col-span-5 space-y-5">
-          <div className="bg-card border border-border rounded-xl p-5 shadow-sm space-y-5">
-            <div className="flex items-center justify-between border-b border-border pb-3">
+        {/* Left Column: Parameter & Rooftop Capture Controls */}
+        <div className={`space-y-5 transition-all duration-300 ${roofMode === "map" ? "lg:col-span-6" : "lg:col-span-5"}`}>
+          
+          {/* Card 1: Customer & Rooftop Capture Mode */}
+          <div className="bg-card border border-border/80 rounded-2xl p-5 shadow-sm space-y-5">
+            <div className="flex items-center justify-between border-b border-border/60 pb-3">
               <h2 className="font-semibold text-foreground flex items-center gap-2 text-base">
                 <Sliders className="h-4 w-4 text-primary" />
                 Rooftop & Energy Parameters
               </h2>
-              <span className="text-xs font-medium px-2 py-0.5 rounded bg-primary/10 text-primary">Config Driven</span>
+              <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/20">
+                CSV Config Synced
+              </span>
             </div>
 
-            {/* Customer & Location */}
+            {/* Customer & Location Details */}
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="text-xs font-medium text-muted-foreground">Customer Name</label>
+                <label className="text-xs font-semibold text-muted-foreground">Customer Name</label>
                 <Input
                   value={customerName}
                   onChange={(e) => setCustomerName(e.target.value)}
-                  className="mt-1 h-9 text-xs"
+                  className="mt-1 h-9 text-xs rounded-xl bg-secondary/30 focus:bg-background border-border/70"
                 />
               </div>
               <div>
-                <label className="text-xs font-medium text-muted-foreground">State / Region Tariff</label>
+                <label className="text-xs font-semibold text-muted-foreground">State / Region Tariff</label>
                 <select
                   value={regionId}
                   onChange={(e) => setRegionId(e.target.value)}
-                  className="mt-1 flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-xs shadow-sm focus-visible:outline-none"
+                  className="mt-1 flex h-9 w-full rounded-xl border border-border/70 bg-secondary/30 px-3 py-1 text-xs font-medium shadow-xs focus-visible:outline-none focus:bg-background"
                 >
                   {config?.tariffs ? (
                     config.tariffs.map((t) => (
@@ -355,18 +365,20 @@ export function PreDesignEngineView() {
               </div>
             </div>
 
-            {/* Rooftop Capture Mode Toggle */}
+            {/* Rooftop Capture Mode Selector */}
             <div className="space-y-2">
-              <label className="text-xs font-medium text-muted-foreground flex justify-between">
+              <label className="text-xs font-semibold text-muted-foreground flex justify-between">
                 <span>Rooftop Capture Mode</span>
-                <span className="text-primary hover:underline cursor-pointer">Pipeline A / B</span>
+                <span className="text-primary hover:underline text-[11px] font-semibold cursor-pointer">Pipeline A / B</span>
               </label>
-              <div className="grid grid-cols-3 gap-1 bg-secondary/50 p-1 rounded-lg">
+              <div className="grid grid-cols-3 gap-1.5 bg-secondary/50 p-1.5 rounded-xl border border-border/50">
                 <button
                   type="button"
                   onClick={() => setRoofMode("dimensions")}
-                  className={`py-1.5 text-xs font-medium rounded-md transition-colors ${
-                    roofMode === "dimensions" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
+                  className={`py-2 text-xs font-semibold rounded-lg transition-all ${
+                    roofMode === "dimensions"
+                      ? "bg-background text-foreground shadow-sm border border-border/40"
+                      : "text-muted-foreground hover:text-foreground"
                   }`}
                 >
                   Length × Width
@@ -374,8 +386,10 @@ export function PreDesignEngineView() {
                 <button
                   type="button"
                   onClick={() => setRoofMode("area")}
-                  className={`py-1.5 text-xs font-medium rounded-md transition-colors ${
-                    roofMode === "area" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
+                  className={`py-2 text-xs font-semibold rounded-lg transition-all ${
+                    roofMode === "area"
+                      ? "bg-background text-foreground shadow-sm border border-border/40"
+                      : "text-muted-foreground hover:text-foreground"
                   }`}
                 >
                   Total Area (m²)
@@ -383,26 +397,28 @@ export function PreDesignEngineView() {
                 <button
                   type="button"
                   onClick={() => setRoofMode("map")}
-                  className={`py-1.5 text-xs font-medium rounded-md transition-colors flex items-center justify-center gap-1 ${
-                    roofMode === "map" ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
+                  className={`py-2 text-xs font-semibold rounded-lg transition-all flex items-center justify-center gap-1.5 ${
+                    roofMode === "map"
+                      ? "bg-primary text-primary-foreground shadow-sm"
+                      : "text-muted-foreground hover:text-foreground"
                   }`}
                 >
-                  <MapPin className="h-3 w-3" />
+                  <MapPin className="h-3.5 w-3.5" />
                   Satellite Map
                 </button>
               </div>
             </div>
 
-            {/* Dynamic Roof Area Inputs */}
+            {/* Dynamic Roof Inputs */}
             {roofMode === "dimensions" && (
-              <div className="grid grid-cols-2 gap-3 bg-secondary/20 p-3 rounded-lg border border-border/50">
+              <div className="grid grid-cols-2 gap-3 bg-secondary/20 p-3.5 rounded-xl border border-border/50">
                 <div>
                   <label className="text-xs font-medium text-muted-foreground">Roof Length (Meters)</label>
                   <Input
                     type="number"
                     value={lengthM}
                     onChange={(e) => setLengthM(Number(e.target.value))}
-                    className="mt-1 h-9 text-xs"
+                    className="mt-1 h-9 text-xs rounded-lg"
                     min={1}
                   />
                 </div>
@@ -412,67 +428,66 @@ export function PreDesignEngineView() {
                     type="number"
                     value={widthM}
                     onChange={(e) => setWidthM(Number(e.target.value))}
-                    className="mt-1 h-9 text-xs"
+                    className="mt-1 h-9 text-xs rounded-lg"
                     min={1}
                   />
                 </div>
-                <div className="col-span-2 text-right text-[11px] text-muted-foreground">
-                  Total Footprint: <span className="font-semibold text-foreground">{lengthM * widthM} m²</span> ({Math.round(lengthM * widthM * 10.764)} sq.ft)
+                <div className="col-span-2 text-right text-[11px] text-muted-foreground font-medium">
+                  Total Footprint: <span className="font-bold text-foreground">{lengthM * widthM} m²</span> ({Math.round(lengthM * widthM * 10.764)} sq.ft)
                 </div>
               </div>
             )}
 
             {roofMode === "area" && (
-              <div className="bg-secondary/20 p-3 rounded-lg border border-border/50">
+              <div className="bg-secondary/20 p-3.5 rounded-xl border border-border/50">
                 <label className="text-xs font-medium text-muted-foreground">Usable Roof Area (m²)</label>
                 <Input
                   type="number"
                   value={roofAreaM2}
                   onChange={(e) => setRoofAreaM2(Number(e.target.value))}
-                  className="mt-1 h-9 text-xs"
+                  className="mt-1 h-9 text-xs rounded-lg"
                   min={5}
                 />
-                <div className="mt-1 text-right text-[11px] text-muted-foreground">
-                  Equivalent to <span className="font-semibold text-foreground">{Math.round(roofAreaM2 * 10.764)} sq.ft</span>
+                <div className="mt-1 text-right text-[11px] text-muted-foreground font-medium">
+                  Equivalent to <span className="font-bold text-foreground">{Math.round(roofAreaM2 * 10.764)} sq.ft</span>
                 </div>
               </div>
             )}
 
+            {/* Enhanced Satellite Map Window */}
             {roofMode === "map" && (
-              <div className="bg-primary/5 border border-primary/20 p-3 rounded-lg space-y-2">
-                <div className="flex items-center justify-between text-xs font-semibold text-primary">
-                  <span className="flex items-center gap-1.5"><Compass className="h-3.5 w-3.5" /> Pipeline B: Satellite Roof Tracing</span>
-                  <span className="bg-primary/20 text-primary text-[10px] px-1.5 py-0.5 rounded">Interactive</span>
-                </div>
-                <p className="text-[11px] text-muted-foreground">
-                  Traced polygon computed area: <strong className="text-foreground">68.5 m²</strong> (737 sq.ft)
-                </p>
-                <div className="h-28 bg-slate-900 rounded-md relative flex items-center justify-center overflow-hidden border border-slate-700">
-                  <div className="absolute inset-0 bg-cover bg-center opacity-60" style={{ backgroundImage: 'url("https://images.unsplash.com/photo-1508873696983-2df515122519?auto=format&fit=crop&w=600&q=80")' }} />
-                  <div className="relative z-10 text-center p-2 bg-slate-950/80 rounded border border-slate-700 max-w-[85%]">
-                    <span className="text-[10px] text-emerald-400 font-mono font-medium block">Polygon Area: 68.5 m²</span>
-                    <span className="text-[9px] text-slate-300">Google Maps API Placeholder Active</span>
-                  </div>
-                </div>
+              <div className="space-y-2">
+                <UnifiedPropertyMap
+                  initialCenter={{ lat: 19.076, lng: 72.8777 }}
+                  onPropertyConfirmed={(data) => {
+                    const area = data.buildingFootprint.properties.areaM2 || 68.5;
+                    setRoofAreaM2(area);
+                    toast.success(`Property confirmed! Rooftop area set to ${area} m²`);
+                  }}
+                />
               </div>
             )}
 
             {/* Bill & Consumption Input */}
-            <div className="space-y-2">
+            <div className="space-y-2 pt-2 border-t border-border/60">
               <div className="flex items-center justify-between">
-                <label className="text-xs font-medium text-muted-foreground">Electricity Bill Input</label>
-                <div className="flex gap-2 text-xs">
+                <label className="text-xs font-semibold text-muted-foreground">Electricity Bill Input</label>
+                <div className="flex gap-1.5 text-xs">
                   <button
                     type="button"
                     onClick={() => setBillMode("bill")}
-                    className={`px-2 py-0.5 rounded ${billMode === "bill" ? "bg-primary text-primary-foreground font-medium" : "text-muted-foreground"}`}
+                    className={`px-2.5 py-0.5 rounded-lg font-medium text-xs transition-all ${
+                      billMode === "bill" ? "bg-primary text-primary-foreground font-semibold shadow-xs" : "text-muted-foreground hover:text-foreground"
+                    }`}
                   >
                     Monthly ₹
                   </button>
                   <button
                     type="button"
                     onClick={() => setBillMode("units")}
-                    className={`px-2 py-0.5 rounded ${billMode === "units" ? "bg-primary text-primary-foreground font-medium" : "text-muted-foreground"}`}
+                    className={`px-2.5 py-0.5 rounded-lg font-medium text-xs transition-all ${
+                      billMode === "units" ? "bg-primary text-primary-foreground font-semibold shadow-xs" : "text-muted-foreground hover:text-foreground"
+                    }`}
                   >
                     Units (kWh)
                   </button>
@@ -487,7 +502,7 @@ export function PreDesignEngineView() {
                       type="number"
                       value={monthlyBill}
                       onChange={(e) => setMonthlyBill(Number(e.target.value))}
-                      className="pl-9 h-9 text-xs"
+                      className="pl-9 h-9 text-xs rounded-xl bg-secondary/30 focus:bg-background border-border/70"
                       step={500}
                     />
                   </div>
@@ -498,7 +513,7 @@ export function PreDesignEngineView() {
                     type="number"
                     value={monthlyUnits}
                     onChange={(e) => setMonthlyUnits(Number(e.target.value))}
-                    className="h-9 text-xs"
+                    className="h-9 text-xs rounded-xl bg-secondary/30 focus:bg-background border-border/70"
                     placeholder="e.g. 450 kWh"
                   />
                 </div>
@@ -506,13 +521,13 @@ export function PreDesignEngineView() {
             </div>
 
             {/* Hardware & Pricing Options */}
-            <div className="grid grid-cols-2 gap-3 pt-2 border-t border-border">
+            <div className="grid grid-cols-2 gap-3 pt-2 border-t border-border/60">
               <div>
-                <label className="text-xs font-medium text-muted-foreground">Solar Panel Model</label>
+                <label className="text-xs font-semibold text-muted-foreground">Solar Panel Model</label>
                 <select
                   value={panelId}
                   onChange={(e) => setPanelId(e.target.value)}
-                  className="mt-1 flex h-9 w-full rounded-md border border-input bg-background px-2 py-1 text-xs shadow-sm"
+                  className="mt-1 flex h-9 w-full rounded-xl border border-border/70 bg-secondary/30 px-3 py-1 text-xs font-medium shadow-xs focus-visible:outline-none focus:bg-background"
                 >
                   {config?.panels ? (
                     config.panels.map((p) => (
@@ -530,11 +545,11 @@ export function PreDesignEngineView() {
               </div>
 
               <div>
-                <label className="text-xs font-medium text-muted-foreground">Installer Cost Tier</label>
+                <label className="text-xs font-semibold text-muted-foreground">Installer Cost Tier</label>
                 <select
                   value={costTier}
                   onChange={(e) => setCostTier(e.target.value as any)}
-                  className="mt-1 flex h-9 w-full rounded-md border border-input bg-background px-2 py-1 text-xs shadow-sm"
+                  className="mt-1 flex h-9 w-full rounded-xl border border-border/70 bg-secondary/30 px-3 py-1 text-xs font-medium shadow-xs focus-visible:outline-none focus:bg-background"
                 >
                   <option value="low">Budget (₹55k/kW)</option>
                   <option value="default">Standard Turnkey (₹65k/kW)</option>
@@ -543,42 +558,42 @@ export function PreDesignEngineView() {
               </div>
             </div>
 
-            {/* Optional Battery Setup */}
-            <div className="p-3 bg-secondary/30 rounded-lg border border-border/60 space-y-2">
+            {/* Optional Battery Storage Setup */}
+            <div className="p-3.5 bg-secondary/30 rounded-xl border border-border/60 space-y-2">
               <div className="flex items-center justify-between">
-                <label className="text-xs font-medium flex items-center gap-1.5 cursor-pointer">
+                <label className="text-xs font-semibold flex items-center gap-2 cursor-pointer">
                   <input
                     type="checkbox"
                     checked={addBattery}
                     onChange={(e) => setAddBattery(e.target.checked)}
-                    className="rounded border-input text-primary focus:ring-primary h-3.5 w-3.5"
+                    className="rounded border-input text-primary focus:ring-primary h-4 w-4"
                   />
-                  <Battery className="h-3.5 w-3.5 text-emerald-600" />
-                  Add Battery Outage Backup Option?
+                  <Battery className="h-4 w-4 text-emerald-600" />
+                  <span>Add Battery Outage Backup Option?</span>
                 </label>
-                <span className="text-[10px] text-muted-foreground font-mono">Non-Subsidized</span>
+                <span className="text-[10px] text-muted-foreground font-mono bg-background px-2 py-0.5 rounded border border-border/50">Non-Subsidized</span>
               </div>
 
               {addBattery && (
-                <div className="grid grid-cols-2 gap-2 pt-2">
+                <div className="grid grid-cols-2 gap-2 pt-2 border-t border-border/40">
                   <div>
-                    <label className="text-[11px] text-muted-foreground">Battery Type</label>
+                    <label className="text-[11px] font-medium text-muted-foreground">Battery Type</label>
                     <select
                       value={batteryId}
                       onChange={(e) => setBatteryId(e.target.value)}
-                      className="mt-0.5 flex h-8 w-full rounded border border-input bg-background px-2 py-1 text-[11px]"
+                      className="mt-1 flex h-8 w-full rounded-lg border border-border/70 bg-background px-2 py-1 text-[11px] font-medium"
                     >
                       <option value="BT02">LFP Lithium (20k/kWh)</option>
                       <option value="BT01">Lead-Acid (12k/kWh)</option>
                     </select>
                   </div>
                   <div>
-                    <label className="text-[11px] text-muted-foreground">Capacity (kWh)</label>
+                    <label className="text-[11px] font-medium text-muted-foreground">Capacity (kWh)</label>
                     <Input
                       type="number"
                       value={batteryCapacity}
                       onChange={(e) => setBatteryCapacity(Number(e.target.value))}
-                      className="mt-0.5 h-8 text-[11px]"
+                      className="mt-1 h-8 text-[11px] rounded-lg"
                       min={1}
                       max={30}
                     />
@@ -590,8 +605,8 @@ export function PreDesignEngineView() {
           </div>
         </div>
 
-        {/* Right Column: Visual Results Dashboard */}
-        <div className="lg:col-span-7 space-y-5">
+        {/* Right Column: Visual Results & Financial ROI Dashboard */}
+        <div className={`space-y-5 transition-all duration-300 ${roofMode === "map" ? "lg:col-span-6" : "lg:col-span-7"}`}>
           {result ? (
             <div className="space-y-5">
               
@@ -599,99 +614,100 @@ export function PreDesignEngineView() {
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 
                 {/* System Capacity */}
-                <div className="bg-card border border-border rounded-xl p-4 shadow-sm relative overflow-hidden">
-                  <div className="absolute right-3 top-3 p-2 bg-amber-500/10 rounded-lg">
+                <div className="bg-card border border-border/80 rounded-2xl p-4 shadow-sm relative overflow-hidden group hover:border-primary/50 transition-all">
+                  <div className="absolute right-3 top-3 p-2 bg-amber-500/10 rounded-xl">
                     <Sun className="h-5 w-5 text-amber-500" />
                   </div>
-                  <span className="text-xs font-medium text-muted-foreground">System Size</span>
+                  <span className="text-xs font-semibold text-muted-foreground">System Size</span>
                   <div className="mt-2 flex items-baseline gap-1">
-                    <span className="text-3xl font-bold tracking-tight text-foreground">{result.systemSizeKw}</span>
+                    <span className="text-3xl font-extrabold tracking-tight text-foreground">{result.systemSizeKw}</span>
                     <span className="text-sm font-semibold text-muted-foreground">kW</span>
                   </div>
-                  <div className="mt-2 text-[11px] text-muted-foreground flex items-center gap-1">
-                    <CheckCircle2 className="h-3 w-3 text-emerald-500" />
-                    Fits <strong className="text-foreground">{result.maxPanelCount} panels</strong> on roof
+                  <div className="mt-2 text-[11px] text-muted-foreground flex items-center gap-1.5">
+                    <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500 shrink-0" />
+                    <span>Fits <strong className="text-foreground">{result.maxPanelCount} panels</strong> on roof</span>
                   </div>
                 </div>
 
                 {/* Monthly Generation */}
-                <div className="bg-card border border-border rounded-xl p-4 shadow-sm relative overflow-hidden">
-                  <div className="absolute right-3 top-3 p-2 bg-blue-500/10 rounded-lg">
+                <div className="bg-card border border-border/80 rounded-2xl p-4 shadow-sm relative overflow-hidden group hover:border-blue-500/50 transition-all">
+                  <div className="absolute right-3 top-3 p-2 bg-blue-500/10 rounded-xl">
                     <Zap className="h-5 w-5 text-blue-500" />
                   </div>
-                  <span className="text-xs font-medium text-muted-foreground">Monthly Production</span>
+                  <span className="text-xs font-semibold text-muted-foreground">Monthly Production</span>
                   <div className="mt-2 flex items-baseline gap-1">
-                    <span className="text-3xl font-bold tracking-tight text-foreground">{result.monthlyProductionKwh}</span>
+                    <span className="text-3xl font-extrabold tracking-tight text-foreground">{result.monthlyProductionKwh}</span>
                     <span className="text-sm font-semibold text-muted-foreground">kWh</span>
                   </div>
-                  <div className="mt-2 text-[11px] text-muted-foreground">
+                  <div className="mt-2 text-[11px] text-muted-foreground font-medium">
                     ~<strong>{Math.round(result.monthlyProductionKwh / 30)}</strong> units generated per day
                   </div>
                 </div>
 
                 {/* Net Cost after PM Surya Ghar */}
-                <div className="bg-card border border-primary/30 rounded-xl p-4 shadow-sm bg-gradient-to-br from-primary/5 to-transparent relative overflow-hidden">
-                  <div className="absolute right-3 top-3 p-2 bg-primary/10 rounded-lg">
+                <div className="bg-card border border-primary/30 rounded-2xl p-4 shadow-sm bg-gradient-to-br from-primary/5 via-transparent to-emerald-500/5 relative overflow-hidden group hover:border-primary/60 transition-all">
+                  <div className="absolute right-3 top-3 p-2 bg-primary/10 rounded-xl">
                     <ShieldCheck className="h-5 w-5 text-primary" />
                   </div>
-                  <span className="text-xs font-medium text-primary">Net Cost (Post-Subsidy)</span>
+                  <span className="text-xs font-bold text-primary">Net Out-of-Pocket Cost</span>
                   <div className="mt-2 flex items-baseline gap-1">
-                    <span className="text-2xl font-bold tracking-tight text-primary">{formatInr(result.netCostInr)}</span>
+                    <span className="text-2xl font-extrabold tracking-tight text-primary">{formatInr(result.netCostInr)}</span>
                   </div>
-                  <div className="mt-2 text-[11px] text-emerald-600 font-medium">
-                    Includes ₹{result.subsidyInr.toLocaleString("en-IN")} PM Surya Ghar Subsidy
+                  <div className="mt-2 text-[11px] text-emerald-600 font-semibold flex items-center gap-1">
+                    <Award className="h-3.5 w-3.5 shrink-0" />
+                    <span>Includes ₹{result.subsidyInr.toLocaleString("en-IN")} PM Surya Ghar Subsidy</span>
                   </div>
                 </div>
 
               </div>
 
               {/* Detailed Financial & Engineering Breakdown */}
-              <div className="bg-card border border-border rounded-xl p-5 shadow-sm space-y-4">
-                <div className="flex items-center justify-between border-b border-border pb-3">
-                  <h3 className="font-semibold text-foreground flex items-center gap-2">
+              <div className="bg-card border border-border/80 rounded-2xl p-5 shadow-sm space-y-4">
+                <div className="flex items-center justify-between border-b border-border/60 pb-3">
+                  <h3 className="font-semibold text-foreground flex items-center gap-2 text-base">
                     <Calculator className="h-4 w-4 text-primary" />
                     Financial Return & Investment Metrics
                   </h3>
-                  <span className="text-xs text-muted-foreground">
-                    Payback: <strong className="text-foreground">{result.paybackYears} Years</strong>
+                  <span className="text-xs font-semibold px-3 py-1 rounded-xl bg-secondary border border-border/50 text-foreground">
+                    Payback: <strong className="text-primary">{result.paybackYears} Years</strong>
                   </span>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   
                   {/* Financial Table */}
-                  <div className="space-y-2 bg-secondary/20 p-3.5 rounded-lg border border-border/50">
-                    <div className="flex justify-between text-xs py-1 border-b border-border/40">
+                  <div className="space-y-2 bg-secondary/20 p-4 rounded-xl border border-border/50">
+                    <div className="flex justify-between text-xs py-1 border-b border-border/40 font-medium">
                       <span className="text-muted-foreground">Gross Turnkey System Cost:</span>
-                      <span className="font-medium">{formatInr(result.systemCostInr)}</span>
+                      <span className="font-semibold text-foreground">{formatInr(result.systemCostInr)}</span>
                     </div>
-                    <div className="flex justify-between text-xs py-1 border-b border-border/40 text-emerald-600 font-medium">
+                    <div className="flex justify-between text-xs py-1 border-b border-border/40 text-emerald-600 font-semibold">
                       <span>PM Surya Ghar Direct Subsidy:</span>
                       <span>- {formatInr(result.subsidyInr)}</span>
                     </div>
-                    <div className="flex justify-between text-sm py-1.5 font-bold text-foreground">
+                    <div className="flex justify-between text-sm py-2 font-extrabold text-foreground">
                       <span>Net Out-of-Pocket Cost:</span>
                       <span className="text-primary">{formatInr(result.netCostInr)}</span>
                     </div>
                   </div>
 
                   {/* Energy Savings Box */}
-                  <div className="space-y-2 bg-secondary/20 p-3.5 rounded-lg border border-border/50 flex flex-col justify-between">
+                  <div className="space-y-2 bg-secondary/20 p-4 rounded-xl border border-border/50 flex flex-col justify-between">
                     <div>
-                      <div className="flex justify-between text-xs text-muted-foreground">
-                        <span>Estimated Bill Savings:</span>
-                        <span className="font-bold text-emerald-600 text-sm">{formatInr(result.monthlySavingsInr)} / mo</span>
+                      <div className="flex justify-between text-xs text-muted-foreground font-medium">
+                        <span>Estimated Monthly Savings:</span>
+                        <span className="font-extrabold text-emerald-600 text-sm">{formatInr(result.monthlySavingsInr)} / mo</span>
                       </div>
-                      <div className="w-full bg-secondary h-2.5 rounded-full mt-3 overflow-hidden">
+                      <div className="w-full bg-secondary h-3 rounded-full mt-3 overflow-hidden p-0.5 border border-border/50">
                         <div
                           className="bg-emerald-500 h-full rounded-full transition-all duration-500"
                           style={{ width: `${result.reductionPct}%` }}
                         />
                       </div>
                     </div>
-                    <div className="flex justify-between items-center text-[11px] text-muted-foreground pt-2">
-                      <span>Bill Reduction: <strong className="text-foreground">{result.reductionPct}%</strong></span>
-                      <span>Annual Savings: <strong className="text-foreground">{formatInr(result.monthlySavingsInr * 12)}</strong></span>
+                    <div className="flex justify-between items-center text-[11px] text-muted-foreground font-medium pt-2">
+                      <span>Grid Bill Reduction: <strong className="text-foreground font-bold">{result.reductionPct}%</strong></span>
+                      <span>Annual Savings: <strong className="text-foreground font-bold">{formatInr(result.monthlySavingsInr * 12)}</strong></span>
                     </div>
                   </div>
 
@@ -699,17 +715,17 @@ export function PreDesignEngineView() {
 
                 {/* Optional Battery Backup Section */}
                 {result.batteryDetails && (
-                  <div className="bg-emerald-500/5 border border-emerald-500/30 rounded-lg p-4 space-y-2">
+                  <div className="bg-emerald-500/5 border border-emerald-500/30 rounded-xl p-4 space-y-2">
                     <div className="flex items-center justify-between">
-                      <span className="text-xs font-semibold text-emerald-700 flex items-center gap-1.5">
+                      <span className="text-xs font-bold text-emerald-700 flex items-center gap-1.5">
                         <Battery className="h-4 w-4" />
-                        Optional Battery Backup Resilience
+                        Optional Battery Outage Backup Sizing
                       </span>
-                      <span className="text-[11px] font-semibold text-emerald-700">{formatInr(result.batteryDetails.batteryCostInr)}</span>
+                      <span className="text-xs font-extrabold text-emerald-700">{formatInr(result.batteryDetails.batteryCostInr)}</span>
                     </div>
-                    <p className="text-xs text-muted-foreground">
+                    <p className="text-xs text-muted-foreground font-medium">
                       Adds <strong>{result.batteryDetails.batteryName}</strong> providing approximately{" "}
-                      <strong className="text-foreground">{result.batteryDetails.estimatedBackupHours} hours</strong> of continuous evening power during grid outages.
+                      <strong className="text-foreground font-bold">{result.batteryDetails.estimatedBackupHours} hours</strong> of continuous power during grid outages.
                     </p>
                   </div>
                 )}
@@ -717,9 +733,9 @@ export function PreDesignEngineView() {
               </div>
 
               {/* Sanity Check & Config Verification Box */}
-              <div className="bg-secondary/40 border border-border rounded-xl p-4 flex items-start gap-3 text-xs text-muted-foreground">
-                <AlertCircle className="h-4 w-4 text-blue-500 shrink-0 mt-0.5" />
-                <div>
+              <div className="bg-secondary/30 border border-border/70 rounded-2xl p-4 flex items-start gap-3 text-xs text-muted-foreground backdrop-blur-xs">
+                <AlertCircle className="h-4.5 w-4.5 text-blue-500 shrink-0 mt-0.5" />
+                <div className="space-y-0.5 font-medium">
                   <span className="font-semibold text-foreground block">Sanity Check Verification</span>
                   A system size of {result.systemSizeKw} kW produces ~{result.monthlyProductionKwh} kWh/month in {result.tariffUsed.region_name}, matching standard solar irradiance standards (~18–22 units/day per 5kW). All formulas and equipment specs are populated dynamically from backend CSV configuration tables.
                 </div>
@@ -727,9 +743,9 @@ export function PreDesignEngineView() {
 
             </div>
           ) : (
-            <div className="bg-card border border-border rounded-xl p-12 text-center text-muted-foreground">
-              <Sparkles className="h-8 w-8 mx-auto text-muted-foreground/50 animate-pulse mb-3" />
-              Calculating optimal solar rooftop configuration...
+            <div className="bg-card border border-border/80 rounded-2xl p-12 text-center text-muted-foreground space-y-3 shadow-sm">
+              <Sparkles className="h-8 w-8 mx-auto text-primary animate-pulse" />
+              <p className="text-sm font-medium">Calculating optimal solar rooftop configuration...</p>
             </div>
           )}
         </div>

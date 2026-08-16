@@ -55,7 +55,7 @@ export const Route = createFileRoute("/estimate")({
   component: EstimatePage,
 });
 
-export function EstimatePage() {
+function EstimatePage() {
   const [currentBill, setCurrentBill] = useState(estimate.currentBill);
   const [targetOffset, setTargetOffset] = useState(90);
   const [includeBattery, setIncludeBattery] = useState(true);

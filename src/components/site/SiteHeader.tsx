@@ -20,18 +20,18 @@ export function SiteHeader() {
     <header className="sticky top-0 z-40 border-b border-border/80 bg-background/90 backdrop-blur-md transition-all">
       <div className="mx-auto grid max-w-7xl grid-cols-[minmax(0,1fr)_auto] items-center gap-4 px-4 py-3 sm:px-6 lg:px-8">
         <div className="flex min-w-0 items-center gap-8">
-          <Link to="/" className="shrink-0 transition-opacity hover:opacity-90">
+          <Link to="/" className="shrink-0 transition-transform duration-200 hover:scale-[1.02]">
             <Logo />
           </Link>
-          <nav className="hidden items-center gap-1.5 lg:flex">
+          <nav className="hidden items-center gap-1 lg:flex">
             {nav.map((item) => (
               <Link
                 key={item.to}
                 to={item.to}
                 activeOptions={{ exact: item.to === "/" }}
-                activeProps={{ className: "text-primary font-bold bg-primary-soft" }}
-                inactiveProps={{ className: "text-muted-foreground hover:text-foreground hover:bg-secondary/50" }}
-                className="rounded-lg px-3.5 py-2 text-sm font-medium transition-colors"
+                activeProps={{ className: "text-primary font-bold bg-primary-soft shadow-xs" }}
+                inactiveProps={{ className: "text-muted-foreground hover:text-foreground hover:bg-secondary/60" }}
+                className="rounded-lg px-3.5 py-2 text-sm font-medium transition-all duration-150"
               >
                 {item.label}
               </Link>
@@ -40,9 +40,14 @@ export function SiteHeader() {
         </div>
 
         <div className="flex shrink-0 items-center gap-3">
+          <div className="hidden xl:flex items-center gap-1.5 rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">
+            <span className="size-2 rounded-full bg-primary animate-pulse" />
+            Instant AI Quotes Live
+          </div>
+
           <a
             href="tel:+14805550170"
-            className="hidden items-center gap-2 rounded-lg border border-border px-3 py-1.5 text-xs font-bold text-muted-foreground transition-colors hover:border-primary hover:text-foreground md:inline-flex"
+            className="hidden items-center gap-2 rounded-lg border border-border px-3 py-1.5 text-xs font-bold text-muted-foreground transition-all duration-150 hover:border-primary/50 hover:bg-secondary/40 hover:text-foreground md:inline-flex"
           >
             <Phone className="size-3.5 text-primary" />
             (480) 555-0170

@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import {
   ArrowRight,
@@ -8,13 +9,20 @@ import {
   ClipboardList,
   Leaf,
   MessageSquareText,
+  PiggyBank,
   ShieldCheck,
+  Sparkles,
   Star,
+  Sun,
   TrendingDown,
+  TrendingUp,
   Wallet,
   Wrench,
+  Zap,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Slider } from "@/components/ui/slider";
+import { Switch } from "@/components/ui/switch";
 import {
   Accordion,
   AccordionContent,
@@ -121,6 +129,18 @@ const financing = [
 ];
 
 function HomePage() {
+  const [monthlyBill, setMonthlyBill] = useState(260);
+  const [includeBattery, setIncludeBattery] = useState(true);
+
+  // Dynamic calculations for the interactive savings simulator
+  const systemSizeKw = Math.max(4.2, Number((monthlyBill / 28).toFixed(1)));
+  const panelCount = Math.ceil((systemSizeKw * 1000) / 400);
+  const grossCost = Math.round(systemSizeKw * 2850 + (includeBattery ? 9800 : 0));
+  const federalCredit = Math.round(grossCost * 0.30);
+  const estimatedNewMonthlyPayment = Math.round(systemSizeKw * 17 + (includeBattery ? 42 : 0));
+  const netMonthlySavings = Math.max(30, monthlyBill - estimatedNewMonthlyPayment);
+  const lifetime25YrSavings = Math.round(netMonthlySavings * 12 * 25 * 1.22);
+
   return (
     <div className="min-h-screen bg-background pb-16">
       <SiteHeader />
@@ -203,6 +223,136 @@ function HomePage() {
               <p className="mt-1 text-sm text-muted-foreground">{s.label}</p>
             </div>
           ))}
+        </div>
+      </section>
+
+      {/* Interactive Solar Savings Simulator */}
+      <section className="section-y bg-gradient-to-b from-background to-secondary/30">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="mx-auto max-w-3xl text-center">
+            <StatusPill tone="brand" dot className="px-3 py-1 font-bold">
+              ⚡ Live Interactive Solar Simulator
+            </StatusPill>
+            <h2 className="mt-4 font-display text-3xl font-extrabold sm:text-4xl">
+              Calculate Your Real-Time Savings & Federal Tax Credit
+            </h2>
+            <p className="mt-3 text-muted-foreground text-sm sm:text-base">
+              Slide your average monthly electric bill to calculate estimated solar panel capacity, 30% federal credit, and 25-year cumulative savings.
+            </p>
+          </div>
+
+          <div className="mt-10 overflow-hidden rounded-3xl border border-border/80 bg-card p-6 shadow-lift sm:p-10 lg:grid lg:grid-cols-[1.2fr_1fr] lg:gap-12 lg:items-center">
+            <div className="min-w-0 space-y-8">
+              <div>
+                <div className="flex items-center justify-between">
+                  <label className="text-sm font-bold text-foreground">
+                    Current Monthly Electric Bill
+                  </label>
+                  <span className="font-display text-2xl font-black text-primary sm:text-3xl">
+                    ${monthlyBill}
+                    <span className="text-xs font-normal text-muted-foreground">/mo</span>
+                  </span>
+                </div>
+                <div className="mt-4">
+                  <Slider
+                    value={[monthlyBill]}
+                    min={90}
+                    max={650}
+                    step={10}
+                    onValueChange={(val) => {
+                      if (typeof val[0] === "number") {
+                        setMonthlyBill(val[0]);
+                      }
+                    }}
+                    className="py-2"
+                  />
+                  <div className="mt-2 flex justify-between text-xs text-muted-foreground font-medium">
+                    <span>$90/mo (Low usage)</span>
+                    <span>$350/mo (Average AZ)</span>
+                    <span>$650/mo (Heavy AC)</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between rounded-2xl border border-border bg-secondary/40 p-4">
+                <div className="flex items-center gap-3">
+                  <div className="grid size-10 place-items-center rounded-xl bg-primary/10 text-primary">
+                    <BatteryCharging className="size-5" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-bold text-foreground">Include Battery Storage</p>
+                    <p className="text-xs text-muted-foreground">Tesla Powerwall 3 / 13.5 kWh backup</p>
+                  </div>
+                </div>
+                <Switch
+                  checked={includeBattery}
+                  onCheckedChange={setIncludeBattery}
+                  aria-label="Toggle battery backup"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="rounded-2xl border border-border/60 bg-secondary/20 p-4">
+                  <p className="text-xs font-semibold text-muted-foreground">Recommended System</p>
+                  <p className="mt-1 font-display text-xl font-extrabold text-foreground">
+                    {systemSizeKw} kW
+                  </p>
+                  <p className="mt-0.5 text-xs text-muted-foreground">{panelCount} Tier-1 Panels</p>
+                </div>
+                <div className="rounded-2xl border border-border/60 bg-secondary/20 p-4">
+                  <p className="text-xs font-semibold text-muted-foreground">30% Federal ITC</p>
+                  <p className="mt-1 font-display text-xl font-extrabold text-primary">
+                    ${federalCredit.toLocaleString()}
+                  </p>
+                  <p className="mt-0.5 text-xs text-muted-foreground">Direct Tax Credit</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="mt-8 rounded-2xl border border-border bg-navy p-6 text-navy-foreground shadow-card lg:mt-0 sm:p-8">
+              <div className="flex items-center justify-between border-b border-navy-foreground/15 pb-4">
+                <span className="text-xs font-bold tracking-widest text-primary uppercase">
+                  Estimated Financial Impact
+                </span>
+                <span className="rounded-full bg-primary/20 px-2.5 py-0.5 text-[11px] font-bold text-primary">
+                  Fixed Rate Solar
+                </span>
+              </div>
+
+              <div className="mt-6 space-y-4">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-navy-foreground/75">New Solar Payment</span>
+                  <span className="font-display text-lg font-bold text-navy-foreground">
+                    ${estimatedNewMonthlyPayment}/mo
+                  </span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-navy-foreground/75">Estimated Monthly Savings</span>
+                  <span className="font-display text-lg font-extrabold text-primary">
+                    +${netMonthlySavings}/mo
+                  </span>
+                </div>
+                <div className="border-t border-navy-foreground/15 pt-4">
+                  <p className="text-xs font-semibold text-navy-foreground/60">
+                    25-Year Cumulative Clean Energy Savings
+                  </p>
+                  <p className="mt-1 font-display text-3xl font-black text-primary sm:text-4xl">
+                    ${lifetime25YrSavings.toLocaleString()}
+                  </p>
+                  <p className="mt-1 text-xs text-navy-foreground/50">
+                    Guaranteed production backed by 25-year warranty
+                  </p>
+                </div>
+              </div>
+
+              <Button asChild size="lg" className="mt-6 w-full h-12 text-sm font-bold shadow-lift bg-primary hover:bg-primary/90 text-primary-foreground">
+                <Link to="/qualify">
+                  Lock In This Savings Estimate
+                  <ArrowRight className="ml-1.5 size-4" />
+                </Link>
+              </Button>
+            </div>
+          </div>
         </div>
       </section>
 

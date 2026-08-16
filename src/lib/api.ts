@@ -249,4 +249,92 @@ export const solarApi = {
     }
     return settings;
   },
+
+  // --- MODULE 05 PRODUCT & PRICING CHATBOT ---
+  async sendChatMessage(sessionId?: string, message = "", leadId?: string) {
+    const res = await postJson("/api/chat/message", { sessionId, message, leadId });
+    return res || null;
+  },
+
+  async getChatSession(sessionId: string) {
+    const res = await getJson(`/api/chat/${sessionId}`);
+    return res?.session || null;
+  },
+
+  async submitRoofData(sessionId: string, roofData: { address?: string; roofAreaSqFt: number; polygon?: any }) {
+    const res = await postJson(`/api/chat/${sessionId}/roof-data`, roofData);
+    return res || null;
+  },
+
+  async calculateChatEstimate(sessionId: string) {
+    const res = await postJson(`/api/chat/${sessionId}/calculate`);
+    return res || null;
+  },
+
+  async escalateChat(sessionId: string, reason?: string) {
+    const res = await postJson(`/api/chat/${sessionId}/escalate`, { reason });
+    return res || null;
+  },
+
+  // --- MODULE 04 POST-SALE RETENTION & MILESTONES ---
+  async getProjects(status?: string) {
+    const query = status ? `?status=${encodeURIComponent(status)}` : "";
+    const res = await getJson(`/api/admin/projects${query}`);
+    return res?.projects || [];
+  },
+
+  async getProjectDetail(projectId: string) {
+    const res = await getJson(`/api/admin/projects/${projectId}`);
+    return res || null;
+  },
+
+  async createProject(data: { leadId: string; startDate?: string; estimatedCompletionDate?: string }) {
+    return await postJson("/api/admin/projects", data);
+  },
+
+  async getProjectMilestones(projectId: string) {
+    const res = await getJson(`/api/admin/projects/${projectId}/milestones`);
+    return res?.milestones || [];
+  },
+
+  async startMilestone(projectId: string, milestoneType: string, notes?: string, updatedBy?: string) {
+    return await postJson(`/api/admin/projects/${projectId}/milestones/${milestoneType}/start`, {
+      notes,
+      updatedBy,
+    });
+  },
+
+  async completeMilestone(projectId: string, milestoneType: string, notes?: string, updatedBy?: string) {
+    return await postJson(`/api/admin/projects/${projectId}/milestones/${milestoneType}/complete`, {
+      notes,
+      updatedBy,
+    });
+  },
+
+  async getProjectUpdates(projectId: string) {
+    const res = await getJson(`/api/admin/projects/${projectId}/updates`);
+    return res?.updates || [];
+  },
+
+  async createProjectUpdate(projectId: string, message: string, visibleToCustomer = true, createdBy = "Operations") {
+    return await postJson(`/api/admin/projects/${projectId}/updates`, {
+      message,
+      visibleToCustomer,
+      createdBy,
+    });
+  },
+
+  async getProjectRisk(projectId: string) {
+    const res = await getJson(`/api/admin/projects/${projectId}/risk`);
+    return res || null;
+  },
+
+  async recalculateProjectRisk(projectId: string, stalledDays = 0, unresolvedInquiries = 0) {
+    return await postJson(`/api/admin/projects/${projectId}/risk/recalculate`, {
+      stalledDays,
+      unresolvedInquiries,
+    });
+  },
 };
+
+

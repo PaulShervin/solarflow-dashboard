@@ -22,6 +22,7 @@ import { Route as AdminConversationsRouteImport } from './routes/admin.conversat
 import { Route as AdminCustomersRouteImport } from './routes/admin.customers'
 import { Route as AdminLeadsRouteImport } from './routes/admin.leads'
 import { Route as AdminNurtureRouteImport } from './routes/admin.nurture'
+import { Route as AdminPostSaleRouteImport } from './routes/admin.post-sale'
 import { Route as AdminPreDesignRouteImport } from './routes/admin.pre-design'
 import { Route as AdminProposalsRouteImport } from './routes/admin.proposals'
 import { Route as AdminReportsRouteImport } from './routes/admin.reports'
@@ -93,6 +94,11 @@ const AdminNurtureRoute = AdminNurtureRouteImport.update({
   path: '/nurture',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminPostSaleRoute = AdminPostSaleRouteImport.update({
+  id: '/post-sale',
+  path: '/post-sale',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminPreDesignRoute = AdminPreDesignRouteImport.update({
   id: '/pre-design',
   path: '/pre-design',
@@ -132,6 +138,7 @@ export interface FileRoutesByFullPath {
   '/admin/customers': typeof AdminCustomersRoute
   '/admin/leads': typeof AdminLeadsRoute
   '/admin/nurture': typeof AdminNurtureRoute
+  '/admin/post-sale': typeof AdminPostSaleRoute
   '/admin/pre-design': typeof AdminPreDesignRoute
   '/admin/proposals': typeof AdminProposalsRoute
   '/admin/reports': typeof AdminReportsRoute
@@ -151,6 +158,7 @@ export interface FileRoutesByTo {
   '/admin/customers': typeof AdminCustomersRoute
   '/admin/leads': typeof AdminLeadsRoute
   '/admin/nurture': typeof AdminNurtureRoute
+  '/admin/post-sale': typeof AdminPostSaleRoute
   '/admin/pre-design': typeof AdminPreDesignRoute
   '/admin/proposals': typeof AdminProposalsRoute
   '/admin/reports': typeof AdminReportsRoute
@@ -172,6 +180,7 @@ export interface FileRoutesById {
   '/admin/customers': typeof AdminCustomersRoute
   '/admin/leads': typeof AdminLeadsRoute
   '/admin/nurture': typeof AdminNurtureRoute
+  '/admin/post-sale': typeof AdminPostSaleRoute
   '/admin/pre-design': typeof AdminPreDesignRoute
   '/admin/proposals': typeof AdminProposalsRoute
   '/admin/reports': typeof AdminReportsRoute
@@ -194,6 +203,7 @@ export interface FileRouteTypes {
     | '/admin/customers'
     | '/admin/leads'
     | '/admin/nurture'
+    | '/admin/post-sale'
     | '/admin/pre-design'
     | '/admin/proposals'
     | '/admin/reports'
@@ -213,6 +223,7 @@ export interface FileRouteTypes {
     | '/admin/customers'
     | '/admin/leads'
     | '/admin/nurture'
+    | '/admin/post-sale'
     | '/admin/pre-design'
     | '/admin/proposals'
     | '/admin/reports'
@@ -233,6 +244,7 @@ export interface FileRouteTypes {
     | '/admin/customers'
     | '/admin/leads'
     | '/admin/nurture'
+    | '/admin/post-sale'
     | '/admin/pre-design'
     | '/admin/proposals'
     | '/admin/reports'
@@ -343,6 +355,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminNurtureRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/post-sale': {
+      id: '/admin/post-sale'
+      path: '/post-sale'
+      fullPath: '/admin/post-sale'
+      preLoaderRoute: typeof AdminPostSaleRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/pre-design': {
       id: '/admin/pre-design'
       path: '/pre-design'
@@ -388,6 +407,7 @@ interface AdminRouteChildren {
   AdminCustomersRoute: typeof AdminCustomersRoute
   AdminLeadsRoute: typeof AdminLeadsRoute
   AdminNurtureRoute: typeof AdminNurtureRoute
+  AdminPostSaleRoute: typeof AdminPostSaleRoute
   AdminPreDesignRoute: typeof AdminPreDesignRoute
   AdminProposalsRoute: typeof AdminProposalsRoute
   AdminReportsRoute: typeof AdminReportsRoute
@@ -403,6 +423,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminCustomersRoute: AdminCustomersRoute,
   AdminLeadsRoute: AdminLeadsRoute,
   AdminNurtureRoute: AdminNurtureRoute,
+  AdminPostSaleRoute: AdminPostSaleRoute,
   AdminPreDesignRoute: AdminPreDesignRoute,
   AdminProposalsRoute: AdminProposalsRoute,
   AdminReportsRoute: AdminReportsRoute,

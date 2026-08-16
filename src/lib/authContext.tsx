@@ -69,7 +69,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       fetch("/api/auth/logout", {
         method: "POST",
         headers: { "X-Session-Token": session.token },
-      }).catch(() => {});
+      }).catch(() => { });
     }
     setSession(null);
     localStorage.removeItem(AUTH_STORAGE_KEY);

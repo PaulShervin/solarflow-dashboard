@@ -231,7 +231,8 @@ export function PreDesignEngineView() {
       batteryDetails: p.addBattery
         ? { batteryCostInr: p.batteryCapacityKwh * 20000, estimatedBackupHours: 3.3, batteryName: "LFP Lithium (5 kWh)" }
         : undefined,
-    });
+    } as any);
+
   }
 
   async function handleDownloadProposal() {
@@ -293,7 +294,7 @@ export function PreDesignEngineView() {
       {/* Top Banner Header */}
       <PageHeader
         title="Auto Pre-Design Engine (Module 02)"
-        subtitle="Instant parametric rooftop solar size estimation, PM Surya Ghar subsidy modeling & PDF proposal generator"
+        description="Instant parametric rooftop solar size estimation, PM Surya Ghar subsidy modeling & PDF proposal generator"
         actions={
           <div className="flex items-center gap-2">
             <span className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 text-xs font-semibold">

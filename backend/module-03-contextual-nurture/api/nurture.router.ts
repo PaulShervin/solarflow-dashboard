@@ -1,3 +1,4 @@
+import { Router, Request, Response } from "express";
 import { NurtureRepository } from "../repositories/nurture.repository";
 import { NurtureEngineService } from "../services/nurture-engine.service";
 import { SuppressionService } from "../services/suppression.service";
@@ -218,3 +219,42 @@ export class NurtureRouter {
     return { success: true, leadId: lead?.id || null };
   }
 }
+
+export function createNurtureExpressRouter(engine?: NurtureEngineService): Router {
+  const router = Router();
+  const controller = new NurtureRouter(engine);
+
+  const handleResponse = (res: Response, result: any) => {
+    const status = result?.status || (result?.error ? 400 : 200);
+    res.status(status).json(result);
+  };
+
+  router.get("/analytics", (req, res) => handleResponse(res, controller.getAnalytics()));
+  router.get("/workflows", (req, res) => handleResponse(res, controller.getWorkflows()));
+  router.post("/workflows", (req, res) => handleResponse(res, controller.createWorkflow(req.body)));
+  router.get("/workflows/:id", (req, res) => handleResponse(res, controller.getWorkflowById(req.params.id)));
+  router.get("/messages", (req, res) => handleResponse(res, controller.getMessages()));
+  router.get("/templates", (req, res) => handleResponse(res, controller.getTemplates()));
+  router.post("/templates", (req, res) => handleResponse(res, controller.createTemplate(req.body)));
+  
+  router.get("/leads/:id", async (req, res) => handleResponse(res, await controller.getLeadNurture(req.params.id)));
+  router.post("/leads/:id/enroll", async (req, res) => handleResponse(res, await controller.enrollLead(req.params.id, req.body)));
+  router.post("/leads/:id/pause", async (req, res) => {
+    const enrId = req.body?.enrollmentId || req.params.id;
+    handleResponse(res, await controller.pauseLeadNurture(enrId));
+  });
+  router.post("/leads/:id/resume", async (req, res) => {
+    const enrId = req.body?.enrollmentId || req.params.id;
+    handleResponse(res, await controller.resumeLeadNurture(enrId));
+  });
+  router.post("/leads/:id/cancel", async (req, res) => {
+    const enrId = req.body?.enrollmentId || req.params.id;
+    handleResponse(res, await controller.cancelLeadNurture(enrId));
+  });
+
+  router.post("/webhooks/sms", async (req, res) => handleResponse(res, await controller.handleSmsWebhook(req.body)));
+  router.post("/webhooks/email", async (req, res) => handleResponse(res, await controller.handleEmailWebhook(req.body)));
+
+  return router;
+}
+

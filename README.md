@@ -12,10 +12,10 @@ A production-grade, fullstack **Agentic AI Solar Operations Platform & CRM** bui
 ## Key Architecture & Core Capabilities
 
 ### 1. ⚡ Instant Response Agent
-- **Inbound Webhooks**: Ingests lead payloads from HubSpot, Salesforce, GoHighLevel, or Custom Webhooks at `/api/webhooks/lead`.
-- **Quantitative Intent Scoring**: Computes lead quality score (0–100) based on homeownership, monthly bill, roof type, and timeline.
-- **Calendar Auto-Booking**: Automatically reserves consultant time slots on the sales rep availability matrix.
-- **Human Handoff Alert**: Automatically flags low-intent (< 45) or renter leads and transfers ownership to `Human Rep (Escalated)`.
+- **Inbound Webhooks**: Ingests lead payloads from HubSpot, Salesforce, GoHighLevel, or Custom Webhooks at `/api/webhooks/lead` with **provider auto-detection** (payload shape wins; CRM settings act as fallback for ambiguous payloads).
+- **Quantitative Intent Scoring**: Computes lead quality score (0–100) from homeownership, monthly bill, roof type, **and timeline** (shared rubric, base 30).
+- **Calendar Auto-Booking**: Automatically reserves the earliest open slot on the **sales rep availability matrix** — a persisted per-rep × day × time slot grid with double-booking protection (conflicts return HTTP 409).
+- **Human Handoff Alert**: Automatically flags low-intent (< 45) or renter leads and **transfers ownership** to `Human Rep (Escalated)` in both the webhook and qualification flows.
 
 ### 2. ☀️ Auto Pre-Design Engine
 - **Satellite Roof Pre-Design**: Visual roof array mapping 400W monocrystalline panel layouts with tilt (18°) and azimuth (180°) parameters.
@@ -44,6 +44,53 @@ A production-grade, fullstack **Agentic AI Solar Operations Platform & CRM** bui
 - **Salted Password Hashing**: Cryptographic PBKDF2 hashing with SHA-512 salting.
 - **Session Token Engine**: Cryptographically secure 256-bit token issuing and header validation (`Authorization: Bearer <token>` or `X-Session-Token`).
 - **Protected Admin Console**: Enforces authentication on `/admin/*` routes.
+
+---
+
+## 🧭 Module 1 — Instant Response Agent: Browser Flow & Endpoint Map
+
+End-to-end trace of how the Instant Response Agent behaves in the browser and which
+endpoint each UI action hits.
+
+```
+Capture:  /admin/leads → "Simulate Webhook" ──POST──▶ /api/webhooks/lead
+Auto-book: /admin/appointments → click open slot ──POST──▶ /api/agent/availability/:slotId/book
+Admin:     /admin/appointments → × / closed slot ──PATCH──▶ /api/agent/availability/:slotId
+Config:    /admin/settings ──POST──▶ /api/crm/settings
+Agent:     (headless qualify) ──POST──▶ /api/agent/qualify  → auto-books earliest open slot
+```
+
+### 1. Capture — Inbound Lead (`/admin/leads`)
+- **Simulate Webhook** (admin.leads.tsx) fills a lead form and fires `POST /api/webhooks/lead`.
+- Server auto-detects the provider schema (`crmAdapter.detectProvider`: HubSpot / Salesforce /
+  GoHighLevel / Custom), computes the intent score (base 30 + homeownership + bill + roof + timeline),
+  persists the lead + SMS conversation, and writes a `Webhook` audit log.
+- Result appears in the table with **AI Score**, status, and **Assigned Owner**.
+- Opening a lead shows the **AI Intent Summary**, score bar, the **Human Handoff Escalated** banner
+  when low-intent (<45) or a renter (owner = `Human Rep (Escalated)`), an **Escalate to Human**
+  button, and the **Two-Way CRM Audit** trail with `⚡ latency` per step.
+- If the server is unreachable, `lib/api.ts` falls back to the local store (`lib/db.ts`) with the same rubric.
+
+### 2. Auto-Booking — Sales Rep Availability Matrix (`/admin/appointments`)
+- Mount loads the matrix via `GET /api/agent/availability` (3 reps × next 5 weekdays × hourly slots,
+  seeded with a few pre-closed slots).
+- Select a bookable lead, then click an **open** slot → `POST /api/agent/availability/:slotId/book`
+  → server validates rep/slot/conflict, `reserveSlot()` marks the slot **closed**, and an
+  `APT-xxxx` consultation is created (lead status → `appointment`).
+- Conflicts return **HTTP 409** with a code: `SLOT_UNAVAILABLE`, `REP_NOT_FOUND`,
+  `SLOT_HAS_APPOINTMENT`, `SLOT_NOT_FOUND`.
+- The `×` on a slot closes it without booking; clicking a closed slot reopens it
+  (`PATCH /api/agent/availability/:slotId`) — reopening is blocked if an appointment exists.
+
+### 3. Qualification Auto-Booking (agent path)
+- `POST /api/agent/qualify` recomputes the score from the lead's answers. Score ≥ 45 & homeowner
+  → **auto-books the earliest open slot** for the assigned rep (status → `appointment`).
+- Renter or score <45 → ownership transfers to `Human Rep (Escalated)`, status `contacted`,
+  and no slot is booked. `solarApi.qualifyLead` is ready for a UI button.
+
+### 4. Configuration & Docs (`/admin/settings`)
+- Swap provider/webhook URL via `POST /api/crm/settings`; the page documents the
+  `/api/webhooks/lead` JSON schema for external CRMs to POST directly.
 
 ---
 

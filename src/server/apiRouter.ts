@@ -75,14 +75,53 @@ export async function handleApiRequest(request: Request, url: URL): Promise<Resp
 
     if (path === "/api/agent/qualify" && method === "POST") {
       const body = await request.json();
-      const lead = await instantResponseAgent.qualifyLead(body.leadId, body.answers);
-      return jsonResponse({ success: true, lead });
+      const result = await instantResponseAgent.qualifyLead(body.leadId, body.answers);
+      return jsonResponse({ success: true, ...result });
     }
 
     if (path === "/api/agent/book-appointment" && method === "POST") {
       const body = await request.json();
-      const appt = await instantResponseAgent.bookAppointment(body.leadId, body.rep, body.date, body.time);
-      return jsonResponse({ success: true, appointment: appt });
+      try {
+        const appt = await instantResponseAgent.bookAppointment(body.leadId, body.rep, body.date, body.time);
+        return jsonResponse({ success: true, appointment: appt });
+      } catch (err: any) {
+        if (err?.code === "SLOT_UNAVAILABLE") {
+          return jsonResponse({ success: false, error: err.message, code: err.code }, 409);
+        }
+        if (err?.code === "REP_NOT_FOUND") {
+          return jsonResponse({ success: false, error: err.message, code: err.code }, 400);
+        }
+        throw err;
+      }
+    }
+
+    if (path === "/api/agent/availability" && method === "GET") {
+      return jsonResponse({ success: true, availability: serverDb.getAvailability() });
+    }
+
+    // --- AVAILABILITY MATRIX ADMIN (slot toggle + book from calendar) ---
+    if (path.startsWith("/api/agent/availability/") && method === "PATCH") {
+      const slotId = path.split("/")[4] || "";
+      const body = await request.json();
+      try {
+        const result = await instantResponseAgent.setSlotStatus(slotId, body.status);
+        return jsonResponse({ success: true, ...result });
+      } catch (err: any) {
+        if (err?.code) return jsonResponse({ success: false, error: err.message, code: err.code }, 409);
+        throw err;
+      }
+    }
+
+    if (path.startsWith("/api/agent/availability/") && path.endsWith("/book") && method === "POST") {
+      const slotId = path.split("/")[4] || "";
+      const body = await request.json();
+      try {
+        const result = await instantResponseAgent.bookSlotFromCalendar(slotId, body.leadId);
+        return jsonResponse({ success: true, ...result });
+      } catch (err: any) {
+        if (err?.code) return jsonResponse({ success: false, error: err.message, code: err.code }, 409);
+        throw err;
+      }
     }
 
     if (path === "/api/agent/pre-design" && method === "POST") {

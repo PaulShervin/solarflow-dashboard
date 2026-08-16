@@ -8,6 +8,7 @@ import {
   calls as defaultCalls,
   appointments as defaultAppointments,
   tasks as defaultTasks,
+  availabilityMatrix as defaultAvailability,
   portalProject as defaultPortalProject,
   portalMilestones as defaultPortalMilestones,
   portalMessages as defaultPortalMessages,
@@ -21,6 +22,7 @@ import {
   type Call,
   type Appointment,
   type Task,
+  type AvailabilitySlot,
   type PortalMilestone,
   type Message as ChatMessage,
 } from "@/data/mock";
@@ -54,6 +56,7 @@ class ServerDatabaseStore {
     calls: [...defaultCalls],
     appointments: [...defaultAppointments],
     tasks: [...defaultTasks],
+    availability: [...defaultAvailability],
     portalProject: { ...defaultPortalProject },
     portalMilestones: [...defaultPortalMilestones],
     portalMessages: [...defaultPortalMessages],
@@ -141,6 +144,7 @@ class ServerDatabaseStore {
       calls: [...defaultCalls],
       appointments: [...defaultAppointments],
       tasks: [...defaultTasks],
+      availability: [...defaultAvailability],
       portalProject: { ...defaultPortalProject },
       portalMilestones: [...defaultPortalMilestones],
       portalMessages: [...defaultPortalMessages],
@@ -212,6 +216,13 @@ class ServerDatabaseStore {
     return proposal;
   }
 
+  // --- APPOINTMENTS ---
+  public saveAppointment(appt: Appointment): Appointment {
+    this.data.appointments.unshift(appt);
+    this.writeToDisk();
+    return appt;
+  }
+
   // --- CAMPAIGNS & NURTURE ---
   public getCampaigns(): Campaign[] {
     return this.data.campaigns;
@@ -229,6 +240,58 @@ class ServerDatabaseStore {
       (this.data.portalMessages as any[]).unshift(newMessage);
     }
     this.writeToDisk();
+  }
+
+  // --- AVAILABILITY MATRIX ---
+  public getAvailability(): AvailabilitySlot[] {
+    return this.data.availability;
+  }
+
+  public isRepInMatrix(rep: string): boolean {
+    return this.data.availability.some((s) => s.rep === rep);
+  }
+
+  public isSlotOpen(rep: string, date: string, time: string): boolean {
+    const slot = this.data.availability.find((s) => s.rep === rep && s.date === date && s.time === time);
+    return !!slot && slot.status === "open";
+  }
+
+  public hasAppointmentConflict(rep: string, date: string, time: string): boolean {
+    return this.data.appointments.some((a) => a.rep === rep && a.date === date && a.time === time);
+  }
+
+  public reserveSlot(rep: string, date: string, time: string): AvailabilitySlot | null {
+    const idx = this.data.availability.findIndex((s) => s.rep === rep && s.date === date && s.time === time);
+    if (idx < 0) return null;
+    const current = this.data.availability[idx];
+    if (!current || current.status !== "open") return null;
+    const slot: AvailabilitySlot = { ...current, status: "closed" };
+    this.data.availability[idx] = slot;
+    this.writeToDisk();
+    return slot;
+  }
+
+  public findFirstOpenSlot(rep: string): AvailabilitySlot | null {
+    const slots = this.data.availability
+      .filter((s) => s.rep === rep && s.status === "open")
+      .sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : a.order - b.order));
+    return slots[0] || null;
+  }
+
+  public getSlotById(slotId: string): AvailabilitySlot | undefined {
+    return this.data.availability.find((s) => s.id === slotId);
+  }
+
+  public setSlotStatus(slotId: string, status: "open" | "closed"): AvailabilitySlot | null {
+    const idx = this.data.availability.findIndex((s) => s.id === slotId);
+    if (idx < 0) return null;
+    const current = this.data.availability[idx];
+    if (!current) return null;
+    if (current.status === status) return current;
+    const updated: AvailabilitySlot = { ...current, status };
+    this.data.availability[idx] = updated;
+    this.writeToDisk();
+    return updated;
   }
 
   // --- CALLS ---

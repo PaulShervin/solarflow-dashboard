@@ -13,6 +13,7 @@ import appCss from "../styles.css?url";
 import { reportError } from "../lib/error-reporting";
 import { AuthProvider } from "../lib/authContext";
 import { ProductChatbotWidget } from "../components/chat/ProductChatbotWidget";
+import { Toaster } from "../components/ui/sonner";
 
 
 function NotFoundComponent() {
@@ -124,6 +125,7 @@ function RootComponent() {
       <AuthProvider>
         <Outlet />
         <ProductChatbotWidget />
+        <Toaster position="top-right" richColors />
       </AuthProvider>
     </QueryClientProvider>
   );

@@ -55,9 +55,12 @@ graph TD
 
 | Endpoint | Method | Agent / Module | Description & Real Behavior |
 | :--- | :--- | :--- | :--- |
-| `/api/webhooks/lead` | `POST` | Instant Response Agent | Ingests raw webhook payload from HubSpot/Salesforce/GHL/Custom. Normalizes fields, computes quantitative intent score (0-100), initializes conversation, logs latency, and triggers outbound CRM sync. |
-| `/api/agent/qualify` | `POST` | Instant Response Agent | Processes qualifying answers, calculates updated score, checks rep availability matrix, and flags human handoff if score < 45 or renter. |
-| `/api/agent/book-appointment` | `POST` | Instant Response Agent | Reserves rep time slot, creates appointment record in `server_db.json`, updates lead status to `appointment`, and dispatches outbound CRM sync. |
+| `/api/webhooks/lead` | `POST` | Instant Response Agent | Ingests raw webhook payload from HubSpot/Salesforce/GHL/Custom with **provider auto-detection** (payload shape wins, CRM settings as fallback). Normalizes fields, computes quantitative intent score (0-100) incl. timeline, initializes conversation, logs latency, and triggers outbound CRM sync. |
+| `/api/agent/qualify` | `POST` | Instant Response Agent | Processes qualifying answers, calculates updated score via the shared rubric, **auto-books the earliest open slot on the rep availability matrix** for qualified leads, and flags human handoff (score < 45 or renter) with **ownership transfer to `Human Rep (Escalated)`**. |
+| `/api/agent/book-appointment` | `POST` | Instant Response Agent | Validates the rep availability matrix (slot exists, open, no conflict), **reserves the slot**, creates appointment record in `server_db.json`, updates lead status to `appointment`, and dispatches outbound CRM sync. Conflicts return HTTP 409 with code `SLOT_UNAVAILABLE`. |
+| `/api/agent/availability` | `GET` | Instant Response Agent | Returns the full sales rep availability matrix (rep × day × time slot grid with open/closed status). |
+| `/api/agent/availability/:slotId` | `PATCH` | Instant Response Agent | Manually opens/closes a matrix slot (`{ "status": "open" \| "closed" }`). Reopening a slot that holds an appointment returns 409 `SLOT_HAS_APPOINTMENT`; unknown slot returns 409 `SLOT_NOT_FOUND`. |
+| `/api/agent/availability/:slotId/book` | `POST` | Instant Response Agent | Books a lead into a specific matrix slot from the calendar (`{ "leadId": "..." }`); reserves the slot, creates the appointment, and applies the same conflict rules as `/api/agent/book-appointment`. |
 | `/api/agent/pre-design` | `POST` | Auto Pre-Design Engine | Executes real solar engineering equations: System kW, panel count, annual kWh generation, 25-yr utility escalation NPV, and federal tax credit math. |
 | `/api/proposals/:id/pdf` | `GET` | Auto Pre-Design Engine | Returns server-rendered printable HTML/PDF proposal document for proposal `:id`. |
 | `/api/agent/nurture/run-rules` | `POST` | Contextual Nurture Engine | Scans leads, checks idle conditions against stage, compiles personalized text templates (`{{first_name}}`, `{{monthly_bill}}`, etc.), and queues messages. |
@@ -75,7 +78,15 @@ $$\text{Required kW System Capacity} = \frac{\text{Daily kWh} \times (\text{Targ
 $$\text{Panel Count (400W Modules)} = \left\lceil \frac{\text{System kW} \times 1000}{400} \right\rceil$$
 $$\text{Net Out-of-Pocket} = \text{Gross System Price} - (0.30 \times \text{Gross System Price})$$
 
-### 2. Cancellation Risk Index Math (`postSaleAgent.ts`)
+### 2. Instant Response Intent Score (`instantResponseAgent.ts`)
+$$\text{Score} = \min(100, \max(0, 30 + \text{Homeowner}(+30) + \text{Bill}(+25/15/0) + \text{Roof}(+15) + \text{Timeline}(+15/+10/0/-5)))$$
+- **Homeownership**: owns home `+30`.
+- **Monthly bill**: `≥ $300` `+25`, `$200–299` `+15`, below `0`.
+- **Roof type**: asphalt shingle or tile `+15`.
+- **Timeline**: 0–1 mo `+15`, 1–3 mo `+10`, 3–6 mo `0`, researching/6+ `−5`.
+- **Handoff rule**: `score < 45` OR renter → ownership transferred to `Human Rep (Escalated)`.
+
+### 3. Cancellation Risk Index Math (`postSaleAgent.ts`)
 $$\text{Cancellation Risk Score} = \min(100, \text{Stalled Days in Stage} \times 12 + \text{Unresolved Inquiries} \times 15)$$
 - **Score $\ge$ 70**: High Cancellation Risk (Priority Manager Intervention).
 - **Score 40–69**: Elevated Risk (Automated Reassurance SMS).

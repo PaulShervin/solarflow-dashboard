@@ -3,9 +3,34 @@ import type { Lead } from "@/data/mock";
 
 export type RawCrmPayload = Record<string, any>;
 
+/**
+ * Resolves which provider's schema a payload uses. Shape detection wins for the
+ * three recognizable CRMs; anything ambiguous falls back to the configured
+ * settings provider (usually Custom Webhook).
+ */
+export function detectProvider(payload: RawCrmPayload, settingsProvider: CrmSettings["provider"]): CrmSettings["provider"] {
+  if (payload && typeof payload === "object") {
+    if (payload.properties && typeof payload.properties === "object") return "HubSpot";
+    if (payload.contact && typeof payload.contact === "object") return "GoHighLevel";
+    if (payload.FirstName || payload.LastName || payload.Name || payload.Email) return "Salesforce";
+    if (
+      typeof payload.name === "string" ||
+      typeof payload.fullName === "string" ||
+      typeof payload.email === "string" ||
+      typeof payload.monthlyBill === "number" ||
+      typeof payload.bill === "number"
+    ) {
+      return "Custom Webhook";
+    }
+  }
+  return settingsProvider;
+}
+
 export class CrmAdapter {
   public normalizeInboundPayload(payload: RawCrmPayload, provider: CrmSettings["provider"]): Partial<Lead> {
-    if (provider === "HubSpot") {
+    const resolvedProvider = detectProvider(payload, provider);
+
+    if (resolvedProvider === "HubSpot") {
       const props = payload.properties || payload;
       return {
         name: `${props.firstname || props.first_name || ""} ${props.lastname || props.last_name || ""}`.trim() || props.name || "HubSpot Lead",
@@ -17,10 +42,11 @@ export class CrmAdapter {
         monthlyBill: Number(props.monthly_electric_bill || props.monthly_bill || 240),
         roof: props.roof_type || props.roof || "Asphalt shingle",
         homeowner: props.is_homeowner !== false && props.homeowner !== "no",
+        timeline: (props.buying_timeline || props.timeline || undefined) as Lead["timeline"],
       };
     }
 
-    if (provider === "Salesforce") {
+    if (resolvedProvider === "Salesforce") {
       return {
         name: `${payload.FirstName || ""} ${payload.LastName || payload.Name || "SFDC Lead"}`.trim(),
         email: payload.Email || "lead@salesforce.com",
@@ -31,10 +57,11 @@ export class CrmAdapter {
         monthlyBill: Number(payload.Monthly_Bill__c || 310),
         roof: payload.Roof_Type__c || "Tile",
         homeowner: payload.Is_Homeowner__c !== false,
+        timeline: (payload.Timeline__c || undefined) as Lead["timeline"],
       };
     }
 
-    if (provider === "GoHighLevel") {
+    if (resolvedProvider === "GoHighLevel") {
       const contact = payload.contact || payload;
       return {
         name: `${contact.firstName || ""} ${contact.lastName || contact.name || "GHL Lead"}`.trim(),
@@ -46,6 +73,7 @@ export class CrmAdapter {
         monthlyBill: Number(contact.customFields?.monthly_bill || 270),
         roof: contact.customFields?.roof || "Asphalt shingle",
         homeowner: true,
+        timeline: (contact.customFields?.timeline || undefined) as Lead["timeline"],
       };
     }
 
@@ -59,6 +87,7 @@ export class CrmAdapter {
       monthlyBill: Number(payload.monthlyBill || payload.bill || 250),
       roof: payload.roof || "Asphalt shingle",
       homeowner: payload.homeowner ?? true,
+      timeline: (payload.timeline || undefined) as Lead["timeline"],
     };
   }
 

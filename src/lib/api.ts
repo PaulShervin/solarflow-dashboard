@@ -48,13 +48,49 @@ export const solarApi = {
     return db.addWebhookLead(payload);
   },
 
-  async qualifyLead(leadId: string, answers: Record<string, string>, score: number) {
+  async qualifyLead(leadId: string, answers: Record<string, string>) {
     const remote = await postJson("/api/agent/qualify", { leadId, answers });
     if (remote && remote.lead) {
       db.updateLead(leadId, remote.lead);
-      return remote.lead;
+      if (remote.appointment) {
+        db.getAppointments().unshift(remote.appointment);
+      }
+      return remote;
     }
-    return db.qualifyLead(leadId, answers, score);
+    return db.qualifyLead(leadId, answers);
+  },
+
+  async getAvailability() {
+    const res = await getJson("/api/agent/availability");
+    return res?.availability || db.getAvailability();
+  },
+
+  async updateAvailabilitySlot(slotId: string, status: "open" | "closed") {
+    try {
+      const res = await fetch(`/api/agent/availability/${slotId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status }),
+      });
+      if (res.ok) {
+        const json = await res.json();
+        db.updateAvailabilitySlot(slotId, status);
+        return json;
+      }
+    } catch (err) {
+      console.warn(`PATCH /api/agent/availability/${slotId} failed, falling back to local store:`, err);
+    }
+    return db.updateAvailabilitySlot(slotId, status);
+  },
+
+  async bookSlotFromCalendar(slotId: string, leadId: string) {
+    const remote = await postJson(`/api/agent/availability/${slotId}/book`, { leadId });
+    if (remote && remote.appointment) {
+      db.getAppointments().unshift(remote.appointment);
+      db.updateLead(leadId, { status: "appointment", owner: remote.appointment.rep });
+      return remote;
+    }
+    return db.bookSlotFromCalendar(slotId, leadId);
   },
 
   async bookAppointment(leadId: string, rep: string, date: string, time: string): Promise<Appointment> {

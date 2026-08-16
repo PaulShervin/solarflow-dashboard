@@ -100,8 +100,8 @@ export async function handleApiRequest(request: Request, url: URL): Promise<Resp
       path.startsWith("/api/agent/status/") ||
       path.startsWith("/api/agent/call-coaching/");
 
-    // --- MODULE 02 PRE-DESIGN & MODULE 03 NURTURE BACKEND PROXY ---
-    if (path.startsWith("/api/nurture/") || path.startsWith("/api/pre-design")) {
+    // --- MODULE 02 PRE-DESIGN, MODULE 03 NURTURE & MODULE 05 CHATBOT BACKEND PROXY ---
+    if (path.startsWith("/api/nurture/") || path.startsWith("/api/pre-design") || path.startsWith("/api/chat")) {
       try {
         const backendUrl = `http://localhost:3001${path}${url.search}`;
         const init: RequestInit = {
@@ -119,6 +119,7 @@ export async function handleApiRequest(request: Request, url: URL): Promise<Resp
         console.warn("Backend 3001 proxy failed:", err);
       }
     }
+
 
     if (isProtected && !activeSession) {
       // For developer demonstration compatibility, allow if local dev header missing or validate token

@@ -12,6 +12,8 @@ import { useEffect, type ReactNode } from "react";
 import appCss from "../styles.css?url";
 import { reportError } from "../lib/error-reporting";
 import { AuthProvider } from "../lib/authContext";
+import { ProductChatbotWidget } from "../components/chat/ProductChatbotWidget";
+
 
 function NotFoundComponent() {
   return (
@@ -114,13 +116,16 @@ function RootShell({ children }: { children: ReactNode }) {
 }
 
 function RootComponent() {
+
   const { queryClient } = Route.useRouteContext();
 
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <Outlet />
+        <ProductChatbotWidget />
       </AuthProvider>
     </QueryClientProvider>
   );
 }
+

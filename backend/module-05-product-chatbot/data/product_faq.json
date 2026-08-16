@@ -1,0 +1,42 @@
+[
+  {
+    "topic": "warranty",
+    "keywords": ["warranty", "guarantee", "degradation", "lifespan", "how long do panels last", "25 year"],
+    "answer": "All our premium solar panels come with a 25-year manufacturer product and power output warranty, guaranteeing at least 85–92% of original power production after 25 years. Inverters include 10–25 year coverage, and battery units include 10–15 year warranties."
+  },
+  {
+    "topic": "cloudy_days",
+    "keywords": ["cloudy", "rain", "winter", "weather", "overcast", "night", "storm"],
+    "answer": "Solar panels still generate electricity on cloudy or overcast days using diffuse sunlight (typically 10% to 25% of peak capacity). During nighttime, your home seamlessly pulls power from your solar battery storage or the local utility grid."
+  },
+  {
+    "topic": "federal_tax_credit",
+    "keywords": ["tax credit", "itc", "subsidy", "incentive", "30%", "rebate", "government rebate"],
+    "answer": "Under the Federal Solar Investment Tax Credit (ITC), homeowners who purchase their system are eligible for a 30% tax credit on the total gross installation cost, including solar panels, battery storage, permitting, and labor."
+  },
+  {
+    "topic": "payback_period",
+    "keywords": ["payback", "roi", "return on investment", "how fast does it pay", "break even"],
+    "answer": "Most residential solar systems pay for themselves within 5.5 to 7.5 years through utility bill elimination. Over a 25-year system lifespan, the average homeowner saves between $35,000 and $65,000 on electric bills."
+  },
+  {
+    "topic": "maintenance",
+    "keywords": ["maintenance", "cleaning", "repair", "service", "broken panel", "snow"],
+    "answer": "Solar panels have no moving parts and require virtually zero maintenance. Rain naturally washes away dust. SolarFlow provides 24/7 proactive real-time performance monitoring to detect any drop in production immediately."
+  },
+  {
+    "topic": "roof_compatibility",
+    "keywords": ["roof type", "tile roof", "metal roof", "shingle", "flat roof", "roof damage", "leak"],
+    "answer": "We install solar on asphalt shingle, Spanish tile, standing seam metal, and flat roofs. We use flashing and waterproof penetrations backed by our 10-year roof-penetration warranty."
+  },
+  {
+    "topic": "financing",
+    "keywords": ["financing", "loan", "lease", "ppa", "$0 down", "monthly payment", "interest"],
+    "answer": "We offer $0-down solar loan options with terms ranging from 10 to 25 years, allowing you to swap your electric bill for a predictable solar payment that is often 20–40% lower than your current utility rate."
+  },
+  {
+    "topic": "battery_storage",
+    "keywords": ["battery", "powerwall", "blackout", "power outage", "store energy", "grid failure"],
+    "answer": "Adding a battery like the Tesla Powerwall 3 (13.5 kWh) or Enphase IQ 5P provides automatic backup power during grid blackouts in under 10 milliseconds, while storing excess daytime solar to power your home during expensive peak-rate evening hours."
+  }
+]

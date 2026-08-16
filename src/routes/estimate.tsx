@@ -115,10 +115,19 @@ export function EstimatePage() {
               Pulls roof data, computes solar energy production, and generates shareable PDF quote documents same-day (instead of 2 days).
             </p>
           </div>
-          <Button onClick={handleGenerateProposal} disabled={generatingPdf} className="gap-2 font-bold">
-            <Download className="size-4" />
-            {generatingPdf ? "Generating Proposal PDF..." : "Generate Proposal Quote (PDF)"}
-          </Button>
+          <div className="flex flex-wrap gap-2">
+            <Button asChild variant="outline" className="gap-2 font-bold">
+              <Link to="/qualify">
+                <Sparkles className="size-4 text-primary" />
+                Ask Solar AI Assistant
+              </Link>
+            </Button>
+            <Button onClick={handleGenerateProposal} disabled={generatingPdf} className="gap-2 font-bold">
+              <Download className="size-4" />
+              {generatingPdf ? "Generating Proposal PDF..." : "Generate Proposal Quote (PDF)"}
+            </Button>
+          </div>
+
         </div>
 
         <div className="mt-8 grid gap-6 lg:grid-cols-[1.4fr_1fr]">

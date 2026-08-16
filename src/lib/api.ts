@@ -249,4 +249,36 @@ export const solarApi = {
     }
     return settings;
   },
+
+  // --- MODULE 05 PRODUCT & PRICING CHATBOT ---
+  async sendChatMessage(sessionId?: string, message = "", leadId?: string) {
+    const res = await postJson("/api/chat/message", { sessionId, message, leadId });
+    return res || null;
+  },
+
+  async getChatSession(sessionId: string) {
+    const res = await getJson(`/api/chat/${sessionId}`);
+    return res?.session || null;
+  },
+
+  async submitRoofData(sessionId: string, roofData: { address?: string; roofAreaSqFt: number; polygon?: any }) {
+    const res = await postJson(`/api/chat/${sessionId}/roof-data`, roofData);
+    return res || null;
+  },
+
+  async calculateChatEstimate(sessionId: string) {
+    const res = await postJson(`/api/chat/${sessionId}/calculate`);
+    return res || null;
+  },
+
+  async escalateChat(sessionId: string, reason?: string) {
+    const res = await postJson(`/api/chat/${sessionId}/escalate`, { reason });
+    return res || null;
+  },
+
+  async getChatCatalog() {
+    const res = await getJson("/api/chat/catalog/items");
+    return res || null;
+  },
 };
+

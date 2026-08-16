@@ -1,0 +1,98 @@
+{
+  "panels": [
+    {
+      "id": "PN-MAXEON-430",
+      "brand": "Maxeon",
+      "model": "Maxeon 6 Black 430W",
+      "wattage": 430,
+      "efficiency": 22.8,
+      "cellType": "Monocrystalline Maxeon Gen 6",
+      "dimensions": "1872 x 1032 x 40 mm",
+      "pricePerPanel": 380,
+      "warrantyYears": 25,
+      "degradationRate": "0.2% per year",
+      "bestFor": "Premium residential, high efficiency, limited roof space"
+    },
+    {
+      "id": "PN-REC-400",
+      "brand": "REC",
+      "model": "REC Alpha Pure 400W",
+      "wattage": 400,
+      "efficiency": 21.6,
+      "cellType": "Heterojunction (HJT) Half-Cut",
+      "dimensions": "1821 x 1016 x 30 mm",
+      "pricePerPanel": 320,
+      "warrantyYears": 25,
+      "degradationRate": "0.25% per year",
+      "bestFor": "High heat tolerance, hot climates like Arizona & California"
+    },
+    {
+      "id": "PN-QCELLS-390",
+      "brand": "Q Cells",
+      "model": "Q.PEAK DUO BLK ML-G10+ 390W",
+      "wattage": 390,
+      "efficiency": 20.6,
+      "cellType": "Monocrystalline Q.ANTUM",
+      "dimensions": "1879 x 1045 x 32 mm",
+      "pricePerPanel": 260,
+      "warrantyYears": 25,
+      "degradationRate": "0.5% per year",
+      "bestFor": "Best value for money, reliable all-black residential aesthetic"
+    },
+    {
+      "id": "PN-CANADIAN-450",
+      "brand": "Canadian Solar",
+      "model": "HiKu6 Mono 450W",
+      "wattage": 450,
+      "efficiency": 20.9,
+      "cellType": "Monocrystalline PERC",
+      "dimensions": "2108 x 1048 x 35 mm",
+      "pricePerPanel": 290,
+      "warrantyYears": 25,
+      "degradationRate": "0.55% per year",
+      "bestFor": "Large roofs, commercial installations, high raw wattage"
+    }
+  ],
+  "batteries": [
+    {
+      "id": "BAT-POWERWALL-3",
+      "brand": "Tesla",
+      "model": "Tesla Powerwall 3",
+      "capacityKwh": 13.5,
+      "continuousPowerKw": 11.5,
+      "chemistry": "LFP (Lithium Iron Phosphate)",
+      "warrantyYears": 10,
+      "installedCost": 9800,
+      "backupCapability": "Whole home backup, built-in solar inverter"
+    },
+    {
+      "id": "BAT-ENPHASE-5P",
+      "brand": "Enphase",
+      "model": "IQ Battery 5P",
+      "capacityKwh": 5.0,
+      "continuousPowerKw": 3.84,
+      "chemistry": "LFP (Lithium Iron Phosphate)",
+      "warrantyYears": 15,
+      "installedCost": 5200,
+      "backupCapability": "Modular scalable storage, microinverter architecture"
+    },
+    {
+      "id": "BAT-FRANKLIN-Apower",
+      "brand": "FranklinWH",
+      "model": "aPower 13.6 kWh",
+      "capacityKwh": 13.6,
+      "continuousPowerKw": 5.0,
+      "chemistry": "LFP (Lithium Iron Phosphate)",
+      "warrantyYears": 12,
+      "installedCost": 9200,
+      "backupCapability": "Generator integration, smart load management"
+    }
+  ],
+  "pricingTiers": {
+    "costPerWattStandard": 2.80,
+    "costPerWattPremium": 3.20,
+    "federalTaxCreditRate": 0.30,
+    "estimatedAnnualSunlightHours": 1650,
+    "annualUtilityRateEscalation": 0.04
+  }
+}

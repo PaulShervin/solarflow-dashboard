@@ -6,6 +6,7 @@ import { preDesignAgent } from "./agents/preDesignAgent";
 import { nurtureAgent } from "./agents/nurtureAgent";
 import { postSaleAgent } from "./agents/postSaleAgent";
 import { callCoachingAgent } from "./agents/callCoachingAgent";
+import { handlePostSaleApi } from "../../backend/module-04-post-sale-retention/api/post-sale.router";
 
 export async function handleApiRequest(request: Request, url: URL): Promise<Response> {
   const method = request.method.toUpperCase();
@@ -33,6 +34,12 @@ export async function handleApiRequest(request: Request, url: URL): Promise<Resp
   const activeSession = authStore.validateSession(token);
 
   try {
+    // --- MODULE 04 POST-SALE RETENTION API DISPATCHER ---
+    const postSaleResponse = await handlePostSaleApi(request, url);
+    if (postSaleResponse) {
+      return postSaleResponse;
+    }
+
     // --- AUTH ROUTES ---
     if (path === "/api/auth/login" && method === "POST") {
       const body = await request.json().catch(() => ({}));

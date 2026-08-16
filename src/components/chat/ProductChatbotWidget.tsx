@@ -36,12 +36,14 @@ interface ProductChatbotWidgetProps {
   initialOpen?: boolean;
   leadId?: string;
   embedded?: boolean;
+  initialPrompt?: string | null;
 }
 
 export function ProductChatbotWidget({
   initialOpen = false,
   leadId = "LD-4821",
   embedded = false,
+  initialPrompt,
 }: ProductChatbotWidgetProps) {
   const [isOpen, setIsOpen] = useState(initialOpen || embedded);
   const [isExpanded, setIsExpanded] = useState(false);
@@ -59,6 +61,13 @@ export function ProductChatbotWidget({
   useEffect(() => {
     initChatSession();
   }, []);
+
+  // Handle external quick prompt triggers
+  useEffect(() => {
+    if (initialPrompt && initialPrompt.trim()) {
+      handleSendMessage(initialPrompt.trim());
+    }
+  }, [initialPrompt]);
 
   useEffect(() => {
     scrollToBottom();

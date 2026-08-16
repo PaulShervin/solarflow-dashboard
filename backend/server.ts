@@ -3,6 +3,7 @@ import cors from "cors";
 import { createNurtureExpressRouter } from "./module-03-contextual-nurture/api/nurture.router";
 import { createPreDesignExpressRouter } from "./module-02-conversational-qualification/api/predesign.router";
 import { createChatExpressRouter } from "./module-05-product-chatbot/api/chat.router";
+import { createPostSaleExpressRouter } from "./module-04-post-sale-retention/api/post-sale.router";
 import { NurtureEngineService } from "./module-03-contextual-nurture/services/nurture-engine.service";
 import { initDatabase } from "./module-03-contextual-nurture/repositories/db";
 import { logger } from "./shared/logger";
@@ -23,6 +24,8 @@ const engine = new NurtureEngineService();
 app.use("/api/nurture", createNurtureExpressRouter(engine));
 app.use("/api/pre-design", createPreDesignExpressRouter());
 app.use("/api/chat", createChatExpressRouter());
+app.use("/api/admin/projects", createPostSaleExpressRouter());
+app.use("/api/projects", createPostSaleExpressRouter());
 
 // Health check endpoint
 app.get("/health", (req, res) => {

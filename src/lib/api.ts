@@ -276,9 +276,65 @@ export const solarApi = {
     return res || null;
   },
 
-  async getChatCatalog() {
-    const res = await getJson("/api/chat/catalog/items");
+  // --- MODULE 04 POST-SALE RETENTION & MILESTONES ---
+  async getProjects(status?: string) {
+    const query = status ? `?status=${encodeURIComponent(status)}` : "";
+    const res = await getJson(`/api/admin/projects${query}`);
+    return res?.projects || [];
+  },
+
+  async getProjectDetail(projectId: string) {
+    const res = await getJson(`/api/admin/projects/${projectId}`);
     return res || null;
   },
+
+  async createProject(data: { leadId: string; startDate?: string; estimatedCompletionDate?: string }) {
+    return await postJson("/api/admin/projects", data);
+  },
+
+  async getProjectMilestones(projectId: string) {
+    const res = await getJson(`/api/admin/projects/${projectId}/milestones`);
+    return res?.milestones || [];
+  },
+
+  async startMilestone(projectId: string, milestoneType: string, notes?: string, updatedBy?: string) {
+    return await postJson(`/api/admin/projects/${projectId}/milestones/${milestoneType}/start`, {
+      notes,
+      updatedBy,
+    });
+  },
+
+  async completeMilestone(projectId: string, milestoneType: string, notes?: string, updatedBy?: string) {
+    return await postJson(`/api/admin/projects/${projectId}/milestones/${milestoneType}/complete`, {
+      notes,
+      updatedBy,
+    });
+  },
+
+  async getProjectUpdates(projectId: string) {
+    const res = await getJson(`/api/admin/projects/${projectId}/updates`);
+    return res?.updates || [];
+  },
+
+  async createProjectUpdate(projectId: string, message: string, visibleToCustomer = true, createdBy = "Operations") {
+    return await postJson(`/api/admin/projects/${projectId}/updates`, {
+      message,
+      visibleToCustomer,
+      createdBy,
+    });
+  },
+
+  async getProjectRisk(projectId: string) {
+    const res = await getJson(`/api/admin/projects/${projectId}/risk`);
+    return res || null;
+  },
+
+  async recalculateProjectRisk(projectId: string, stalledDays = 0, unresolvedInquiries = 0) {
+    return await postJson(`/api/admin/projects/${projectId}/risk/recalculate`, {
+      stalledDays,
+      unresolvedInquiries,
+    });
+  },
 };
+
 

@@ -6,6 +6,7 @@ import { preDesignAgent } from "./agents/preDesignAgent";
 import { nurtureAgent } from "./agents/nurtureAgent";
 import { postSaleAgent } from "./agents/postSaleAgent";
 import { callCoachingAgent } from "./agents/callCoachingAgent";
+import { handlePostSaleApi } from "../../backend/module-04-post-sale-retention/api/post-sale.router";
 
 export async function handleApiRequest(request: Request, url: URL): Promise<Response> {
   const method = request.method.toUpperCase();
@@ -25,6 +26,12 @@ export async function handleApiRequest(request: Request, url: URL): Promise<Resp
 
   if (method === "OPTIONS") {
     return jsonResponse({ ok: true });
+  }
+
+  // --- MODULE 04 POST-SALE RETENTION & MILESTONE TRACKING ---
+  if (path.startsWith("/api/admin/projects") || path.startsWith("/api/projects")) {
+    const postSaleRes = await handlePostSaleApi(request, url);
+    if (postSaleRes) return postSaleRes;
   }
 
   // Extract session token from Authorization or X-Session-Token header
@@ -100,8 +107,14 @@ export async function handleApiRequest(request: Request, url: URL): Promise<Resp
       path.startsWith("/api/agent/status/") ||
       path.startsWith("/api/agent/call-coaching/");
 
-    // --- MODULE 02 PRE-DESIGN, MODULE 03 NURTURE & MODULE 05 CHATBOT BACKEND PROXY ---
-    if (path.startsWith("/api/nurture/") || path.startsWith("/api/pre-design") || path.startsWith("/api/chat")) {
+    // --- MODULE 02 PRE-DESIGN, MODULE 03 NURTURE, MODULE 04 POST-SALE & MODULE 05 CHATBOT BACKEND PROXY ---
+    if (
+      path.startsWith("/api/nurture/") ||
+      path.startsWith("/api/pre-design") ||
+      path.startsWith("/api/chat") ||
+      path.startsWith("/api/admin/projects") ||
+      path.startsWith("/api/projects")
+    ) {
       try {
         const backendUrl = `http://localhost:3001${path}${url.search}`;
         const init: RequestInit = {

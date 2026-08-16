@@ -195,6 +195,28 @@
   box-shadow: var(--shadow-card);
 }
 
+@utility surface-glass {
+  background-color: oklch(from var(--color-card) l c h / 80%);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid oklch(from var(--color-border) l c h / 80%);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-card);
+}
+
+@utility glow-primary {
+  box-shadow: 0 0 25px -5px oklch(0.62 0.15 152 / 30%);
+}
+
+@utility glow-subtle {
+  box-shadow: 0 4px 20px -4px oklch(0.62 0.15 152 / 18%);
+}
+
+@utility card-hover-lift {
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
 @utility section-y {
   padding-block: 4.5rem;
 }
+

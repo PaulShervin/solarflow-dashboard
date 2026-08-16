@@ -13,6 +13,10 @@ import {
   Zap,
   MapPin,
   Shield,
+  Layers,
+  Sun,
+  BatteryCharging,
+  DollarSign,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
@@ -35,8 +39,17 @@ export const Route = createFileRoute("/qualify")({
   component: QualifyPage,
 });
 
+const quickPrompts = [
+  "⚡ Tesla Powerwall 3 Pricing & Specs",
+  "☀️ Maxeon vs REC Solar Panels",
+  "💰 Arizona APS / SRP Net Metering",
+  "📄 How does the 30% Federal Tax Credit work?",
+  "🏠 What if my roof is 15 years old?",
+];
+
 function QualifyPage() {
   const [assignedRep] = useState("Dana Ruiz");
+  const [selectedPrompt, setSelectedPrompt] = useState<string | null>(null);
 
   return (
     <div className="min-h-screen bg-background flex flex-col justify-between">
@@ -53,16 +66,30 @@ function QualifyPage() {
           <p className="mt-3 text-muted-foreground text-sm sm:text-base leading-relaxed max-w-2xl mx-auto">
             Answer a few quick questions or ask anything about panels, battery backup, warranties, and incentives. Our AI sizes your roof in real-time.
           </p>
+
+          {/* Quick Inquiry Chips */}
+          <div className="mt-5 flex flex-wrap items-center justify-center gap-2">
+            {quickPrompts.map((prompt) => (
+              <button
+                key={prompt}
+                onClick={() => setSelectedPrompt(prompt)}
+                className="rounded-full border border-border bg-card px-3.5 py-1.5 text-xs font-semibold text-muted-foreground transition-all hover:border-primary hover:bg-primary-soft hover:text-primary active:scale-95 shadow-xs"
+              >
+                {prompt}
+              </button>
+            ))}
+          </div>
         </div>
 
         <div className="mt-8 grid gap-8 lg:grid-cols-[1.6fr_1fr] items-start">
           {/* Main Embedded Chatbot Widget */}
-          <div className="surface-card flex min-w-0 flex-col overflow-hidden border-border/80 shadow-2xl p-2 rounded-2xl">
-            <ProductChatbotWidget embedded={true} initialOpen={true} />
+          <div className="surface-card flex min-w-0 flex-col overflow-hidden border-border/80 shadow-2xl p-2 rounded-3xl">
+            <ProductChatbotWidget embedded={true} initialOpen={true} initialPrompt={selectedPrompt} />
           </div>
 
           {/* Right Panel: How It Works & Guarantees */}
           <div className="min-w-0 space-y-5">
+            {/* Real-Time Roof Satellite Sizing Card */}
             <div className="surface-card p-6 space-y-4">
               <div className="flex items-center justify-between border-b border-border pb-3">
                 <h2 className="text-sm font-bold flex items-center gap-2">
@@ -123,24 +150,40 @@ function QualifyPage() {
               </div>
             </div>
 
-            <div className="surface-card p-6 space-y-3 border-emerald-500/30 bg-emerald-500/5">
-              <div className="flex items-center gap-2 text-emerald-600 font-bold text-xs">
+            {/* Arizona Clean Energy Guarantees */}
+            <div className="surface-card p-6 space-y-3 border-primary/30 bg-primary-soft/50">
+              <div className="flex items-center gap-2 text-primary font-bold text-xs">
                 <Shield className="size-4" />
                 <span>Verified Clean Energy Guarantees</span>
               </div>
-              <ul className="space-y-1.5 text-xs text-muted-foreground">
-                <li>• <strong>25-Year</strong> Linear Panel Output Warranty (92% Guaranteed)</li>
-                <li>• <strong>30% Federal Clean Energy Tax Credit</strong> Applied Directly</li>
-                <li>• <strong>$0 Down</strong> Low-Interest Solar Loan Programs Available</li>
+              <ul className="space-y-1.5 text-xs text-foreground/80">
+                <li className="flex items-center gap-2">
+                  <CheckCircle2 className="size-3.5 text-primary shrink-0" />
+                  <span><strong>25-Year</strong> Linear Panel Output Warranty (92% Guaranteed)</span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <CheckCircle2 className="size-3.5 text-primary shrink-0" />
+                  <span><strong>30% Federal Clean Energy Tax Credit</strong> Applied Directly</span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <CheckCircle2 className="size-3.5 text-primary shrink-0" />
+                  <span><strong>$0 Down</strong> Low-Interest Solar Loan Programs Available</span>
+                </li>
               </ul>
             </div>
 
+            {/* Senior Consultant Assignment Card */}
             <div className="surface-card p-5">
               <div className="flex items-start gap-3">
-                <Lock className="mt-0.5 size-4 text-primary shrink-0" />
-                <p className="text-xs text-muted-foreground leading-relaxed">
-                  <strong>Senior Consultant Assigned</strong>: {assignedRep} will receive your pre-design calculations directly to review customized financing options.
-                </p>
+                <div className="grid size-8 shrink-0 place-items-center rounded-full bg-navy text-navy-foreground text-xs font-bold">
+                  DR
+                </div>
+                <div className="min-w-0">
+                  <p className="text-xs font-bold text-foreground">Senior Consultant Assigned</p>
+                  <p className="text-xs text-muted-foreground leading-relaxed mt-0.5">
+                    {assignedRep} will receive your pre-design calculations directly to review customized financing options.
+                  </p>
+                </div>
               </div>
             </div>
           </div>
@@ -151,4 +194,5 @@ function QualifyPage() {
     </div>
   );
 }
+
 

@@ -11,12 +11,9 @@ import {
   Megaphone,
   MessagesSquare,
   Menu,
-  PhoneCall,
   PieChart,
   Search,
   Settings,
-  ShieldCheck,
-  Sun,
   Users,
   UserSquare2,
   X,
@@ -41,7 +38,6 @@ const navGroups: { label: string; items: NavItem[] }[] = [
     label: "Operate",
     items: [
       { to: "/admin" as const, label: "Dashboard", icon: LayoutDashboard, exact: true },
-      { to: "/admin/pre-design" as const, label: "Pre-Design Engine", icon: Sun, badge: "Mod 2" },
       { to: "/admin/post-sale" as const, label: "Post-Sale Tracking", icon: Compass, badge: "Mod 4" },
       { to: "/admin/leads" as const, label: "Leads", icon: Users, badge: "23" },
       { to: "/admin/conversations" as const, label: "Conversations", icon: MessagesSquare, badge: "3" },
@@ -55,7 +51,6 @@ const navGroups: { label: string; items: NavItem[] }[] = [
     items: [
       { to: "/admin/nurture" as const, label: "Nurture Campaigns", icon: Megaphone },
       { to: "/admin/tasks" as const, label: "Tasks", icon: ClipboardCheck, badge: "5" },
-      { to: "/admin/call-coaching" as const, label: "Call Coaching", icon: PhoneCall },
       { to: "/admin/reports" as const, label: "Reports", icon: PieChart },
     ],
   },

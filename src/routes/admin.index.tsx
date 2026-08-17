@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowDownRight, ArrowUpRight, Flame, Sparkles } from "lucide-react";
+import { ArrowDownRight, ArrowUpRight, Flame } from "lucide-react";
 import {
   Area,
   AreaChart,
@@ -19,7 +19,6 @@ import { Progress } from "@/components/ui/progress";
 import { PageHeader } from "@/components/admin/AdminShell";
 import { StatusPill } from "@/components/common/StatusPill";
 import {
-  callCoachingSummary,
   conversionFunnel,
   dealStatus,
   kpis,
@@ -242,7 +241,7 @@ function AdminDashboard() {
         </div>
       </section>
 
-      <section className="grid gap-5 lg:grid-cols-3">
+      <section className="grid gap-5 lg:grid-cols-2">
         <div className="surface-card min-w-0 p-6">
           <h2 className="text-base font-bold">Deal status</h2>
           <ul className="mt-4 divide-y divide-border">
@@ -255,39 +254,6 @@ function AdminDashboard() {
               </li>
             ))}
           </ul>
-        </div>
-
-        <div className="surface-card min-w-0 p-6">
-          <div className="flex items-center gap-2">
-            <Sparkles className="size-4 text-primary" />
-            <h2 className="text-base font-bold">Call coaching</h2>
-          </div>
-          <p className="mt-3 font-display text-3xl font-extrabold">
-            {callCoachingSummary.teamScore}
-            <span className="text-base font-semibold text-muted-foreground">/100</span>
-          </p>
-          <p className="text-xs text-muted-foreground">
-            {callCoachingSummary.callsAnalyzed} calls analyzed this month
-          </p>
-          <ul className="mt-4 space-y-3">
-            {[
-              ["Discovery", callCoachingSummary.discovery],
-              ["Objection handling", callCoachingSummary.objectionHandling],
-              ["Next step set", callCoachingSummary.nextStepSet],
-              ["Talk ratio (rep)", callCoachingSummary.talkRatio],
-            ].map(([label, value]) => (
-              <li key={label as string}>
-                <div className="flex justify-between text-xs">
-                  <span className="text-muted-foreground">{label}</span>
-                  <span className="font-semibold">{value}%</span>
-                </div>
-                <Progress value={value as number} className="mt-1 h-1.5" />
-              </li>
-            ))}
-          </ul>
-          <Button asChild variant="outline" size="sm" className="mt-5 w-full">
-            <Link to="/admin/call-coaching">Open coaching</Link>
-          </Button>
         </div>
 
         <div className="surface-card min-w-0 p-6">

@@ -18,13 +18,11 @@ import { Route as QualifyRouteImport } from './routes/qualify'
 import { Route as ViewAnalysisRouteImport } from './routes/view-analysis'
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as AdminAppointmentsRouteImport } from './routes/admin.appointments'
-import { Route as AdminCallCoachingRouteImport } from './routes/admin.call-coaching'
 import { Route as AdminConversationsRouteImport } from './routes/admin.conversations'
 import { Route as AdminCustomersRouteImport } from './routes/admin.customers'
 import { Route as AdminLeadsRouteImport } from './routes/admin.leads'
 import { Route as AdminNurtureRouteImport } from './routes/admin.nurture'
 import { Route as AdminPostSaleRouteImport } from './routes/admin.post-sale'
-import { Route as AdminPreDesignRouteImport } from './routes/admin.pre-design'
 import { Route as AdminProposalsRouteImport } from './routes/admin.proposals'
 import { Route as AdminReportsRouteImport } from './routes/admin.reports'
 import { Route as AdminSettingsRouteImport } from './routes/admin.settings'
@@ -75,11 +73,6 @@ const AdminAppointmentsRoute = AdminAppointmentsRouteImport.update({
   path: '/appointments',
   getParentRoute: () => AdminRoute,
 } as any)
-const AdminCallCoachingRoute = AdminCallCoachingRouteImport.update({
-  id: '/call-coaching',
-  path: '/call-coaching',
-  getParentRoute: () => AdminRoute,
-} as any)
 const AdminConversationsRoute = AdminConversationsRouteImport.update({
   id: '/conversations',
   path: '/conversations',
@@ -103,11 +96,6 @@ const AdminNurtureRoute = AdminNurtureRouteImport.update({
 const AdminPostSaleRoute = AdminPostSaleRouteImport.update({
   id: '/post-sale',
   path: '/post-sale',
-  getParentRoute: () => AdminRoute,
-} as any)
-const AdminPreDesignRoute = AdminPreDesignRouteImport.update({
-  id: '/pre-design',
-  path: '/pre-design',
   getParentRoute: () => AdminRoute,
 } as any)
 const AdminProposalsRoute = AdminProposalsRouteImport.update({
@@ -140,13 +128,11 @@ export interface FileRoutesByFullPath {
   '/qualify': typeof QualifyRoute
   '/view-analysis': typeof ViewAnalysisRoute
   '/admin/appointments': typeof AdminAppointmentsRoute
-  '/admin/call-coaching': typeof AdminCallCoachingRoute
   '/admin/conversations': typeof AdminConversationsRoute
   '/admin/customers': typeof AdminCustomersRoute
   '/admin/leads': typeof AdminLeadsRoute
   '/admin/nurture': typeof AdminNurtureRoute
   '/admin/post-sale': typeof AdminPostSaleRoute
-  '/admin/pre-design': typeof AdminPreDesignRoute
   '/admin/proposals': typeof AdminProposalsRoute
   '/admin/reports': typeof AdminReportsRoute
   '/admin/settings': typeof AdminSettingsRoute
@@ -161,13 +147,11 @@ export interface FileRoutesByTo {
   '/qualify': typeof QualifyRoute
   '/view-analysis': typeof ViewAnalysisRoute
   '/admin/appointments': typeof AdminAppointmentsRoute
-  '/admin/call-coaching': typeof AdminCallCoachingRoute
   '/admin/conversations': typeof AdminConversationsRoute
   '/admin/customers': typeof AdminCustomersRoute
   '/admin/leads': typeof AdminLeadsRoute
   '/admin/nurture': typeof AdminNurtureRoute
   '/admin/post-sale': typeof AdminPostSaleRoute
-  '/admin/pre-design': typeof AdminPreDesignRoute
   '/admin/proposals': typeof AdminProposalsRoute
   '/admin/reports': typeof AdminReportsRoute
   '/admin/settings': typeof AdminSettingsRoute
@@ -184,13 +168,11 @@ export interface FileRoutesById {
   '/qualify': typeof QualifyRoute
   '/view-analysis': typeof ViewAnalysisRoute
   '/admin/appointments': typeof AdminAppointmentsRoute
-  '/admin/call-coaching': typeof AdminCallCoachingRoute
   '/admin/conversations': typeof AdminConversationsRoute
   '/admin/customers': typeof AdminCustomersRoute
   '/admin/leads': typeof AdminLeadsRoute
   '/admin/nurture': typeof AdminNurtureRoute
   '/admin/post-sale': typeof AdminPostSaleRoute
-  '/admin/pre-design': typeof AdminPreDesignRoute
   '/admin/proposals': typeof AdminProposalsRoute
   '/admin/reports': typeof AdminReportsRoute
   '/admin/settings': typeof AdminSettingsRoute
@@ -208,13 +190,11 @@ export interface FileRouteTypes {
     | '/qualify'
     | '/view-analysis'
     | '/admin/appointments'
-    | '/admin/call-coaching'
     | '/admin/conversations'
     | '/admin/customers'
     | '/admin/leads'
     | '/admin/nurture'
     | '/admin/post-sale'
-    | '/admin/pre-design'
     | '/admin/proposals'
     | '/admin/reports'
     | '/admin/settings'
@@ -229,13 +209,11 @@ export interface FileRouteTypes {
     | '/qualify'
     | '/view-analysis'
     | '/admin/appointments'
-    | '/admin/call-coaching'
     | '/admin/conversations'
     | '/admin/customers'
     | '/admin/leads'
     | '/admin/nurture'
     | '/admin/post-sale'
-    | '/admin/pre-design'
     | '/admin/proposals'
     | '/admin/reports'
     | '/admin/settings'
@@ -251,13 +229,11 @@ export interface FileRouteTypes {
     | '/qualify'
     | '/view-analysis'
     | '/admin/appointments'
-    | '/admin/call-coaching'
     | '/admin/conversations'
     | '/admin/customers'
     | '/admin/leads'
     | '/admin/nurture'
     | '/admin/post-sale'
-    | '/admin/pre-design'
     | '/admin/proposals'
     | '/admin/reports'
     | '/admin/settings'
@@ -340,13 +316,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminAppointmentsRouteImport
       parentRoute: typeof AdminRoute
     }
-    '/admin/call-coaching': {
-      id: '/admin/call-coaching'
-      path: '/call-coaching'
-      fullPath: '/admin/call-coaching'
-      preLoaderRoute: typeof AdminCallCoachingRouteImport
-      parentRoute: typeof AdminRoute
-    }
     '/admin/conversations': {
       id: '/admin/conversations'
       path: '/conversations'
@@ -382,13 +351,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminPostSaleRouteImport
       parentRoute: typeof AdminRoute
     }
-    '/admin/pre-design': {
-      id: '/admin/pre-design'
-      path: '/pre-design'
-      fullPath: '/admin/pre-design'
-      preLoaderRoute: typeof AdminPreDesignRouteImport
-      parentRoute: typeof AdminRoute
-    }
     '/admin/proposals': {
       id: '/admin/proposals'
       path: '/proposals'
@@ -422,13 +384,11 @@ declare module '@tanstack/react-router' {
 
 interface AdminRouteChildren {
   AdminAppointmentsRoute: typeof AdminAppointmentsRoute
-  AdminCallCoachingRoute: typeof AdminCallCoachingRoute
   AdminConversationsRoute: typeof AdminConversationsRoute
   AdminCustomersRoute: typeof AdminCustomersRoute
   AdminLeadsRoute: typeof AdminLeadsRoute
   AdminNurtureRoute: typeof AdminNurtureRoute
   AdminPostSaleRoute: typeof AdminPostSaleRoute
-  AdminPreDesignRoute: typeof AdminPreDesignRoute
   AdminProposalsRoute: typeof AdminProposalsRoute
   AdminReportsRoute: typeof AdminReportsRoute
   AdminSettingsRoute: typeof AdminSettingsRoute
@@ -438,13 +398,11 @@ interface AdminRouteChildren {
 
 const AdminRouteChildren: AdminRouteChildren = {
   AdminAppointmentsRoute: AdminAppointmentsRoute,
-  AdminCallCoachingRoute: AdminCallCoachingRoute,
   AdminConversationsRoute: AdminConversationsRoute,
   AdminCustomersRoute: AdminCustomersRoute,
   AdminLeadsRoute: AdminLeadsRoute,
   AdminNurtureRoute: AdminNurtureRoute,
   AdminPostSaleRoute: AdminPostSaleRoute,
-  AdminPreDesignRoute: AdminPreDesignRoute,
   AdminProposalsRoute: AdminProposalsRoute,
   AdminReportsRoute: AdminReportsRoute,
   AdminSettingsRoute: AdminSettingsRoute,

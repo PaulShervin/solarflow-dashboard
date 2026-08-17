@@ -15,6 +15,7 @@ import { Route as EstimateRouteImport } from './routes/estimate'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as PortalRouteImport } from './routes/portal'
 import { Route as QualifyRouteImport } from './routes/qualify'
+import { Route as ViewAnalysisRouteImport } from './routes/view-analysis'
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as AdminAppointmentsRouteImport } from './routes/admin.appointments'
 import { Route as AdminCallCoachingRouteImport } from './routes/admin.call-coaching'
@@ -57,6 +58,11 @@ const PortalRoute = PortalRouteImport.update({
 const QualifyRoute = QualifyRouteImport.update({
   id: '/qualify',
   path: '/qualify',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ViewAnalysisRoute = ViewAnalysisRouteImport.update({
+  id: '/view-analysis',
+  path: '/view-analysis',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminIndexRoute = AdminIndexRouteImport.update({
@@ -132,6 +138,7 @@ export interface FileRoutesByFullPath {
   '/login': typeof LoginRoute
   '/portal': typeof PortalRoute
   '/qualify': typeof QualifyRoute
+  '/view-analysis': typeof ViewAnalysisRoute
   '/admin/appointments': typeof AdminAppointmentsRoute
   '/admin/call-coaching': typeof AdminCallCoachingRoute
   '/admin/conversations': typeof AdminConversationsRoute
@@ -152,6 +159,7 @@ export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/portal': typeof PortalRoute
   '/qualify': typeof QualifyRoute
+  '/view-analysis': typeof ViewAnalysisRoute
   '/admin/appointments': typeof AdminAppointmentsRoute
   '/admin/call-coaching': typeof AdminCallCoachingRoute
   '/admin/conversations': typeof AdminConversationsRoute
@@ -174,6 +182,7 @@ export interface FileRoutesById {
   '/login': typeof LoginRoute
   '/portal': typeof PortalRoute
   '/qualify': typeof QualifyRoute
+  '/view-analysis': typeof ViewAnalysisRoute
   '/admin/appointments': typeof AdminAppointmentsRoute
   '/admin/call-coaching': typeof AdminCallCoachingRoute
   '/admin/conversations': typeof AdminConversationsRoute
@@ -197,6 +206,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/portal'
     | '/qualify'
+    | '/view-analysis'
     | '/admin/appointments'
     | '/admin/call-coaching'
     | '/admin/conversations'
@@ -217,6 +227,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/portal'
     | '/qualify'
+    | '/view-analysis'
     | '/admin/appointments'
     | '/admin/call-coaching'
     | '/admin/conversations'
@@ -238,6 +249,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/portal'
     | '/qualify'
+    | '/view-analysis'
     | '/admin/appointments'
     | '/admin/call-coaching'
     | '/admin/conversations'
@@ -260,6 +272,7 @@ export interface RootRouteChildren {
   LoginRoute: typeof LoginRoute
   PortalRoute: typeof PortalRoute
   QualifyRoute: typeof QualifyRoute
+  ViewAnalysisRoute: typeof ViewAnalysisRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -304,6 +317,13 @@ declare module '@tanstack/react-router' {
       path: '/qualify'
       fullPath: '/qualify'
       preLoaderRoute: typeof QualifyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/view-analysis': {
+      id: '/view-analysis'
+      path: '/view-analysis'
+      fullPath: '/view-analysis'
+      preLoaderRoute: typeof ViewAnalysisRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admin/': {
@@ -441,6 +461,7 @@ const rootRouteChildren: RootRouteChildren = {
   LoginRoute: LoginRoute,
   PortalRoute: PortalRoute,
   QualifyRoute: QualifyRoute,
+  ViewAnalysisRoute: ViewAnalysisRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

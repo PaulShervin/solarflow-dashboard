@@ -185,10 +185,10 @@ export function UnifiedPropertyMap({
         setIsGeolocating(false);
         const { latitude, longitude } = pos.coords;
         if (mapProviderRef.current) {
-          mapProviderRef.current.setCenter(latitude, longitude);
+          mapProviderRef.current.setCenter(latitude, longitude, 18); // Zoom in closer
         }
-        toast.success("Navigated to your location!");
-        toast.info("Now please tap on your building on the map to select it.");
+        handleMapLocationSelected(latitude, longitude, "gps");
+        toast.success("Location found!");
       },
       (err) => {
         setIsGeolocating(false);
@@ -306,11 +306,6 @@ export function UnifiedPropertyMap({
             <Navigation className={`h-3.5 w-3.5 text-emerald-600 ${isGeolocating ? "animate-spin" : ""}`} />
             {isGeolocating ? "Locating..." : "Locate Me"}
           </Button>
-
-          <div className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-primary/10 border border-primary/20 text-primary text-[11px] font-semibold">
-            <Globe className="h-3.5 w-3.5 text-primary" />
-            <span>{activeProviderType === "osm" ? "OpenStreetMap Satellite Engine" : "Google Maps Engine"}</span>
-          </div>
         </div>
       </div>
 

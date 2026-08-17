@@ -20,6 +20,11 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { solarApi } from "@/lib/api";
+import { CustomerRooftopParams } from "@/components/chat/CustomerRooftopParams";
+
+const UnifiedPropertyMap = React.lazy(() => 
+  import("@/components/common/UnifiedPropertyMap").then((mod) => ({ default: mod.UnifiedPropertyMap }))
+);
 
 interface ChatMessage {
   id: string;
@@ -56,6 +61,7 @@ export function ProductChatbotWidget({
   const [mapAddress, setMapAddress] = useState("742 Evergreen Terrace, Chandler, AZ");
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const lastHandledPromptRef = useRef<string | null>(null);
 
   // Initialize session on mount
   useEffect(() => {
@@ -64,7 +70,8 @@ export function ProductChatbotWidget({
 
   // Handle external quick prompt triggers
   useEffect(() => {
-    if (initialPrompt && initialPrompt.trim()) {
+    if (initialPrompt && initialPrompt.trim() && lastHandledPromptRef.current !== initialPrompt.trim()) {
+      lastHandledPromptRef.current = initialPrompt.trim();
       handleSendMessage(initialPrompt.trim());
     }
   }, [initialPrompt]);
@@ -132,6 +139,11 @@ export function ProductChatbotWidget({
           setSessionId(res.sessionId);
         }
         setMessages((prev) => [...prev, res.botMessage]);
+        
+        // Auto-open map modal if the backend determines it's time for the map prompt
+        if (res.botMessage.cardType === "map_prompt") {
+          setTimeout(() => setShowMapModal(true), 1000);
+        }
       } else {
         // Offline / Local Simulation Fallback
         handleLocalFallbackReply(text);
@@ -145,7 +157,9 @@ export function ProductChatbotWidget({
   }
 
   function handleLocalFallbackReply(userText: string) {
-    const lower = userText.toLowerCase();
+    const trimmed = (userText || "").trim();
+    if (!trimmed) return;
+    const lower = trimmed.toLowerCase();
     let replyText = "";
     let quickReplies: string[] | undefined = undefined;
     let cardType: any = undefined;
@@ -209,14 +223,17 @@ export function ProductChatbotWidget({
     setMessages((prev) => [...prev, botMsg]);
   }
 
-  async function handleConfirmRoofMap() {
+  async function handleConfirmRoofMap(confirmedAreaSqFt?: number, confirmedAddress?: string) {
     setShowMapModal(false);
     setLoading(true);
 
+    const finalArea = confirmedAreaSqFt !== undefined ? confirmedAreaSqFt : mapRoofArea;
+    const finalAddress = confirmedAddress !== undefined ? confirmedAddress : mapAddress;
+
     try {
       const res = await solarApi.submitRoofData(sessionId, {
-        address: mapAddress,
-        roofAreaSqFt: mapRoofArea,
+        address: finalAddress,
+        roofAreaSqFt: finalArea,
       });
 
       if (res && res.session) {
@@ -225,7 +242,7 @@ export function ProductChatbotWidget({
         const botMsg: ChatMessage = {
           id: `bot-${Date.now()}`,
           sender: "bot",
-          text: `📍 **Map Capture Successful!**\n\nIdentified **${mapRoofArea} sq ft** of usable solar roof area at *${mapAddress}*.\n\nWhen are you looking to install solar?`,
+          text: `📍 **Map Capture Successful!**\n\nIdentified **${finalArea} sq ft** of usable solar roof area at *${finalAddress}*.\n\nWhen are you looking to install solar?`,
           timestamp: new Date().toISOString(),
           quickReplies: ["Within 1 month", "1-3 months", "3-6 months", "Just researching"],
         };
@@ -556,85 +573,15 @@ export function ProductChatbotWidget({
       {/* Map Sub-Window Modal */}
       {showMapModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-          <div className="w-full max-w-xl overflow-hidden rounded-2xl border border-border bg-card shadow-2xl">
-            <div className="flex items-center justify-between border-b border-border bg-navy px-5 py-4 text-navy-foreground">
-              <div className="flex items-center gap-2">
-                <MapPin className="size-5 text-primary" />
-                <h3 className="font-display text-base font-black">Satellite Rooftop Area Scanner</h3>
-              </div>
-              <button
-                onClick={() => setShowMapModal(false)}
-                className="rounded-lg p-1 text-navy-foreground/70 hover:bg-navy-foreground/10 hover:text-navy-foreground"
-              >
-                <X className="size-5" />
-              </button>
-            </div>
-
-            <div className="p-6 space-y-4 text-xs">
-              <div>
-                <label className="font-bold text-muted-foreground">Property Address</label>
-                <input
-                  type="text"
-                  value={mapAddress}
-                  onChange={(e) => setMapAddress(e.target.value)}
-                  className="mt-1 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm font-semibold"
-                />
-              </div>
-
-              {/* Mock Satellite Canvas */}
-              <div className="relative h-48 w-full overflow-hidden rounded-xl border border-border bg-slate-900">
-                <div
-                  className="absolute inset-0 opacity-40 bg-cover bg-center"
-                  style={{
-                    backgroundImage:
-                      "radial-gradient(circle at 50% 50%, #1e293b 10%, #0f172a 90%)",
-                  }}
-                />
-                <div className="absolute inset-0 flex flex-col items-center justify-center text-center p-4">
-                  <div className="size-24 rounded-lg border-2 border-dashed border-primary bg-primary/20 grid place-items-center shadow-lg">
-                    <Sun className="size-8 text-primary animate-pulse" />
-                  </div>
-                  <span className="mt-2 font-mono font-bold text-emerald-400">
-                    Active Polygon: {mapRoofArea} sq ft usable
-                  </span>
-                  <span className="text-[10px] text-slate-400">
-                    Azimuth: 180° (South) · Optimal Solar Irradiance
-                  </span>
-                </div>
-              </div>
-
-              <div>
-                <div className="flex justify-between font-bold mb-1">
-                  <span>Adjust Traced Area</span>
-                  <span className="text-primary font-mono">{mapRoofArea} sq ft</span>
-                </div>
-                <input
-                  type="range"
-                  min="250"
-                  max="1200"
-                  step="10"
-                  value={mapRoofArea}
-                  onChange={(e) => setMapRoofArea(parseInt(e.target.value, 10))}
-                  className="w-full accent-primary"
-                />
-              </div>
-
-              <div className="flex gap-2 pt-2">
-                <Button
-                  variant="outline"
-                  onClick={() => setShowMapModal(false)}
-                  className="flex-1 text-xs"
-                >
-                  Cancel
-                </Button>
-                <Button
-                  onClick={handleConfirmRoofMap}
-                  className="flex-1 text-xs font-bold"
-                >
-                  <CheckCircle2 className="size-4 mr-1.5" />
-                  Confirm & Sync to Chat
-                </Button>
-              </div>
+          <div className="w-full max-w-3xl overflow-hidden rounded-2xl border border-border bg-card shadow-2xl relative">
+            <button
+              onClick={() => setShowMapModal(false)}
+              className="absolute top-4 right-4 z-50 rounded-lg bg-background/80 p-1.5 text-foreground hover:bg-muted backdrop-blur border border-border shadow-sm transition-colors"
+            >
+              <X className="size-5" />
+            </button>
+            <div className="w-full h-[85vh]">
+              <CustomerRooftopParams onClose={() => setShowMapModal(false)} />
             </div>
           </div>
         </div>

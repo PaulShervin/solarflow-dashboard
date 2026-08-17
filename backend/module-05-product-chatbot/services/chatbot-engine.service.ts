@@ -27,6 +27,12 @@ export class ProductChatbotEngine {
     const now = new Date().toISOString();
     const cleanText = userText.trim();
 
+    // If userText is empty (e.g. session initialization), return initial greeting without adding empty message or advancing qualification
+    if (!cleanText) {
+      const lastMsg = session.messages[session.messages.length - 1];
+      return { session, botMessage: lastMsg };
+    }
+
     // 1. Log incoming user message
     const userMsg: ChatMessage = {
       id: `MSG-${uuidv4().substring(0, 6)}`,
@@ -66,11 +72,14 @@ export class ProductChatbotEngine {
     const isProductQuestion = this.isProductQuery(cleanText);
     const grounding = RetrievalService.retrieveProductContext(cleanText);
 
+    const isDirectAnswer = this.isDirectQualificationAnswer(session.currentStep, cleanText);
+
     if (
-      isProductQuestion ||
+      !isDirectAnswer &&
+      (isProductQuestion ||
       grounding.matchedFaqs ||
       grounding.matchedPanels ||
-      grounding.matchedBatteries
+      grounding.matchedBatteries)
     ) {
       const groundedAnswer = await GeminiAiService.generateGroundedReply(
         cleanText,
@@ -316,6 +325,24 @@ export class ProductChatbotEngine {
       t.includes("call me") ||
       t.includes("speak to someone")
     );
+  }
+
+  private static isDirectQualificationAnswer(step: QualificationStep, text: string): boolean {
+    const t = text.toLowerCase();
+    switch (step) {
+      case "HOMEOWNER":
+        return t.includes("yes") || t.includes("no") || t.includes("own") || t.includes("rent");
+      case "BILL":
+        return /\d+/.test(t) || t.includes("mo") || t.includes("$");
+      case "ROOF_TYPE":
+        return t.includes("shingle") || t.includes("tile") || t.includes("metal") || t.includes("flat");
+      case "ROOF_AREA":
+        return /\d+/.test(t) || t.includes("pin") || t.includes("map");
+      case "TIMELINE":
+        return t.includes("month") || t.includes("researching");
+      default:
+        return false;
+    }
   }
 
   private static isProductQuery(text: string): boolean {

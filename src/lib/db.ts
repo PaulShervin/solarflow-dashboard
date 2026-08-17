@@ -6,6 +6,7 @@ import {
   calls as defaultCalls,
   appointments as defaultAppointments,
   tasks as defaultTasks,
+  availabilityMatrix as defaultAvailability,
   portalProject as defaultPortalProject,
   portalMilestones as defaultPortalMilestones,
   portalMessages as defaultPortalMessages,
@@ -19,6 +20,7 @@ import {
   type Call,
   type Appointment,
   type Task,
+  type AvailabilitySlot,
   type PortalMilestone,
   type Message as ChatMessage,
 } from "@/data/mock";
@@ -47,6 +49,41 @@ export type WebhookPayload = {
   homeowner?: boolean;
 };
 
+/** Client-side mirror of the server intent-score rubric (keep in sync). */
+export function computeIntentScore(factors: {
+  homeowner: boolean;
+  monthlyBill?: number | undefined;
+  roof?: string | undefined;
+  timeline?: string | undefined;
+}): number {
+  let score = 30;
+  if (factors.homeowner) score += 30;
+
+  const bill = factors.monthlyBill || 0;
+  if (bill >= 300) score += 25;
+  else if (bill >= 200) score += 15;
+
+  const roof = (factors.roof || "").toLowerCase();
+  if (roof.includes("asphalt") || roof.includes("tile")) score += 15;
+
+  const timeline = (factors.timeline || "").toLowerCase();
+  if (timeline.includes("0-1") || timeline.includes("as soon")) score += 15;
+  else if (timeline.includes("1-3")) score += 10;
+  else if (timeline.includes("3-6")) score += 0;
+  else score -= 5;
+
+  return Math.max(0, Math.min(100, score));
+}
+
+export class BookingConflictError extends Error {
+  public code: string;
+  constructor(message: string, code = "SLOT_UNAVAILABLE") {
+    super(message);
+    this.name = "BookingConflictError";
+    this.code = code;
+  }
+}
+
 const STORAGE_KEY = "solarflow_db_v1";
 
 type Listener = () => void;
@@ -59,6 +96,7 @@ class DatabaseStore {
   private calls: Call[] = [];
   private appointments: Appointment[] = [];
   private tasks: Task[] = [];
+  private availability: AvailabilitySlot[] = [];
   private portalProject = { ...defaultPortalProject };
   private portalMilestones: PortalMilestone[] = [];
   private portalMessages: any[] = [];
@@ -91,6 +129,7 @@ class DatabaseStore {
       this.calls = data.calls || defaultCalls;
       this.appointments = data.appointments || defaultAppointments;
       this.tasks = data.tasks || defaultTasks;
+      this.availability = data.availability || defaultAvailability;
       this.portalProject = data.portalProject || defaultPortalProject;
       this.portalMilestones = data.portalMilestones || defaultPortalMilestones;
       this.portalMessages = data.portalMessages || defaultPortalMessages;
@@ -112,6 +151,7 @@ class DatabaseStore {
     this.calls = [...defaultCalls];
     this.appointments = [...defaultAppointments];
     this.tasks = [...defaultTasks];
+    this.availability = [...defaultAvailability];
     this.portalProject = { ...defaultPortalProject };
     this.portalMilestones = [...defaultPortalMilestones];
     this.portalMessages = [...defaultPortalMessages];
@@ -173,6 +213,7 @@ class DatabaseStore {
         calls: this.calls,
         appointments: this.appointments,
         tasks: this.tasks,
+        availability: this.availability,
         portalProject: this.portalProject,
         portalMilestones: this.portalMilestones,
         portalMessages: this.portalMessages,
@@ -240,15 +281,86 @@ class DatabaseStore {
     this.save();
   }
 
+  // --- AVAILABILITY MATRIX ---
+  public getAvailability(): AvailabilitySlot[] {
+    return this.availability;
+  }
+
+  public isRepInMatrix(rep: string): boolean {
+    return this.availability.some((s) => s.rep === rep);
+  }
+
+  public isSlotOpen(rep: string, date: string, time: string): boolean {
+    const slot = this.availability.find((s) => s.rep === rep && s.date === date && s.time === time);
+    return !!slot && slot.status === "open";
+  }
+
+  public hasAppointmentConflict(rep: string, date: string, time: string): boolean {
+    return this.appointments.some((a) => a.rep === rep && a.date === date && a.time === time);
+  }
+
+  public reserveSlot(rep: string, date: string, time: string): AvailabilitySlot | null {
+    const idx = this.availability.findIndex((s) => s.rep === rep && s.date === date && s.time === time);
+    if (idx < 0) return null;
+    const current = this.availability[idx];
+    if (!current || current.status !== "open") return null;
+    const slot: AvailabilitySlot = { ...current, status: "closed" };
+    this.availability = this.availability.map((s, i) => (i === idx ? slot : s));
+    return slot;
+  }
+
+  public findFirstOpenSlot(rep: string): AvailabilitySlot | null {
+    const slots = this.availability
+      .filter((s) => s.rep === rep && s.status === "open")
+      .sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : a.order - b.order));
+    return slots[0] || null;
+  }
+
+  public getSlotById(slotId: string): AvailabilitySlot | undefined {
+    return this.availability.find((s) => s.id === slotId);
+  }
+
+  public updateAvailabilitySlot(slotId: string, status: "open" | "closed"): { slot: AvailabilitySlot } {
+    const slot = this.getSlotById(slotId);
+    if (!slot) throw new BookingConflictError(`Availability slot ${slotId} not found`, "SLOT_NOT_FOUND");
+    if (status === "open" && this.hasAppointmentConflict(slot.rep, slot.date, slot.time)) {
+      throw new BookingConflictError(
+        `Cannot reopen slot ${slotId}: ${slot.rep} already has an appointment on ${slot.date} at ${slot.time}`,
+        "SLOT_HAS_APPOINTMENT",
+      );
+    }
+    this.availability = this.availability.map((s) => (s.id === slotId ? { ...s, status } : s));
+    this.addAuditLog({
+      category: "AI Bot",
+      title: status === "closed" ? "Availability Slot Manually Closed" : "Availability Slot Reopened",
+      detail: `Slot ${slot.id} (${slot.rep}, ${slot.date} ${slot.time}) set to '${status}' by admin`,
+      status: "info",
+    });
+    return { slot: this.getSlotById(slotId)! };
+  }
+
+  public bookSlotFromCalendar(slotId: string, leadId: string): { appointment: Appointment; slot: AvailabilitySlot } {
+    const slot = this.getSlotById(slotId);
+    if (!slot) throw new BookingConflictError(`Availability slot ${slotId} not found`, "SLOT_NOT_FOUND");
+    const appointment = this.bookAppointment(leadId, slot.rep, slot.date, slot.time);
+    // Re-read the slot so the response reflects the reservation (status -> closed).
+    const booked = this.getSlotById(slotId);
+    return { appointment, slot: booked ?? slot };
+  }
+
   // --- INBOUND WEBHOOK & QUALIFYING ---
   public addWebhookLead(payload: WebhookPayload): { lead: Lead; auditLog: AuditLogEntry } {
     const startTime = Date.now();
     const id = `LD-${Math.floor(1000 + Math.random() * 9000)}`;
 
-    let score = 50;
-    if (payload.homeowner) score += 25;
-    if (payload.monthlyBill && payload.monthlyBill > 250) score += 15;
-    if (payload.roof === "Asphalt shingle") score += 10;
+    const timeline = payload.timeline || "0-1 month";
+    const score = computeIntentScore({
+      homeowner: payload.homeowner ?? true,
+      monthlyBill: payload.monthlyBill,
+      roof: payload.roof,
+      timeline,
+    });
+    const needsHandoff = score < 45 || payload.homeowner === false;
 
     const newLead: Lead = {
       id,
@@ -258,18 +370,18 @@ class DatabaseStore {
       city: payload.city || "Phoenix",
       state: payload.state || "AZ",
       source: payload.source || "Website",
-      status: "new",
+      status: needsHandoff ? "contacted" : "new",
       score,
       monthlyBill: payload.monthlyBill || 220,
       homeType: payload.homeType || "Single family",
       roof: payload.roof || "Asphalt shingle",
-      timeline: payload.timeline || "0-1 month",
+      timeline,
       homeowner: payload.homeowner ?? true,
       createdAt: new Date().toISOString(),
       lastTouch: "Just now",
-      owner: "Sunny (AI Agent)",
-      aiSummary: `Inbound webhook captured lead with average monthly bill of $${payload.monthlyBill || 220}. Qualify via automated SMS/call prompt.`,
-      tags: ["Webhook", "Instant Lead"],
+      owner: needsHandoff ? "Human Rep (Escalated)" : "Sunny (AI Agent)",
+      aiSummary: `Inbound webhook captured lead with average monthly bill of $${payload.monthlyBill || 220}. Intent score: ${score}/100. ${needsHandoff ? "FLAGGED FOR HUMAN HANDOFF." : "Qualify via automated SMS/call prompt."}`,
+      tags: ["Webhook", "Instant Lead", score > 75 ? "High Intent" : "Standard"],
     };
 
     this.leads = [newLead, ...this.leads];
@@ -329,34 +441,75 @@ class DatabaseStore {
   public qualifyLead(
     leadId: string,
     answers: Record<string, string>,
-    computedScore: number,
-  ): Lead | undefined {
+  ): { lead?: Lead; appointment?: Appointment } | undefined {
     const lead = this.getLeadById(leadId);
     if (!lead) return undefined;
 
-    const needsHandoff = computedScore < 45 || answers.homeowner === "No, I rent";
+    const homeowner = answers.homeowner === "Yes, I own it" || answers.homeowner === "I'm buying soon";
+    const bill =
+      answers.bill === "Over $350"
+        ? 400
+        : answers.bill === "$200 – $350"
+          ? 300
+          : answers.bill === "$100 – $200"
+            ? 150
+            : 90;
+    const timeline = answers.timeline || "0-1 month";
+    const score = computeIntentScore({ homeowner, monthlyBill: bill, roof: answers.roof, timeline });
+
+    const needsHandoff = score < 45 || answers.homeowner === "No, I rent";
     const newStatus = needsHandoff ? "contacted" : "qualified";
 
-    const updated = this.updateLead(leadId, {
-      score: computedScore,
+    this.updateLead(leadId, {
+      score,
       status: newStatus,
-      aiSummary: `Qualifying conversation completed. Answers: ${JSON.stringify(answers)}. Computed intent score: ${computedScore}. ${needsHandoff ? "FLAGGED FOR HUMAN HANDOFF." : "Ready for calendar booking."}`,
-      tags: [...new Set([...lead.tags, "Qualified", computedScore > 75 ? "High Intent" : "Review Needed"])],
+      timeline: timeline as Lead["timeline"],
+      owner: needsHandoff ? "Human Rep (Escalated)" : lead.owner,
+      aiSummary: `Qualifying conversation completed. Answers: ${JSON.stringify(answers)}. Computed intent score: ${score}. ${needsHandoff ? "FLAGGED FOR HUMAN HANDOFF — transferred to Human Rep." : "Auto-booking consultation."}`,
+      tags: [...new Set([...lead.tags, "Qualified", score > 75 ? "High Intent" : "Review Needed"])],
     });
 
     this.addAuditLog({
       category: "AI Bot",
       title: "Qualifying Chat Completed",
-      detail: `Lead ${leadId} scored ${computedScore}/100. Status updated to '${newStatus}'.`,
+      detail: `Lead ${leadId} scored ${score}/100. Status updated to '${newStatus}'.${needsHandoff ? " Ownership transferred to Human Rep (Escalated)." : ""}`,
       latencyMs: 190,
       status: needsHandoff ? "warning" : "success",
     });
 
-    return updated;
+    let appointment: Appointment | undefined;
+    if (!needsHandoff) {
+      const rep = lead.owner || "Dana Ruiz";
+      const slot = this.findFirstOpenSlot(rep);
+      if (slot) {
+        appointment = this.bookAppointment(leadId, slot.rep, slot.date, slot.time);
+      }
+    }
+
+    const result: { lead?: Lead; appointment?: Appointment } = {};
+    const updatedLead = this.getLeadById(leadId);
+    if (updatedLead) result.lead = updatedLead;
+    if (appointment) result.appointment = appointment;
+    return result;
   }
 
   // --- CALENDAR BOOKING ---
   public bookAppointment(leadId: string, rep: string, date: string, time: string): Appointment {
+    if (!this.isRepInMatrix(rep)) {
+      throw new BookingConflictError(`Rep "${rep}" is not on the availability matrix`, "REP_NOT_FOUND");
+    }
+    if (!this.isSlotOpen(rep, date, time)) {
+      throw new BookingConflictError(`Slot ${date} ${time} for ${rep} is not open on the availability matrix`, "SLOT_UNAVAILABLE");
+    }
+    if (this.hasAppointmentConflict(rep, date, time)) {
+      throw new BookingConflictError(`Rep ${rep} already has an appointment on ${date} at ${time}`, "SLOT_UNAVAILABLE");
+    }
+
+    const reserved = this.reserveSlot(rep, date, time);
+    if (!reserved) {
+      throw new BookingConflictError(`Failed to reserve slot ${date} ${time} for ${rep}`, "SLOT_UNAVAILABLE");
+    }
+
     const lead = this.getLeadById(leadId);
     const apptId = `APT-${Math.floor(1000 + Math.random() * 9000)}`;
 
@@ -370,7 +523,7 @@ class DatabaseStore {
       time,
       type: "In-home consult",
       status: "Confirmed",
-      notes: "Auto-booked via Instant Response Agent after qualification flow.",
+      notes: "Auto-booked via Instant Response Agent on the sales rep availability matrix.",
     };
 
     this.appointments = [newAppt, ...this.appointments];
@@ -387,7 +540,7 @@ class DatabaseStore {
     this.addAuditLog({
       category: "AI Bot",
       title: "Calendar Slot Auto-Booked",
-      detail: `Consultation booked for ${newAppt.customer} with ${rep} on ${date} at ${time}.`,
+      detail: `Reserved matrix slot for ${newAppt.customer} with ${rep} on ${date} at ${time} (slot ${reserved.id} marked closed).`,
       latencyMs: 145,
       status: "success",
     });

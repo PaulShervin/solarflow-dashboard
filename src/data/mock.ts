@@ -485,6 +485,85 @@ export const appointments: Appointment[] = [
   { id: "AP-315", customer: "Sofia Delgado", type: "Install walkthrough", date: "2026-08-18", day: "Tue", time: "11:00 AM", rep: "Field team", status: "Rescheduled", address: "1490 N 91st Ave, Peoria" },
 ];
 
+/* ------------------------- Rep availability matrix ------------------------ */
+
+export type AvailabilitySlot = {
+  id: string;
+  rep: string;
+  date: string; // YYYY-MM-DD
+  day: string; // display label, e.g. "Tomorrow" / "Mon"
+  time: string; // e.g. "10:00 AM"
+  order: number; // slot index within a day (sort order)
+  status: "open" | "closed";
+};
+
+const AVAILABILITY_REPS = ["Dana Ruiz", "Ben Okafor", "Marcus Chen"];
+const AVAILABILITY_TIMES = ["9:00 AM", "10:00 AM", "11:00 AM", "12:00 PM", "1:00 PM", "2:00 PM", "3:00 PM", "4:00 PM"];
+
+function toISODate(d: Date): string {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+}
+
+/**
+ * Builds the sales rep availability matrix: next N weekdays (skipping weekends)
+ * starting tomorrow, hourly slots per rep. A couple of slots are seeded closed
+ * so booking conflict handling is demonstrable.
+ */
+export function buildAvailabilityMatrix(daysAhead = 5): AvailabilitySlot[] {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const dates: { date: string; label: string }[] = [];
+  let offset = 1;
+  while (dates.length < daysAhead) {
+    const d = new Date(today);
+    d.setDate(today.getDate() + offset);
+    const dow = d.getDay();
+    if (dow !== 0 && dow !== 6) {
+      const labels = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+      dates.push({ date: toISODate(d), label: offset === 1 ? "Tomorrow" : labels[dow]! });
+    }
+    offset++;
+  }
+
+  const slots: AvailabilitySlot[] = [];
+  let idCounter = 1;
+  for (const rep of AVAILABILITY_REPS) {
+    for (const { date, label } of dates) {
+      AVAILABILITY_TIMES.forEach((time, idx) => {
+        slots.push({
+          id: `AV-${String(idCounter++).padStart(3, "0")}`,
+          rep,
+          date,
+          day: label,
+          time,
+          order: idx,
+          status: "open",
+        });
+      });
+    }
+  }
+
+  // Seed a few closed slots on the first day to prove conflict handling.
+  const firstDate = dates[0]!.date;
+  const seedClosed: [string, string][] = [
+    [AVAILABILITY_REPS[0]!, "9:00 AM"],
+    [AVAILABILITY_REPS[1]!, "2:00 PM"],
+    [AVAILABILITY_REPS[2]!, "4:00 PM"],
+  ];
+  for (const [rep, time] of seedClosed) {
+    const slot = slots.find((s) => s.rep === rep && s.date === firstDate && s.time === time);
+    if (slot) slot.status = "closed";
+  }
+
+  return slots;
+}
+
+export const availabilityMatrix: AvailabilitySlot[] = buildAvailabilityMatrix();
+
 /* -------------------------------- Proposals ------------------------------- */
 
 export type Proposal = {

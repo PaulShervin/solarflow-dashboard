@@ -44,7 +44,7 @@ import { cn } from "@/lib/utils";
 export const Route = createFileRoute("/admin/post-sale")({
   head: () => ({
     meta: [
-      { title: "Post-Sale Retention Engine (Module 04) | SolarFlow Admin" },
+      { title: "Post-Sale Retention Engine | SolarFlow Admin" },
       {
         name: "description",
         content:
@@ -99,70 +99,25 @@ const MILESTONE_ORDER = [
   { key: "PTO", label: "Permission to Operate", desc: "Utility net meter installation, bi-directional grid sync & system turn-on" },
 ];
 
-const INITIAL_PROJECTS: SolarProjectData[] = [
-  {
-    id: "PRJ-9042",
-    leadId: "LD-4821",
-    customerName: "Robert Vance",
-    address: "742 Evergreen Terrace, Chandler, AZ",
-    status: "ACTIVE",
-    currentMilestone: "PERMITTING",
-    startDate: "2026-07-28",
-    estimatedCompletionDate: "2026-09-15",
-    progressPercent: 50,
-  },
-  {
-    id: "PRJ-9043",
-    leadId: "LD-4822",
-    customerName: "Marcus Whitfield",
-    address: "1048 E Desert Bloom Way, Phoenix, AZ",
-    status: "ACTIVE",
-    currentMilestone: "INSTALLATION",
-    startDate: "2026-07-15",
-    estimatedCompletionDate: "2026-08-30",
-    progressPercent: 68,
-  },
-  {
-    id: "PRJ-9044",
-    leadId: "LD-4823",
-    customerName: "Elena Rodriguez",
-    address: "3312 S Saguaro Vista, Mesa, AZ",
-    status: "ACTIVE",
-    currentMilestone: "SITE_SURVEY",
-    startDate: "2026-08-10",
-    estimatedCompletionDate: "2026-10-01",
-    progressPercent: 20,
-  },
-  {
-    id: "PRJ-9040",
-    leadId: "LD-4819",
-    customerName: "David Sterling",
-    address: "8820 N Scottsdale Rd, Scottsdale, AZ",
-    status: "COMPLETED",
-    currentMilestone: "PTO",
-    startDate: "2026-06-01",
-    completedAt: "2026-08-05",
-    progressPercent: 100,
-  },
-];
+const INITIAL_PROJECTS: SolarProjectData[] = [];
 
 function PostSaleAdminPage() {
-  const [projects, setProjects] = useState<SolarProjectData[]>(INITIAL_PROJECTS);
-  const [selectedId, setSelectedId] = useState<string>("PRJ-9042");
+  const [projects, setProjects] = useState<SolarProjectData[]>([]);
+  const [selectedId, setSelectedId] = useState<string>("");
   const [statusFilter, setStatusFilter] = useState<string>("ALL");
   const [searchQuery, setSearchQuery] = useState("");
 
   // Detailed selected project state
   const [milestones, setMilestones] = useState<MilestoneData[]>([]);
   const [currentRisk, setCurrentRisk] = useState<RiskData>({
-    id: "RSK-01",
-    projectId: "PRJ-9042",
-    score: 24,
+    id: "RSK-00",
+    projectId: "",
+    score: 0,
     riskLevel: "LOW",
-    stalledDays: 2,
+    stalledDays: 0,
     unresolvedInquiries: 0,
-    reason: "Project on track. Permitting review progressing normally.",
-    evaluatedAt: "Today at 09:00 AM",
+    reason: "No project selected.",
+    evaluatedAt: "Just now",
   });
   const [updates, setUpdates] = useState<any[]>([]);
 
@@ -174,24 +129,45 @@ function PostSaleAdminPage() {
   const [actType, setActType] = useState<"start" | "complete" | null>(null);
 
   // Risk simulator state
-  const [simStalledDays, setSimStalledDays] = useState(2);
+  const [simStalledDays, setSimStalledDays] = useState(0);
   const [simInquiries, setSimInquiries] = useState(0);
 
   // Create Project Modal
   const [createModalOpen, setCreateModalOpen] = useState(false);
   const [newCustomerName, setNewCustomerName] = useState("");
   const [newCustomerAddress, setNewCustomerAddress] = useState("");
-  const [newLeadId, setNewLeadId] = useState("LD-4890");
+  const [newLeadId, setNewLeadId] = useState("");
 
-  const selectedProject: SolarProjectData =
-    projects.find((p) => p.id === selectedId) || projects[0] || INITIAL_PROJECTS[0]!;
+  const selectedProject: SolarProjectData | undefined =
+    projects.find((p) => p.id === selectedId) || projects[0];
+
+  // Fetch live projects
+  useEffect(() => {
+    async function fetchProjects() {
+      try {
+        const res = await solarApi.getProjects(statusFilter === "ALL" ? undefined : statusFilter);
+        if (res && res.projects) {
+          setProjects(res.projects);
+          if (res.projects.length > 0 && !selectedId) {
+            setSelectedId(res.projects[0].id);
+          }
+        }
+      } catch (err) {
+        console.warn("Could not fetch live projects:", err);
+      }
+    }
+    fetchProjects();
+  }, [statusFilter]);
 
   // Load project details on selection
   useEffect(() => {
-    loadProjectDetails(selectedId);
+    if (selectedId) {
+      loadProjectDetails(selectedId);
+    }
   }, [selectedId]);
 
   async function loadProjectDetails(id: string) {
+    if (!id) return;
     try {
       const res = await solarApi.getProjectDetail(id);
       if (res && res.milestones) {
@@ -201,29 +177,14 @@ function PostSaleAdminPage() {
       }
       if (res && res.currentRisk) {
         setCurrentRisk(res.currentRisk);
-        setSimStalledDays(res.currentRisk.stalledDays || 2);
+        setSimStalledDays(res.currentRisk.stalledDays || 0);
         setSimInquiries(res.currentRisk.unresolvedInquiries || 0);
       }
       const updRes = await solarApi.getProjectUpdates(id);
       if (updRes && updRes.length > 0) {
         setUpdates(updRes);
       } else {
-        setUpdates([
-          {
-            id: "upd-1",
-            message: "🎉 Welcome to SolarPeak! Sale completed and site survey scheduled.",
-            visibleToCustomer: true,
-            createdBy: "Dana Ruiz",
-            createdAt: "2026-07-28 10:30 AM",
-          },
-          {
-            id: "upd-2",
-            message: "Engineering drawings submitted to City of Chandler Building Dept.",
-            visibleToCustomer: true,
-            createdBy: "Operations Team",
-            createdAt: "2026-08-04 02:15 PM",
-          },
-        ]);
+        setUpdates([]);
       }
     } catch {
       generateDefaultMilestones(id);
@@ -399,7 +360,7 @@ function PostSaleAdminPage() {
   return (
     <div className="space-y-6 pb-16">
       <PageHeader
-        title="Post-Sale Retention Engine (Module 04)"
+        title="Post-Sale Retention Engine"
         description="Milestone state machine transitions, real-time cancellation risk radar, customer updates, and post-PTO referral bonus enrollment."
         actions={
           <div className="flex gap-2">
@@ -461,7 +422,7 @@ function PostSaleAdminPage() {
             <BadgeCheck className="size-4 text-primary" />
           </div>
           <p className="mt-2 font-display text-2xl font-extrabold text-foreground">100% Automated</p>
-          <p className="mt-1 text-xs text-muted-foreground">$500 customer referral bonus</p>
+          <p className="mt-1 text-xs text-muted-foreground">₹10,000 customer referral bonus</p>
         </div>
       </div>
 
@@ -510,73 +471,107 @@ function PostSaleAdminPage() {
 
           {/* Project List */}
           <div className="space-y-2.5 max-h-[560px] overflow-y-auto pr-1">
-            {filteredProjects.map((p) => {
-              const isSelected = p.id === selectedId;
-              return (
-                <div
-                  key={p.id}
-                  onClick={() => setSelectedId(p.id)}
-                  className={cn(
-                    "cursor-pointer rounded-2xl border p-4 transition-all duration-200",
-                    isSelected
-                      ? "border-primary bg-primary-soft/40 shadow-sm ring-2 ring-primary/20"
-                      : "border-border/80 bg-card hover:border-primary/50 hover:bg-secondary/30"
-                  )}
+            {filteredProjects.length === 0 ? (
+              <div className="surface-card p-8 text-center rounded-2xl border border-dashed border-border/80 my-2">
+                <Compass className="size-8 text-muted-foreground/40 mx-auto mb-2" />
+                <p className="text-xs font-bold text-foreground">No projects found</p>
+                <p className="text-[11px] text-muted-foreground mt-1">
+                  Create a new installation project or adjust status filter.
+                </p>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => setCreateModalOpen(true)}
+                  className="mt-3 text-xs font-bold gap-1"
                 >
-                  <div className="flex items-center justify-between">
-                    <span className="font-mono text-xs font-bold text-primary">{p.id}</span>
-                    <StatusPill
-                      tone={p.status === "COMPLETED" ? "success" : p.status === "CANCELLED" ? "danger" : "brand"}
-                      dot
-                    >
-                      {p.status}
-                    </StatusPill>
-                  </div>
-                  <p className="mt-1 font-bold text-sm text-foreground truncate">
-                    {p.customerName || "Customer Lead"}
-                  </p>
-                  <p className="text-xs text-muted-foreground truncate">{p.address}</p>
+                  <Plus className="size-3" /> New Project
+                </Button>
+              </div>
+            ) : (
+              filteredProjects.map((p) => {
+                const isSelected = p.id === selectedId;
+                return (
+                  <div
+                    key={p.id}
+                    onClick={() => setSelectedId(p.id)}
+                    className={cn(
+                      "cursor-pointer rounded-2xl border p-4 transition-all duration-200",
+                      isSelected
+                        ? "border-primary bg-primary-soft/40 shadow-sm ring-2 ring-primary/20"
+                        : "border-border/80 bg-card hover:border-primary/50 hover:bg-secondary/30"
+                    )}
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className="font-mono text-xs font-bold text-primary">{p.id}</span>
+                      <StatusPill
+                        tone={p.status === "COMPLETED" ? "success" : p.status === "CANCELLED" ? "danger" : "brand"}
+                        dot
+                      >
+                        {p.status}
+                      </StatusPill>
+                    </div>
+                    <p className="mt-1 font-bold text-sm text-foreground truncate">
+                      {p.customerName || "Customer Lead"}
+                    </p>
+                    <p className="text-xs text-muted-foreground truncate">{p.address || "Address pending site survey"}</p>
 
-                  <div className="mt-3 flex items-center justify-between border-t border-border/60 pt-2 text-[11px]">
-                    <span className="text-muted-foreground">Stage:</span>
-                    <span className="font-semibold text-foreground bg-secondary px-2 py-0.5 rounded-md">
-                      {p.currentMilestone}
-                    </span>
+                    <div className="mt-3 flex items-center justify-between border-t border-border/60 pt-2 text-[11px]">
+                      <span className="text-muted-foreground">Stage:</span>
+                      <span className="font-semibold text-foreground bg-secondary px-2 py-0.5 rounded-md">
+                        {p.currentMilestone}
+                      </span>
+                    </div>
                   </div>
-                </div>
-              );
-            })}
+                );
+              })
+            )}
           </div>
         </div>
 
         {/* Right Column: Selected Project Detail & Interactive Engine */}
         <div className="space-y-6">
-          {/* Project Header Banner */}
-          <div className="surface-card p-6 border-navy-foreground/10 bg-navy text-navy-foreground rounded-3xl shadow-lift">
-            <div className="flex flex-wrap items-center justify-between gap-3">
-              <div>
-                <div className="flex items-center gap-2">
-                  <span className="rounded-full bg-primary/20 px-2.5 py-0.5 text-xs font-bold text-primary">
-                    {selectedProject.id}
-                  </span>
-                  <span className="text-xs text-navy-foreground/60">Lead: {selectedProject.leadId}</span>
-                </div>
-                <h2 className="mt-1.5 font-display text-2xl font-extrabold text-navy-foreground">
-                  {selectedProject.customerName}
-                </h2>
-                <p className="text-xs text-navy-foreground/75 mt-0.5">{selectedProject.address}</p>
-              </div>
-              <div className="text-right">
-                <span className="text-xs text-navy-foreground/60">Current Phase</span>
-                <p className="font-display text-lg font-black text-primary">
-                  {selectedProject.currentMilestone}
-                </p>
-                <span className="text-[11px] text-navy-foreground/50">
-                  Target PTO: {selectedProject.estimatedCompletionDate || "2026-09-15"}
-                </span>
-              </div>
+          {!selectedProject ? (
+            <div className="surface-card p-14 text-center rounded-3xl border border-dashed border-border">
+              <Compass className="size-12 text-muted-foreground/30 mx-auto mb-3" />
+              <h3 className="font-display text-lg font-extrabold text-foreground">No Project Selected</h3>
+              <p className="text-xs text-muted-foreground mt-1 max-w-sm mx-auto">
+                Select an active project from the installation pipeline or create a new solar project to track its 6-stage milestone state machine.
+              </p>
+              <Button
+                onClick={() => setCreateModalOpen(true)}
+                className="mt-5 gap-1.5 font-bold bg-primary hover:bg-primary/90 text-primary-foreground shadow-lift"
+              >
+                <Plus className="size-4" /> Create Installation Project
+              </Button>
             </div>
-          </div>
+          ) : (
+            <>
+              {/* Project Header Banner */}
+              <div className="surface-card p-6 border-navy-foreground/10 bg-navy text-navy-foreground rounded-3xl shadow-lift">
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className="rounded-full bg-primary/20 px-2.5 py-0.5 text-xs font-bold text-primary">
+                        {selectedProject.id}
+                      </span>
+                      <span className="text-xs text-navy-foreground/60">Lead: {selectedProject.leadId}</span>
+                    </div>
+                    <h2 className="mt-1.5 font-display text-2xl font-extrabold text-navy-foreground">
+                      {selectedProject.customerName || "Customer Lead"}
+                    </h2>
+                    <p className="text-xs text-navy-foreground/75 mt-0.5">{selectedProject.address || "Address pending site survey"}</p>
+                  </div>
+                  <div className="text-right">
+                    <span className="text-xs text-navy-foreground/60">Current Phase</span>
+                    <p className="font-display text-lg font-black text-primary">
+                      {selectedProject.currentMilestone}
+                    </p>
+                    <span className="text-[11px] text-navy-foreground/50">
+                      Target PTO: {selectedProject.estimatedCompletionDate || "TBD"}
+                    </span>
+                  </div>
+                </div>
+              </div>
 
           {/* Module 4 Tabs */}
           <Tabs defaultValue="milestones" className="w-full">
@@ -827,7 +822,7 @@ function PostSaleAdminPage() {
                   <div>
                     <h3 className="font-display text-base font-bold">Post-PTO Referral Engine</h3>
                     <p className="text-xs text-muted-foreground">
-                      Automatically enrolls customers into the $500 referral incentive program upon grid interconnection.
+                      Automatically enrolls customers into the ₹10,000 referral incentive program upon grid interconnection.
                     </p>
                   </div>
                   <StatusPill tone={selectedProject.status === "COMPLETED" ? "success" : "neutral"} dot>
@@ -843,19 +838,21 @@ function PostSaleAdminPage() {
                     <div>
                       <p className="text-sm font-bold text-foreground">Customer Referral Link Created</p>
                       <p className="text-xs text-muted-foreground">
-                        <code>https://solarpeak.com/refer/{selectedProject.leadId}</code>
+                        <code>https://solarflow.com/refer/{selectedProject.leadId}</code>
                       </p>
                     </div>
                   </div>
                   <p className="text-xs text-muted-foreground leading-relaxed">
-                    Once PTO is approved, the customer receives an automated SMS and email thanking them and providing their customized shareable referral link with instant $500 payout tracking.
+                    Once PTO is approved, the customer receives an automated SMS and email thanking them and providing their customized shareable referral link with instant ₹10,000 payout tracking.
                   </p>
                 </div>
               </div>
             </TabsContent>
           </Tabs>
-        </div>
-      </div>
+        </>
+      )}
+    </div>
+  </div>
 
       {/* Action Dialog for Milestones */}
       <Dialog open={Boolean(selectedMilestoneToAct)} onOpenChange={(open) => !open && setSelectedMilestoneToAct(null)}>

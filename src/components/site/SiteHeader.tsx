@@ -45,31 +45,47 @@ export function SiteHeader() {
           </div>
 
           {isAuthenticated ? (
-            <div className="hidden sm:flex items-center gap-2">
-              <Button variant="outline" size="sm" asChild className="gap-1.5 font-bold border-emerald-300 bg-emerald-50 text-emerald-800 rounded-full">
-                <Link to="/admin">
-                  <ShieldCheck className="size-4 text-emerald-600" />
-                  Rep Console
-                </Link>
-              </Button>
+            <div className="flex items-center gap-2">
+              {session?.role === "admin" || session?.role === "consultant" ? (
+                <Button variant="outline" size="sm" asChild className="gap-1.5 font-bold border-emerald-300 bg-emerald-50 text-emerald-800 rounded-full">
+                  <Link to="/admin">
+                    <ShieldCheck className="size-4 text-emerald-600" />
+                    Rep Console
+                  </Link>
+                </Button>
+              ) : (
+                <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 rounded-full bg-slate-100/90 border border-slate-200 px-3 py-1 text-xs font-semibold text-slate-800">
+                    <div className="size-5 rounded-full bg-emerald-600 text-white font-bold flex items-center justify-center text-[10px]">
+                      {(session?.name || "U")[0]?.toUpperCase() || "U"}
+                    </div>
+                    <span className="max-w-[110px] truncate">{session?.name || "My Account"}</span>
+                  </div>
+                  <Button variant="outline" size="sm" asChild className="hidden sm:inline-flex rounded-full text-xs font-semibold">
+                    <Link to="/portal">My Portal</Link>
+                  </Button>
+                </div>
+              )}
               <Button variant="ghost" size="icon" onClick={() => logout()} title="Sign Out" className="rounded-full">
-                <LogOut className="size-4 text-muted-foreground" />
+                <LogOut className="size-4 text-muted-foreground hover:text-destructive" />
               </Button>
             </div>
           ) : (
-            <Button variant="ghost" size="sm" asChild className="hidden sm:inline-flex text-xs font-semibold text-slate-600 hover:text-slate-900 rounded-full">
-              <Link to="/login">
-                Rep Login
-              </Link>
-            </Button>
-          )}
+            <>
+              <Button variant="ghost" size="sm" asChild className="hidden sm:inline-flex text-xs font-semibold text-slate-600 hover:text-slate-900 rounded-full">
+                <Link to="/login">
+                  Rep Login
+                </Link>
+              </Button>
 
-          <Button asChild size="sm" className="font-bold shadow-sm bg-emerald-600 hover:bg-emerald-700 text-white rounded-full px-5 py-2 text-xs sm:text-sm">
-            <Link to="/qualify">
-              Get Started
-              <ArrowRight className="ml-1 size-3.5" />
-            </Link>
-          </Button>
+              <Button asChild size="sm" className="font-bold shadow-sm bg-emerald-600 hover:bg-emerald-700 text-white rounded-full px-5 py-2 text-xs sm:text-sm">
+                <Link to="/qualify">
+                  Get Started
+                  <ArrowRight className="ml-1 size-3.5" />
+                </Link>
+              </Button>
+            </>
+          )}
 
           <Button
             variant="ghost"
@@ -99,23 +115,43 @@ export function SiteHeader() {
           </nav>
           <div className="border-t border-slate-100 pt-3 flex flex-col gap-2">
             {isAuthenticated ? (
-              <Button asChild variant="outline" className="w-full rounded-2xl">
-                <Link to="/admin" onClick={() => setOpen(false)}>
-                  Rep & Admin Console ({session?.name})
-                </Link>
-              </Button>
+              <>
+                <div className="px-4 py-2 rounded-2xl bg-slate-50 text-xs font-semibold text-slate-700 flex items-center justify-between">
+                  <span>Signed in as <strong>{session?.name}</strong></span>
+                  <span className="text-[10px] uppercase font-bold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-full">{session?.role}</span>
+                </div>
+                {session?.role === "admin" || session?.role === "consultant" ? (
+                  <Button asChild variant="outline" className="w-full rounded-2xl">
+                    <Link to="/admin" onClick={() => setOpen(false)}>
+                      Rep & Admin Console
+                    </Link>
+                  </Button>
+                ) : (
+                  <Button asChild variant="outline" className="w-full rounded-2xl">
+                    <Link to="/portal" onClick={() => setOpen(false)}>
+                      Track My Installation
+                    </Link>
+                  </Button>
+                )}
+                <Button variant="ghost" onClick={() => { logout(); setOpen(false); }} className="w-full rounded-2xl text-destructive hover:bg-destructive/10">
+                  <LogOut className="size-4 mr-2" />
+                  Sign Out
+                </Button>
+              </>
             ) : (
-              <Button asChild variant="outline" className="w-full rounded-2xl">
-                <Link to="/login" onClick={() => setOpen(false)}>
-                  Rep Sign In
-                </Link>
-              </Button>
+              <>
+                <Button asChild variant="outline" className="w-full rounded-2xl">
+                  <Link to="/login" onClick={() => setOpen(false)}>
+                    Rep Sign In
+                  </Link>
+                </Button>
+                <Button asChild className="w-full bg-emerald-600 hover:bg-emerald-700 text-white rounded-2xl">
+                  <Link to="/qualify" onClick={() => setOpen(false)}>
+                    Get Started
+                  </Link>
+                </Button>
+              </>
             )}
-            <Button asChild className="w-full bg-emerald-600 hover:bg-emerald-700 text-white rounded-2xl">
-              <Link to="/qualify" onClick={() => setOpen(false)}>
-                Get Started
-              </Link>
-            </Button>
           </div>
         </div>
       ) : null}

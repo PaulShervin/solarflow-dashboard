@@ -10,8 +10,8 @@ export class ChatRepository {
     return this.sessions.get(id);
   }
 
-  public static createSession(leadId?: string): ChatSession {
-    const id = `CS-${uuidv4().substring(0, 8)}`;
+  public static createSession(leadId?: string, explicitId?: string): ChatSession {
+    const id = explicitId || (leadId && leadId.startsWith("conv-") ? leadId : `CS-${uuidv4().substring(0, 8)}`);
     const now = new Date().toISOString();
 
     const session: ChatSession = {

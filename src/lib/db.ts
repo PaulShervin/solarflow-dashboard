@@ -84,7 +84,22 @@ export class BookingConflictError extends Error {
   }
 }
 
-const STORAGE_KEY = "solarflow_db_v1";
+import {
+  syncLeadToFirestore,
+  subscribeFirestoreLeads,
+  syncConversationToFirestore,
+  subscribeFirestoreConversations,
+  syncProposalToFirestore,
+  subscribeFirestoreProposals,
+  syncAppointmentToFirestore,
+  subscribeFirestoreAppointments,
+  syncTaskToFirestore,
+  subscribeFirestoreTasks,
+  syncAuditLogToFirestore,
+  subscribeFirestoreAuditLogs,
+} from "./firestoreSync";
+
+const STORAGE_KEY = "solarflow_db_v2";
 
 type Listener = () => void;
 
@@ -100,14 +115,61 @@ class DatabaseStore {
   private portalProject = { ...defaultPortalProject };
   private portalMilestones: PortalMilestone[] = [];
   private portalMessages: any[] = [];
-  private portalAppointments = [...defaultPortalAppointments];
+  private portalAppointments: any[] = [];
   private portalDocuments = [...defaultPortalDocuments];
-  private portalPayments = [...defaultPortalPayments];
+  private portalPayments: any[] = [];
   private auditLogs: AuditLogEntry[] = [];
   private listeners: Set<Listener> = new Set();
 
   constructor() {
     this.load();
+    this.initFirestoreListeners();
+  }
+
+  private initFirestoreListeners() {
+    if (typeof window === "undefined") return;
+
+    subscribeFirestoreLeads((remoteLeads) => {
+      if (remoteLeads && remoteLeads.length > 0) {
+        this.leads = remoteLeads;
+        this.saveLocalOnly();
+      }
+    });
+
+    subscribeFirestoreConversations((remoteConvs) => {
+      if (remoteConvs && remoteConvs.length > 0) {
+        this.conversations = remoteConvs;
+        this.saveLocalOnly();
+      }
+    });
+
+    subscribeFirestoreAppointments((remoteAppts) => {
+      if (remoteAppts && remoteAppts.length > 0) {
+        this.appointments = remoteAppts;
+        this.saveLocalOnly();
+      }
+    });
+
+    subscribeFirestoreProposals((remoteProps) => {
+      if (remoteProps && remoteProps.length > 0) {
+        this.proposals = remoteProps;
+        this.saveLocalOnly();
+      }
+    });
+
+    subscribeFirestoreTasks((remoteTasks) => {
+      if (remoteTasks && remoteTasks.length > 0) {
+        this.tasks = remoteTasks;
+        this.saveLocalOnly();
+      }
+    });
+
+    subscribeFirestoreAuditLogs((remoteLogs) => {
+      if (remoteLogs && remoteLogs.length > 0) {
+        this.auditLogs = remoteLogs;
+        this.saveLocalOnly();
+      }
+    });
   }
 
   private load() {
@@ -122,43 +184,43 @@ class DatabaseStore {
         return;
       }
       const data = JSON.parse(raw);
-      this.leads = data.leads || defaultLeads;
-      this.conversations = data.conversations || defaultConversations;
-      this.proposals = data.proposals || defaultProposals;
-      this.campaigns = data.campaigns || defaultCampaigns;
-      this.calls = data.calls || defaultCalls;
-      this.appointments = data.appointments || defaultAppointments;
-      this.tasks = data.tasks || defaultTasks;
+      this.leads = data.leads || [];
+      this.conversations = data.conversations || [];
+      this.proposals = data.proposals || [];
+      this.campaigns = data.campaigns || [];
+      this.calls = data.calls || [];
+      this.appointments = data.appointments || [];
+      this.tasks = data.tasks || [];
       this.availability = data.availability || defaultAvailability;
       this.portalProject = data.portalProject || defaultPortalProject;
-      this.portalMilestones = data.portalMilestones || defaultPortalMilestones;
-      this.portalMessages = data.portalMessages || defaultPortalMessages;
-      this.portalAppointments = data.portalAppointments || defaultPortalAppointments;
+      this.portalMilestones = data.portalMilestones || [];
+      this.portalMessages = data.portalMessages || [];
+      this.portalAppointments = data.portalAppointments || [];
       this.portalDocuments = data.portalDocuments || defaultPortalDocuments;
-      this.portalPayments = data.portalPayments || defaultPortalPayments;
-      this.auditLogs = data.auditLogs || this.createInitialAuditLogs();
+      this.portalPayments = data.portalPayments || [];
+      this.auditLogs = data.auditLogs || [];
     } catch (err) {
-      console.error("Failed to parse DB from localStorage, falling back to defaults", err);
+      console.error("Failed to parse DB from localStorage, falling back to clean state", err);
       this.useDefaults();
     }
   }
 
   private useDefaults() {
-    this.leads = [...defaultLeads];
-    this.conversations = [...defaultConversations];
-    this.proposals = [...defaultProposals];
-    this.campaigns = [...defaultCampaigns];
-    this.calls = [...defaultCalls];
-    this.appointments = [...defaultAppointments];
-    this.tasks = [...defaultTasks];
+    this.leads = [];
+    this.conversations = [];
+    this.proposals = [];
+    this.campaigns = [];
+    this.calls = [];
+    this.appointments = [];
+    this.tasks = [];
     this.availability = [...defaultAvailability];
     this.portalProject = { ...defaultPortalProject };
-    this.portalMilestones = [...defaultPortalMilestones];
-    this.portalMessages = [...defaultPortalMessages];
-    this.portalAppointments = [...defaultPortalAppointments];
+    this.portalMilestones = [];
+    this.portalMessages = [];
+    this.portalAppointments = [];
     this.portalDocuments = [...defaultPortalDocuments];
-    this.portalPayments = [...defaultPortalPayments];
-    this.auditLogs = this.createInitialAuditLogs();
+    this.portalPayments = [];
+    this.auditLogs = [];
   }
 
   private createInitialAuditLogs(): AuditLogEntry[] {
@@ -202,7 +264,7 @@ class DatabaseStore {
     ];
   }
 
-  private save() {
+  private saveLocalOnly() {
     if (typeof window === "undefined") return;
     try {
       const data = {
@@ -224,9 +286,13 @@ class DatabaseStore {
       };
       localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
     } catch (err) {
-      console.error("Failed to save DB state", err);
+      console.error("Failed to save local DB state", err);
     }
     this.notify();
+  }
+
+  private save() {
+    this.saveLocalOnly();
   }
 
   public subscribe(listener: Listener) {
@@ -258,8 +324,9 @@ class DatabaseStore {
   }
 
   public addLead(lead: Lead): Lead {
-    this.leads = [lead, ...this.leads];
+    this.leads = [lead, ...this.leads.filter((l) => l.id !== lead.id)];
     this.save();
+    syncLeadToFirestore(lead);
     return lead;
   }
 
@@ -273,6 +340,9 @@ class DatabaseStore {
       return l;
     });
     this.save();
+    if (updated) {
+      syncLeadToFirestore(updated);
+    }
     return updated;
   }
 
@@ -447,13 +517,13 @@ class DatabaseStore {
 
     const homeowner = answers.homeowner === "Yes, I own it" || answers.homeowner === "I'm buying soon";
     const bill =
-      answers.bill === "Over $350"
-        ? 400
-        : answers.bill === "$200 – $350"
-          ? 300
-          : answers.bill === "$100 – $200"
-            ? 150
-            : 90;
+      answers.bill?.includes("10,000") || answers.bill === "Over ₹10,000" || answers.bill === "Over $350"
+        ? 12000
+        : answers.bill?.includes("5,000") || answers.bill === "₹5,000 – ₹10,000" || answers.bill === "$200 – $350"
+          ? 6500
+          : answers.bill?.includes("2,500") || answers.bill === "₹2,500 – ₹5,000" || answers.bill === "$100 – $200"
+            ? 3500
+            : 1800;
     const timeline = answers.timeline || "0-1 month";
     const score = computeIntentScore({ homeowner, monthlyBill: bill, roof: answers.roof, timeline });
 
@@ -546,6 +616,7 @@ class DatabaseStore {
     });
 
     this.save();
+    syncAppointmentToFirestore(newAppt);
     return newAppt;
   }
 
@@ -556,26 +627,55 @@ class DatabaseStore {
 
   public addMessage(conversationId: string, sender: "bot" | "user" | "rep" | "system", text: string, channel: "SMS" | "Voice Call" | "Webchat" = "SMS"): Conversation | undefined {
     let updatedConv: Conversation | undefined;
-    this.conversations = this.conversations.map((c) => {
-      if (c.id === conversationId) {
-        const newMsg: ChatMessage = {
-          id: `msg-${Date.now()}`,
-          sender,
-          text,
-          time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
-          channel,
-        };
-        updatedConv = {
-          ...c,
-          lastMessage: text,
-          lastTime: "Just now",
-          messages: [...c.messages, newMsg],
-        };
-        return updatedConv;
-      }
-      return c;
-    });
+    const msgId = `msg-${Date.now()}`;
+    const newMsg: ChatMessage = {
+      id: msgId,
+      sender,
+      text,
+      time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+      channel,
+    };
+
+    const convExists = this.conversations.some((c) => c.id === conversationId);
+    if (!convExists) {
+      const createdConv: Conversation = {
+        id: conversationId,
+        leadId: conversationId,
+        name: "Customer Lead",
+        customer: "Solar Customer",
+        channel: channel === "Webchat" ? "Web chat" : (channel as any),
+        status: "Active",
+        score: 85,
+        preview: text,
+        updatedAt: "Just now",
+        unread: sender === "user" ? 1 : 0,
+        messages: [newMsg],
+        lastMessage: text,
+        lastTime: "Just now",
+      };
+      this.conversations = [createdConv, ...this.conversations];
+      updatedConv = createdConv;
+    } else {
+      this.conversations = this.conversations.map((c) => {
+        if (c.id === conversationId) {
+          updatedConv = {
+            ...c,
+            lastMessage: text,
+            lastTime: "Just now",
+            messages: [...c.messages, newMsg],
+          };
+          return updatedConv;
+        }
+        return c;
+      });
+    }
+
     this.save();
+    syncConversationToFirestore(conversationId, newMsg, {
+      lastMessage: text,
+      lastTime: "Just now",
+      updatedAt: new Date().toISOString(),
+    });
     return updatedConv;
   }
 
@@ -602,6 +702,7 @@ class DatabaseStore {
     });
 
     this.save();
+    syncProposalToFirestore(newProp);
     return newProp;
   }
 
@@ -757,6 +858,7 @@ class DatabaseStore {
     };
     this.auditLogs = [newEntry, ...this.auditLogs];
     this.save();
+    syncAuditLogToFirestore(newEntry);
   }
 
   public getAppointments(): Appointment[] {

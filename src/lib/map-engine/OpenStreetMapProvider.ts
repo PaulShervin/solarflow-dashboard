@@ -144,11 +144,13 @@ export class OpenStreetMapProvider implements IMapProvider {
     this.isEditingActive = true;
 
     const coords = currentFeature.geometry.coordinates[0]; // [[lng, lat], ...]
+    if (!coords || coords.length === 0) return;
     const map = this.map;
 
     // Create an editable Leaflet Polygon (visual only, not draggable itself)
     const latLngs: L.LatLng[] = coords
       .slice(0, -1) // skip closure duplicate
+      .filter((pt): pt is [number, number] => Boolean(pt && typeof pt[0] === "number" && typeof pt[1] === "number"))
       .map((pt) => L.latLng(pt[1], pt[0]));
 
     this.editPolygonLayer = L.polygon(latLngs, {
@@ -195,8 +197,11 @@ export class OpenStreetMapProvider implements IMapProvider {
     // Add midpoint ghost handles between each pair of vertices
     for (let i = 0; i < latLngs.length; i++) {
       const next = (i + 1) % latLngs.length;
-      const midLat = (latLngs[i].lat + latLngs[next].lat) / 2;
-      const midLng = (latLngs[i].lng + latLngs[next].lng) / 2;
+      const curPt = latLngs[i];
+      const nextPt = latLngs[next];
+      if (!curPt || !nextPt) continue;
+      const midLat = (curPt.lat + nextPt.lat) / 2;
+      const midLng = (curPt.lng + nextPt.lng) / 2;
 
       const midHandle = L.marker([midLat, midLng], {
         icon: midpointIcon,
@@ -290,12 +295,14 @@ export class OpenStreetMapProvider implements IMapProvider {
     const updatedLngLats: number[][] = latLngs.map((ll) => [ll.lng, ll.lat]);
 
     // Ensure closed ring
+    const first = updatedLngLats[0];
+    const last = updatedLngLats[updatedLngLats.length - 1];
     if (
-      updatedLngLats.length > 0 &&
-      (updatedLngLats[0][0] !== updatedLngLats[updatedLngLats.length - 1][0] ||
-        updatedLngLats[0][1] !== updatedLngLats[updatedLngLats.length - 1][1])
+      first &&
+      last &&
+      (first[0] !== last[0] || first[1] !== last[1])
     ) {
-      updatedLngLats.push([updatedLngLats[0][0], updatedLngLats[0][1]]);
+      updatedLngLats.push([first[0] ?? 0, first[1] ?? 0]);
     }
 
     const areaM2 = this.computeSphericalPolygonArea(updatedLngLats);
@@ -375,6 +382,7 @@ export class OpenStreetMapProvider implements IMapProvider {
     for (let i = 0; i < coords.length - 1; i++) {
       const p1 = coords[i];
       const p2 = coords[i + 1];
+      if (!p1 || !p2 || typeof p1[0] !== "number" || typeof p2[0] !== "number" || typeof p1[1] !== "number" || typeof p2[1] !== "number") continue;
       const rad1Lat = (p1[1] * Math.PI) / 180;
       const rad1Lng = (p1[0] * Math.PI) / 180;
       const rad2Lat = (p2[1] * Math.PI) / 180;

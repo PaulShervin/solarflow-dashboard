@@ -40,15 +40,17 @@ import { SiteFooter } from "@/components/site/SiteFooter";
 import { StatusPill } from "@/components/common/StatusPill";
 import { estimate } from "@/data/mock";
 import { solarApi } from "@/lib/api";
+import { useAuth } from "@/lib/authContext";
+import { formatINR, formatINRShort } from "@/lib/formatCurrency";
 
 export const Route = createFileRoute("/estimate")({
   head: () => ({
     meta: [
-      { title: "Auto Pre-Design Engine & Roof Mapping | SolarPeak Consultant Console" },
+      { title: "Auto Pre-Design Engine & Roof Mapping | SolarFlow Consultant Console" },
       {
         name: "description",
         content:
-          "Satellite pre-design, solar production calculations, and same-day proposal generation tool for solar consultants.",
+          "AI Rooftop detection, PV production modeling, 25-year financial ROI and instant same-day PDF quote engine.",
       },
     ],
   }),
@@ -56,7 +58,10 @@ export const Route = createFileRoute("/estimate")({
 });
 
 function EstimatePage() {
-  const [currentBill, setCurrentBill] = useState(estimate.currentBill);
+  const { session, currentUser } = useAuth();
+  const customerName = session?.name || currentUser?.displayName || session?.email || "Solar Customer";
+
+  const [currentBill, setCurrentBill] = useState(3500);
   const [targetOffset, setTargetOffset] = useState(90);
   const [includeBattery, setIncludeBattery] = useState(true);
 
@@ -64,16 +69,16 @@ function EstimatePage() {
   const [generatingPdf, setGeneratingPdf] = useState(false);
   const [pdfProposalId, setPdfProposalId] = useState<string | null>(null);
 
-  const systemSizeKw = Number(((currentBill / 30) * (targetOffset / 100)).toFixed(1));
+  const systemSizeKw = Number(((currentBill / 700) * (targetOffset / 100)).toFixed(1)) || 5.2;
   const panelCount = Math.ceil((systemSizeKw * 1000) / 400);
   const annualKwh = Math.round(systemSizeKw * 1650);
-  const monthlySolarPayment = Math.round(systemSizeKw * 18 + (includeBattery ? 45 : 0));
+  const monthlySolarPayment = Math.round(systemSizeKw * 450 + (includeBattery ? 900 : 0));
   const monthlySavings = Math.round(currentBill * (targetOffset / 100) - monthlySolarPayment);
   const annualSavings = monthlySavings * 12;
   const net25YrSavings = Math.round(annualSavings * 25 * 1.15);
-  const grossSystemPrice = Math.round(systemSizeKw * 2800 + (includeBattery ? 9500 : 0));
-  const federalTaxCredit = Math.round(grossSystemPrice * 0.30);
-  const netSystemPrice = grossSystemPrice - federalTaxCredit;
+  const grossSystemPrice = Math.round(systemSizeKw * 55000 + (includeBattery ? 180000 : 0));
+  const subsidyAmount = Math.round(Math.min(78000, grossSystemPrice * 0.30));
+  const netSystemPrice = grossSystemPrice - subsidyAmount;
 
   const cumulativeData = Array.from({ length: 26 }, (_, year) => ({
     year,
@@ -85,7 +90,7 @@ function EstimatePage() {
   async function handleGenerateProposal() {
     setGeneratingPdf(true);
     const prop = await solarApi.createProposal({
-      customer: "Marcus Whitfield",
+      customer: customerName,
       systemKw: systemSizeKw,
       battery: includeBattery,
       value: netSystemPrice,
@@ -112,7 +117,7 @@ function EstimatePage() {
               Satellite Roof Mapping & Same-Day Proposal Generator
             </h1>
             <p className="mt-3 max-w-2xl text-muted-foreground">
-              Pulls roof data, computes solar energy production, and generates shareable PDF quote documents same-day (instead of 2 days).
+              Pulls roof data, computes solar energy production, and generates shareable PDF quote documents in Indian Rupees (₹).
             </p>
           </div>
           <div className="flex flex-wrap gap-2">
@@ -127,7 +132,6 @@ function EstimatePage() {
               {generatingPdf ? "Generating Proposal PDF..." : "Generate Proposal Quote (PDF)"}
             </Button>
           </div>
-
         </div>
 
         <div className="mt-8 grid gap-6 lg:grid-cols-[1.4fr_1fr]">
@@ -186,19 +190,19 @@ function EstimatePage() {
           <div className="surface-card p-6 space-y-5">
             <h2 className="font-display text-lg font-bold flex items-center gap-2">
               <Sparkles className="size-5 text-primary" />
-              Production & Financial Calculator
+              Production & Financial Calculator (INR)
             </h2>
 
             <div>
               <div className="flex justify-between text-sm font-semibold">
                 <span>Customer Monthly Bill</span>
-                <span className="text-primary font-bold">${currentBill}/mo</span>
+                <span className="text-primary font-bold">{formatINR(currentBill)}/mo</span>
               </div>
               <input
                 type="range"
-                min="100"
-                max="600"
-                step="10"
+                min="1000"
+                max="25000"
+                step="250"
                 value={currentBill}
                 onChange={(e) => setCurrentBill(Number(e.target.value))}
                 className="mt-2 w-full accent-primary cursor-pointer"
@@ -223,8 +227,8 @@ function EstimatePage() {
 
             <div className="flex items-center justify-between rounded-xl border border-border p-3">
               <div>
-                <span className="block text-sm font-bold">Include 13.5 kWh Battery Storage</span>
-                <span className="text-xs text-muted-foreground">Provides 24/7 backup during grid outages</span>
+                <span className="block text-sm font-bold">Include 10 kWh Battery Storage</span>
+                <span className="text-xs text-muted-foreground">Provides 24/7 power during load shedding</span>
               </div>
               <input
                 type="checkbox"
@@ -237,15 +241,15 @@ function EstimatePage() {
             <div className="rounded-xl border border-primary/30 bg-primary-soft/50 p-4 space-y-2 text-xs">
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Gross System Value:</span>
-                <span className="font-bold">${grossSystemPrice.toLocaleString()}</span>
+                <span className="font-bold">{formatINR(grossSystemPrice)}</span>
               </div>
               <div className="flex justify-between text-emerald-600 dark:text-emerald-400">
-                <span>30% Federal Clean Energy Tax Credit:</span>
-                <span className="font-bold">-${federalTaxCredit.toLocaleString()}</span>
+                <span>PM Surya Ghar / Central Subsidy:</span>
+                <span className="font-bold">-{formatINR(subsidyAmount)}</span>
               </div>
               <div className="border-t border-border pt-2 flex justify-between text-sm font-bold text-foreground">
                 <span>Net System Price:</span>
-                <span className="text-primary">${netSystemPrice.toLocaleString()}</span>
+                <span className="text-primary">{formatINR(netSystemPrice)}</span>
               </div>
             </div>
           </div>
@@ -253,10 +257,10 @@ function EstimatePage() {
 
         <div className="mt-8 surface-card p-6">
           <h2 className="font-display text-lg font-extrabold mb-1">
-            25-Year Utility Escalation vs Fixed Solar Investment
+            25-Year Grid Tariff Escalation vs Fixed Solar Investment
           </h2>
           <p className="text-xs text-muted-foreground mb-6">
-            Comparing standard utility rates (+5%/yr) against fixed solar payment.
+            Comparing standard DISCOM utility grid rates (+5%/yr) against solar energy savings.
           </p>
 
           <div className="h-72 w-full">
@@ -264,8 +268,8 @@ function EstimatePage() {
               <AreaChart data={cumulativeData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" opacity={0.3} />
                 <XAxis dataKey="year" tickLine={false} tickFormatter={(v) => `Yr ${v}`} />
-                <YAxis tickLine={false} tickFormatter={(v) => `$${v / 1000}k`} />
-                <Tooltip formatter={(val: number) => [`$${val.toLocaleString()}`, "Amount"]} />
+                <YAxis tickLine={false} tickFormatter={(v) => formatINRShort(v)} />
+                <Tooltip formatter={(val: number) => [formatINR(val), "Amount"]} />
                 <Area type="monotone" dataKey="withoutSolar" stroke="#ef4444" fill="#f87171" fillOpacity={0.2} name="Without Solar" />
                 <Area type="monotone" dataKey="savings" stroke="#10b981" fill="#34d399" fillOpacity={0.3} name="Cumulative Net Savings" />
               </AreaChart>
@@ -280,7 +284,7 @@ function EstimatePage() {
             <div className="flex items-center justify-between">
               <DialogTitle className="font-display text-xl font-bold flex items-center gap-2">
                 <FileCheck className="size-5 text-primary" />
-                Auto-Generated Same-Day Proposal Quote
+                Auto-Generated Same-Day Proposal Quote (INR)
               </DialogTitle>
               <StatusPill tone="success">Proposal #{pdfProposalId}</StatusPill>
             </div>
@@ -290,13 +294,13 @@ function EstimatePage() {
             <div className="rounded-xl border border-navy/20 bg-navy text-navy-foreground p-6">
               <div className="flex justify-between items-start">
                 <div>
-                  <h3 className="font-display text-2xl font-black text-white">SolarPeak</h3>
+                  <h3 className="font-display text-2xl font-black text-white">SolarFlow</h3>
                   <p className="text-xs text-navy-foreground/70">Official Pre-Design Proposal & Contract Quote</p>
                 </div>
                 <div className="text-right text-xs">
-                  <p className="font-bold">Prepared for: Marcus Whitfield</p>
+                  <p className="font-bold">Prepared for: {customerName}</p>
                   <p className="text-navy-foreground/70">Sales Consultant: Dana Ruiz</p>
-                  <p className="text-navy-foreground/70">Date: {new Date().toLocaleDateString()}</p>
+                  <p className="text-navy-foreground/70">Date: {new Date().toLocaleDateString("en-IN")}</p>
                 </div>
               </div>
 
@@ -311,11 +315,11 @@ function EstimatePage() {
                 </div>
                 <div>
                   <span className="block text-[10px] text-navy-foreground/70">Est. 25-Yr Savings</span>
-                  <span className="font-extrabold text-base text-emerald-400">${net25YrSavings.toLocaleString()}</span>
+                  <span className="font-extrabold text-base text-emerald-400">{formatINR(net25YrSavings)}</span>
                 </div>
                 <div>
                   <span className="block text-[10px] text-navy-foreground/70">Battery Backup</span>
-                  <span className="font-extrabold text-base text-white">{includeBattery ? "13.5 kWh" : "None"}</span>
+                  <span className="font-extrabold text-base text-white">{includeBattery ? "10 kWh" : "None"}</span>
                 </div>
               </div>
             </div>
@@ -331,26 +335,26 @@ function EstimatePage() {
                 </thead>
                 <tbody className="divide-y divide-border">
                   <tr>
-                    <td className="py-2.5">Solar Modules ({panelCount}x Tier-1 Monocrystalline Panels)</td>
-                    <td className="py-2.5 text-right font-medium">${(systemSizeKw * 1800).toLocaleString()}</td>
+                    <td className="py-2.5">Solar Modules ({panelCount}x Mono Perc 400W Modules)</td>
+                    <td className="py-2.5 text-right font-medium">{formatINR(systemSizeKw * 35000)}</td>
                   </tr>
                   <tr>
-                    <td className="py-2.5">Inverter & Racking System (SolarEdge / Enphase Microinverters)</td>
-                    <td className="py-2.5 text-right font-medium">${(systemSizeKw * 1000).toLocaleString()}</td>
+                    <td className="py-2.5">Grid-Tie Solar Inverter & Balance of System (BoS)</td>
+                    <td className="py-2.5 text-right font-medium">{formatINR(systemSizeKw * 20000)}</td>
                   </tr>
                   {includeBattery ? (
                     <tr>
-                      <td className="py-2.5">Battery Storage System (13.5 kWh Lithium Phosphate)</td>
-                      <td className="py-2.5 text-right font-medium">$9,500</td>
+                      <td className="py-2.5">Battery Storage Unit (10 kWh Lithium Phosphate)</td>
+                      <td className="py-2.5 text-right font-medium">{formatINR(180000)}</td>
                     </tr>
                   ) : null}
                   <tr className="text-emerald-600 font-semibold">
-                    <td className="py-2.5">Federal Clean Energy Tax Credit (30% ITC)</td>
-                    <td className="py-2.5 text-right">-${federalTaxCredit.toLocaleString()}</td>
+                    <td className="py-2.5">PM Surya Ghar Subsidy Benefit</td>
+                    <td className="py-2.5 text-right">-{formatINR(subsidyAmount)}</td>
                   </tr>
                   <tr className="font-bold text-sm text-foreground">
                     <td className="pt-3">Total Net System Investment</td>
-                    <td className="pt-3 text-right text-primary">${netSystemPrice.toLocaleString()}</td>
+                    <td className="pt-3 text-right text-primary">{formatINR(netSystemPrice)}</td>
                   </tr>
                 </tbody>
               </table>

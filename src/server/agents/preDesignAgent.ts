@@ -12,19 +12,19 @@ export type PreDesignInput = {
 export class PreDesignAgent {
   public async generatePreDesignProposal(input: PreDesignInput): Promise<{ proposal: Proposal; engineeringData: any }> {
     const startTime = Date.now();
-    const monthlyBill = input.monthlyBill || 280;
+    const monthlyBill = input.monthlyBill || 3500;
     const offsetPercent = input.offsetPercent || 90;
     const includeBattery = input.includeBattery ?? true;
 
-    const dailyKwh = (monthlyBill / 0.16) / 30;
+    const dailyKwh = (monthlyBill / 8.5) / 30;
     const requiredDailyGeneration = dailyKwh * (offsetPercent / 100);
-    const systemKw = Number((requiredDailyGeneration / 5.5).toFixed(1));
+    const systemKw = Number((requiredDailyGeneration / 4.5).toFixed(1)) || 5.2;
     const panelCount = Math.ceil((systemKw * 1000) / 400);
     const annualKwh = Math.round(systemKw * 1650);
 
-    const grossSystemPrice = Math.round(systemKw * 2850 + (includeBattery ? 9500 : 0));
-    const federalTaxCredit = Math.round(grossSystemPrice * 0.30);
-    const netInvestment = grossSystemPrice - federalTaxCredit;
+    const grossSystemPrice = Math.round(systemKw * 55000 + (includeBattery ? 180000 : 0));
+    const subsidyAmount = Math.round(Math.min(78000, grossSystemPrice * 0.30));
+    const netInvestment = grossSystemPrice - subsidyAmount;
 
     const propId = `PROP-${Math.floor(1000 + Math.random() * 9000)}`;
 
@@ -47,7 +47,7 @@ export class PreDesignAgent {
     serverDb.addAuditLog({
       category: "Proposal",
       title: "Auto Pre-Design Engine Executed",
-      detail: `Generated Proposal ${propId} (${systemKw} kW, ${panelCount} panels, $${netInvestment.toLocaleString()} net) for ${newProposal.customer}`,
+      detail: `Generated Proposal ${propId} (${systemKw} kW, ${panelCount} panels, ₹${netInvestment.toLocaleString("en-IN")} net) for ${newProposal.customer}`,
       latencyMs,
       status: "success",
     });
@@ -61,9 +61,9 @@ export class PreDesignAgent {
       roofAzimuth: 180,
       usableRoofSqFt: 1450,
       grossSystemPrice,
-      federalTaxCredit,
+      subsidyAmount,
       netInvestment,
-      est25YrSavings: Math.round(annualKwh * 0.22 * 25),
+      est25YrSavings: Math.round(annualKwh * 9.5 * 25),
     };
 
     return { proposal: newProposal, engineeringData };
@@ -71,7 +71,7 @@ export class PreDesignAgent {
 
   public generateProposalPdfHtml(proposalId: string): string {
     const prop = serverDb.getProposals().find((p) => p.id === proposalId) || serverDb.getProposals()[0];
-    const federalCredit = Math.round((prop?.value || 25000) * 0.3);
+    const subsidyAmount = Math.round(Math.min(78000, (prop?.value || 250000) * 0.3));
 
     return `<!DOCTYPE html>
 <html>
@@ -95,14 +95,14 @@ export class PreDesignAgent {
 <body>
   <div class="header">
     <div>
-      <div class="brand">SolarPeak</div>
-      <div class="subtitle">Official Pre-Design Proposal & Financial Quote</div>
+      <div class="brand">SolarFlow</div>
+      <div class="subtitle">Official Pre-Design Proposal & Financial Quote (INR)</div>
     </div>
     <div style="text-align: right; font-size: 13px;">
       <strong>Prepared for: ${prop?.customer}</strong><br />
       Proposal #: ${prop?.id}<br />
       Sales Consultant: ${prop?.rep}<br />
-      Date: ${new Date().toLocaleDateString()}
+      Date: ${new Date().toLocaleDateString("en-IN")}
     </div>
   </div>
 
@@ -113,15 +113,15 @@ export class PreDesignAgent {
     </div>
     <div>
       <div class="metric-label">Battery Storage</div>
-      <div class="metric-val">${prop?.battery ? "13.5 kWh" : "Grid Only"}</div>
+      <div class="metric-val">${prop?.battery ? "10 kWh" : "Grid Only"}</div>
     </div>
     <div>
       <div class="metric-label">Net Investment</div>
-      <div class="metric-val">$${prop?.value.toLocaleString()}</div>
+      <div class="metric-val">₹${prop?.value.toLocaleString("en-IN")}</div>
     </div>
     <div>
-      <div class="metric-label">30% Tax Credit</div>
-      <div class="metric-val">$${federalCredit.toLocaleString()}</div>
+      <div class="metric-label">Govt. Subsidy</div>
+      <div class="metric-val">₹${subsidyAmount.toLocaleString("en-IN")}</div>
     </div>
   </div>
 
@@ -136,16 +136,20 @@ export class PreDesignAgent {
     <tbody>
       <tr>
         <td>${prop?.systemKw} kW Tier-1 Monocrystalline Solar Array (400W Modules)</td>
-        <td style="text-align: right;">$${Math.round((prop?.systemKw || 9) * 2200).toLocaleString()}</td>
+        <td style="text-align: right;">₹${Math.round((prop?.systemKw || 5.2) * 35000).toLocaleString("en-IN")}</td>
       </tr>
-      ${prop?.battery ? `<tr><td>13.5 kWh Lithium-Ion Battery Backup Storage</td><td style="text-align: right;">$9,500</td></tr>` : ""}
+      <tr>
+        <td>Grid-Tie Solar Inverter & BoS Electrical Hardware</td>
+        <td style="text-align: right;">₹${Math.round((prop?.systemKw || 5.2) * 20000).toLocaleString("en-IN")}</td>
+      </tr>
+      ${prop?.battery ? `<tr><td>10 kWh Lithium Phosphate Battery Storage Unit</td><td style="text-align: right;">₹1,80,000</td></tr>` : ""}
       <tr style="color: #059669; font-weight: 600;">
-        <td>Federal Clean Energy Tax Credit (30% ITC)</td>
-        <td style="text-align: right;">-$${federalCredit.toLocaleString()}</td>
+        <td>PM Surya Ghar Muft Bijli Yojana Subsidy</td>
+        <td style="text-align: right;">-₹${subsidyAmount.toLocaleString("en-IN")}</td>
       </tr>
       <tr class="total-row">
         <td>Total Net System Investment</td>
-        <td style="text-align: right; color: #0284c7;">$${prop?.value.toLocaleString()}</td>
+        <td style="text-align: right; color: #0284c7;">₹${prop?.value.toLocaleString("en-IN")}</td>
       </tr>
     </tbody>
   </table>

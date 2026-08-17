@@ -40,11 +40,11 @@ export const Route = createFileRoute("/qualify")({
 });
 
 const quickPrompts = [
-  "⚡ Tesla Powerwall 3 Pricing & Specs",
-  "☀️ Maxeon vs REC Solar Panels",
-  "💰 Arizona APS / SRP Net Metering",
-  "📄 How does the 30% Federal Tax Credit work?",
-  "🏠 What if my roof is 15 years old?",
+  "⚡ Lithium LFP Battery Pricing & Specs",
+  "☀️ Tier-1 Mono Perc vs TopCon Panels",
+  "💰 Net Metering with Tata / BESCOM / MSEDCL",
+  "📄 PM Surya Ghar: Muft Bijli Yojana (₹78,000 Subsidy)",
+  "🏠 What if my RCC roof has partial shade?",
 ];
 
 function QualifyPage() {
@@ -58,7 +58,7 @@ function QualifyPage() {
       <main className="mx-auto w-full max-w-7xl px-4 py-8 sm:px-6 lg:px-8 lg:py-12 flex-1">
         <div className="mx-auto max-w-3xl text-center">
           <StatusPill tone="brand" dot className="px-3 py-1 font-bold">
-            ⚡ Module 5: Retrieval-Grounded Product & Pricing Chatbot
+            ⚡ Instant Rooftop Solar & Subsidy Calculator
           </StatusPill>
           <h1 className="mt-4 font-display text-3xl font-black tracking-tight sm:text-4xl lg:text-5xl text-foreground">
             Get Your Free Solar Estimate in 60 Seconds
@@ -163,11 +163,11 @@ function QualifyPage() {
                 </li>
                 <li className="flex items-center gap-2">
                   <CheckCircle2 className="size-3.5 text-primary shrink-0" />
-                  <span><strong>30% Federal Clean Energy Tax Credit</strong> Applied Directly</span>
+                  <span><strong>PM Surya Ghar: Muft Bijli Yojana</strong> Subsidy up to ₹78,000</span>
                 </li>
                 <li className="flex items-center gap-2">
                   <CheckCircle2 className="size-3.5 text-primary shrink-0" />
-                  <span><strong>$0 Down</strong> Low-Interest Solar Loan Programs Available</span>
+                  <span><strong>₹0 Down</strong> Low-Interest Solar Loan & EMI Options</span>
                 </li>
               </ul>
             </div>

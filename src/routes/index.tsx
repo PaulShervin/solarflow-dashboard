@@ -65,34 +65,35 @@ import { SiteHeader } from "@/components/site/SiteHeader";
 import { SiteFooter } from "@/components/site/SiteFooter";
 import heroImage from "@/assets/hero-solar-home.jpg";
 import { cn } from "@/lib/utils";
+import { formatINR } from "@/lib/formatCurrency";
 
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "SolarPeak — Save Up to 96% on Your Arizona Power Bill with Zero Down" },
+      { title: "SolarFlow — Save Up to 90% on Your Electricity Bill with Zero Down" },
       {
         name: "description",
         content:
-          "Turn Arizona's 300+ days of sunshine into locked-in energy independence. Calculate your 30% Federal ITC, compare battery backup systems, and claim instant roof savings in 60 seconds.",
+          "Harness India's 300+ days of abundant sunshine. Calculate your PM Surya Ghar central subsidy, compare solar storage, and claim instant rooftop savings in 60 seconds.",
       },
-      { property: "og:title", content: "SolarPeak — The Smarter Way to Power Your Home." },
+      { property: "og:title", content: "SolarFlow — The Smarter Way to Power Your Home." },
       {
         property: "og:description",
         content:
-          "Zero upfront cost, licensed Arizona installers, Tesla Powerwall 3 backup, and a 25-year production guarantee.",
+          "Zero upfront cost, certified installers, Lithium battery backup, and a 25-year production guarantee.",
       },
     ],
   }),
   component: HomePage,
 });
 
-// Neighborhood quick selectors for Arizona
-const ARIZONA_CITIES = [
-  { name: "Phoenix", utility: "APS / SRP", sunHours: "310 days/yr", avgBill: 320 },
-  { name: "Chandler", utility: "SRP Electric", sunHours: "315 days/yr", avgBill: 340 },
-  { name: "Scottsdale", utility: "APS Power", sunHours: "312 days/yr", avgBill: 380 },
-  { name: "Mesa", utility: "SRP / City", sunHours: "314 days/yr", avgBill: 310 },
-  { name: "Gilbert", utility: "SRP Electric", sunHours: "316 days/yr", avgBill: 350 },
+// Neighborhood quick selectors for India
+const INDIAN_CITIES = [
+  { name: "New Delhi", utility: "Tata Power / BSES", sunHours: "310 days/yr", avgBill: 4500 },
+  { name: "Mumbai", utility: "Adani / MSEDCL", sunHours: "315 days/yr", avgBill: 5200 },
+  { name: "Bengaluru", utility: "BESCOM Electric", sunHours: "312 days/yr", avgBill: 4200 },
+  { name: "Hyderabad", utility: "TSSPDCL Power", sunHours: "314 days/yr", avgBill: 4800 },
+  { name: "Chennai", utility: "TANGEDCO Grid", sunHours: "316 days/yr", avgBill: 4600 },
 ];
 
 // Interactive System Studio Packages
@@ -103,7 +104,7 @@ const PANEL_TIERS = [
     efficiency: "22.8% Peak",
     degradation: "0.25%/yr",
     badge: "Most Popular",
-    desc: "Engineered specifically to maximize power during scorching 115°F+ Arizona summer afternoons.",
+    desc: "Engineered specifically to maximize power during high-temperature 45°C+ summer afternoons.",
   },
   {
     id: "bifacial",
@@ -122,92 +123,92 @@ const BATTERY_TIERS = [
     capacity: "0 kWh",
     backup: "Standard Net Metering",
     priceAdd: 0,
-    desc: "Exports excess solar power to utility during the day and pulls grid power at night.",
+    desc: "Exports excess solar power to grid via bidirectional net meter and pulls power at night.",
   },
   {
     id: "powerwall-1",
-    name: "1x Tesla Powerwall 3",
-    capacity: "13.5 kWh Storage",
-    backup: "Essential Home Backup (AC + Fridge)",
-    priceAdd: 9800,
-    desc: "Zero-flicker backup during storm outages. Powers AC through peak utility charge hours.",
+    name: "1x Lithium LFP 10 kWh Unit",
+    capacity: "10.0 kWh Storage",
+    backup: "Essential Home Backup (AC + Lights + Refrigerator)",
+    priceAdd: 180000,
+    desc: "Zero-flicker power during grid load shedding. Seamlessly powers heavy loads through night.",
   },
   {
     id: "powerwall-2",
-    name: "2x Tesla Powerwall Max",
-    capacity: "27.0 kWh Whole-Home",
+    name: "2x Lithium LFP 20 kWh Max",
+    capacity: "20.0 kWh Whole-Home",
     backup: "100% Whole-Home Independence",
-    priceAdd: 18500,
-    desc: "Complete energy autonomy for large homes with dual AC units and EV charging.",
+    priceAdd: 340000,
+    desc: "Complete energy autonomy for large villas with multiple ACs and EV fast charging.",
   },
 ];
 
 const SMART_OPTIONS = [
   {
     id: "span",
-    name: "SPAN Smart AI Panel",
+    name: "Smart AI Distribution Panel",
     benefit: "+40% Battery Duration",
-    priceAdd: 3200,
-    desc: "Dynamically manages household electrical circuits in real-time from your phone.",
+    priceAdd: 45000,
+    desc: "Dynamically manages household electrical circuits in real-time from your smartphone.",
   },
   {
     id: "ev",
-    name: "Tesla Universal Level-2 EV Charger",
-    benefit: "44 Miles of Range/hr",
-    priceAdd: 1200,
-    desc: "Direct solar-powered electric vehicle charging with universal J1772 & NACS compatibility.",
+    name: "Universal Level-2 Fast EV Charger",
+    benefit: "45 km Range / hr",
+    priceAdd: 35000,
+    desc: "Direct solar-powered electric vehicle charging with universal Type 2 compatibility.",
   },
 ];
 
 const CASE_STUDIES = [
   {
-    name: "Marcus & Elena Vance",
-    city: "Chandler, AZ (SRP Grid)",
-    home: "2,850 sq ft · 4 Bed with Pool",
-    system: "12.4 kW System + Tesla Powerwall 3",
-    beforeBill: "$385 / mo",
-    afterBill: "$18 / mo",
-    savedToDate: "$14,280",
-    taxCredit: "$11,240 Cash Credit",
+    name: "Rajesh & Priya Sharma",
+    city: "Mumbai (MSEDCL Grid)",
+    home: "2,400 sq ft · 3 BHK Villa",
+    system: "5.2 kW System + 10 kWh Battery",
+    beforeBill: "₹8,500 / mo",
+    afterBill: "₹450 / mo",
+    savedToDate: "₹3,20,000",
+    taxCredit: "₹78,000 Subsidy Received",
     quote:
-      "Our July SRP electric bill used to hit $420 every summer. Now our net bill is just $18! The Powerwall runs our AC all night through the peak demand window without buying single kWh of dirty grid power.",
+      "Our monthly electricity bill used to hit ₹9,000 every summer. Now our net bill is just ₹450! The battery runs our AC through night power cuts without buying grid units.",
     stars: 5,
-    installDays: "24 days start-to-PTO",
+    installDays: "18 days start-to-grid",
   },
   {
-    name: "David & Rebecca Sterling",
-    city: "Scottsdale, AZ (APS Grid)",
-    home: "3,900 sq ft · Dual EV Charging",
-    system: "16.8 kW Array + Dual Powerwalls",
-    beforeBill: "$560 / mo",
-    afterBill: "$24 / mo",
-    savedToDate: "$22,400",
-    taxCredit: "$15,400 Cash Credit",
+    name: "Vikram & Ananya Patel",
+    city: "Bengaluru (BESCOM Grid)",
+    home: "3,200 sq ft · Dual EV Charging",
+    system: "8.4 kW Array + 20 kWh Storage",
+    beforeBill: "₹12,400 / mo",
+    afterBill: "₹650 / mo",
+    savedToDate: "₹4,80,000",
+    taxCredit: "₹78,000 Subsidy Received",
     quote:
-      "With two electric cars and monsoon power outages in Scottsdale, SolarPeak was the best home investment we've ever made. The system paid for itself faster than promised and we never lost power once.",
+      "With two electric cars and heavy home usage, SolarFlow was the best investment we've ever made. The system paid for itself faster than promised and we never lost power once.",
     stars: 5,
-    installDays: "28 days start-to-PTO",
+    installDays: "21 days start-to-grid",
   },
   {
-    name: "Sarah & Brian Jenkins",
-    city: "Mesa, AZ (SRP Grid)",
-    home: "2,100 sq ft · Single Story",
-    system: "8.6 kW Tier-1 Ultra-Black Panels",
-    beforeBill: "$270 / mo",
-    afterBill: "$14 / mo",
-    savedToDate: "$9,840",
-    taxCredit: "$8,100 Cash Credit",
+    name: "Suresh & Meena Iyer",
+    city: "Chennai (TANGEDCO Grid)",
+    home: "1,900 sq ft · Independent House",
+    system: "4.2 kW Tier-1 Mono Perc",
+    beforeBill: "₹6,200 / mo",
+    afterBill: "₹320 / mo",
+    savedToDate: "₹2,40,000",
+    taxCredit: "₹78,000 Subsidy Received",
     quote:
-      "Zero aggressive salespeople. The instant AI qualification scanned our roof via satellite and gave us transparent pricing within minutes. The install crew was super professional and finished in one afternoon.",
+      "Zero aggressive salespeople. The instant AI qualification scanned our roof via satellite and gave us transparent pricing within minutes. The install crew was super professional.",
     stars: 5,
-    installDays: "21 days start-to-PTO",
+    installDays: "15 days start-to-grid",
   },
 ];
 
 function HomePage() {
   // Quick Simulator state
-  const [selectedCity, setSelectedCity] = useState(ARIZONA_CITIES[1]!);
-  const [monthlyBill, setMonthlyBill] = useState(340);
+  const [selectedCity, setSelectedCity] = useState(INDIAN_CITIES[1]!);
+  const [monthlyBill, setMonthlyBill] = useState(5200);
   const [includeBatteryInCalc, setIncludeBatteryInCalc] = useState(true);
   const [comparisonMode, setComparisonMode] = useState<"after" | "before">("after");
 
@@ -217,12 +218,12 @@ function HomePage() {
   const [activeSmartAddons, setActiveSmartAddons] = useState<string[]>(["span"]);
 
   // Calculate synchronized financial metrics for the Live Calculator section
-  const systemSizeKw = Math.max(4.4, Number((monthlyBill / 28.5).toFixed(1)));
+  const systemSizeKw = Math.max(3.0, Number((monthlyBill / 950).toFixed(1)));
   const panelCount = Math.ceil((systemSizeKw * 1000) / 430);
-  const grossCostInCalc = Math.round(systemSizeKw * 2750 + (includeBatteryInCalc ? 9800 : 0));
-  const federalTaxCreditInCalc = Math.round(grossCostInCalc * 0.30);
-  const estimatedSolarPayment = Math.round(systemSizeKw * 16.2 + (includeBatteryInCalc ? 38 : 0));
-  const estimatedMonthlySavings = Math.max(35, monthlyBill - estimatedSolarPayment);
+  const grossCostInCalc = Math.round(systemSizeKw * 55000 + (includeBatteryInCalc ? 180000 : 0));
+  const subsidyInCalc = Math.round(Math.min(78000, grossCostInCalc * 0.30));
+  const estimatedSolarPayment = Math.round(systemSizeKw * 450 + (includeBatteryInCalc ? 900 : 0));
+  const estimatedMonthlySavings = Math.max(500, monthlyBill - estimatedSolarPayment);
   const lifetime25YrSavings = Math.round(estimatedMonthlySavings * 12 * 25 * 1.32);
   const utility25YrCumulativeExpense = Math.round(monthlyBill * 12 * 25 * 1.62);
 
@@ -233,10 +234,10 @@ function HomePage() {
     const item = SMART_OPTIONS.find((s) => s.id === id);
     return acc + (item ? item.priceAdd : 0);
   }, 0);
-  const studioGrossCost = Math.round(systemSizeKw * 2750 + batteryCost + smartAddonCost);
-  const studioFederalTaxCredit = Math.round(studioGrossCost * 0.30);
-  const studioNetCost = studioGrossCost - studioFederalTaxCredit - 1000;
-  const studioMonthlyPayment = Math.round(systemSizeKw * 16.2 + (batteryObj.priceAdd > 0 ? 38 : 0));
+  const studioGrossCost = Math.round(systemSizeKw * 55000 + batteryCost + smartAddonCost);
+  const studioSubsidy = Math.round(Math.min(78000, studioGrossCost * 0.30));
+  const studioNetCost = studioGrossCost - studioSubsidy;
+  const studioMonthlyPayment = Math.round(systemSizeKw * 450 + (batteryObj.priceAdd > 0 ? 900 : 0));
 
   function toggleSmartAddon(id: string) {
     setActiveSmartAddons((prev) =>
@@ -261,10 +262,10 @@ function HomePage() {
             >
               <span className="flex items-center gap-1.5 font-bold text-emerald-600">
                 <Gift className="size-4 text-emerald-600" />
-                ARIZONA SOLAR INCENTIVE ACTIVE:
+                CENTRAL SOLAR SUBSIDY ACTIVE:
               </span>
               <span className="text-slate-800 font-semibold">
-                Claim 30% Federal ITC + $1,000 State Rebate
+                Claim PM Surya Ghar Subsidy (up to ₹78,000 Direct Benefit)
               </span>
               <span className="ml-1 grid size-5 place-items-center rounded-full bg-slate-100 text-slate-700">
                 <ArrowRight className="size-3" />
@@ -279,7 +280,7 @@ function HomePage() {
               {/* Trust Badge */}
               <div className="inline-flex items-center gap-2 rounded-full border border-emerald-200/80 bg-emerald-50/80 px-4 py-1.5 text-xs font-semibold text-emerald-800 shadow-xs">
                 <ShieldCheck className="size-4 text-emerald-600" />
-                $0 Down • Fixed Monthly Payment • 25-Year Guarantee
+                ₹0 Down • Fixed Monthly EMI • 25-Year Guarantee
               </div>
 
               {/* Main Headline */}
@@ -291,7 +292,7 @@ function HomePage() {
 
               {/* Subtext */}
               <p className="max-w-xl text-base leading-relaxed text-slate-600 sm:text-lg">
-                Cut your energy bills, increase your home value, and take control of your energy future with premium solar solutions.
+                Cut your electricity bills, increase your property value, and take control of your energy future with rooftop solar solutions.
               </p>
 
               {/* Action Buttons */}
@@ -416,7 +417,7 @@ function HomePage() {
                 </div>
                 <div>
                   <p className="font-bold text-xs text-slate-900">Trusted by 10,000+ homeowners</p>
-                  <p className="text-[11px] font-semibold text-emerald-700">Across Arizona</p>
+                  <p className="text-[11px] font-semibold text-emerald-700">Across India</p>
                 </div>
               </div>
 
@@ -435,25 +436,14 @@ function HomePage() {
                 </div>
               </div>
 
-              {/* BBB Rating */}
-              <div className="flex items-center gap-2">
-                <div className="grid size-8 place-items-center rounded-lg bg-slate-900 text-white font-bold text-xs">
-                  BBB
-                </div>
-                <div>
-                  <p className="font-bold text-xs text-slate-900">A+ Rating</p>
-                  <p className="text-[11px] text-slate-500 font-medium">BBB Accredited</p>
-                </div>
-              </div>
-
               {/* Experience */}
               <div className="flex items-center gap-2">
                 <div className="grid size-8 place-items-center rounded-lg bg-emerald-100 text-emerald-700 font-bold text-xs">
                   <Award className="size-4" />
                 </div>
                 <div>
-                  <p className="font-bold text-xs text-slate-900">25+ Years</p>
-                  <p className="text-[11px] text-slate-500 font-medium">Industry Experience</p>
+                  <p className="font-bold text-xs text-slate-900">MNRE Approved</p>
+                  <p className="text-[11px] text-slate-500 font-medium">National Portal Registered</p>
                 </div>
               </div>
             </div>
@@ -468,13 +458,13 @@ function HomePage() {
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="mx-auto max-w-3xl text-center space-y-3">
             <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-600/30 bg-emerald-50 px-3.5 py-1 text-xs font-bold text-emerald-700">
-              ⚡ Real-Time Financial Simulator
+              ⚡ Real-Time Financial Simulator (INR)
             </span>
             <h2 className="font-display text-3xl font-black sm:text-4xl text-slate-900">
-              Calculate Your Exact Solar Savings & Tax Credit
+              Calculate Your Solar Savings & PM Surya Ghar Subsidy
             </h2>
             <p className="text-slate-600 text-sm sm:text-base">
-              Select your city and slide your monthly electric bill to calculate recommended panel sizing, tax credits, and 25-year cumulative savings.
+              Select your city and slide your monthly electric bill to calculate recommended system size, direct central government subsidy, and 25-year cumulative savings.
             </p>
           </div>
 
@@ -484,10 +474,10 @@ function HomePage() {
               {/* City Selection */}
               <div className="space-y-2">
                 <label className="text-xs font-bold uppercase tracking-wider text-slate-500">
-                  Select Your Arizona City / Grid:
+                  Select Your City / DISCOM Grid:
                 </label>
                 <div className="flex flex-wrap gap-2">
-                  {ARIZONA_CITIES.map((city) => (
+                  {INDIAN_CITIES.map((city) => (
                     <button
                       key={city.name}
                       onClick={() => {
@@ -517,24 +507,24 @@ function HomePage() {
                     <span className="text-xs text-slate-500">Average monthly utility bill in {selectedCity.name}</span>
                   </div>
                   <span className="font-display text-3xl font-black text-emerald-600">
-                    ${monthlyBill}
+                    {formatINR(monthlyBill)}
                     <span className="text-xs font-normal text-slate-500">/mo</span>
                   </span>
                 </div>
                 <Slider
                   value={[monthlyBill]}
-                  min={100}
-                  max={750}
-                  step={10}
+                  min={1000}
+                  max={25000}
+                  step={250}
                   onValueChange={(val) => {
                     if (typeof val[0] === "number") setMonthlyBill(val[0]);
                   }}
                   className="py-2"
                 />
                 <div className="flex justify-between text-xs text-slate-500 font-medium">
-                  <span>$100/mo (Small Home)</span>
-                  <span>$340/mo (Avg AZ Home)</span>
-                  <span>$750/mo (High AC / Pool)</span>
+                  <span>₹1,000/mo (Small Flat)</span>
+                  <span>₹5,200/mo (Avg Home)</span>
+                  <span>₹25,000/mo (Villa / ACs)</span>
                 </div>
               </div>
 
@@ -545,8 +535,8 @@ function HomePage() {
                     <BatteryCharging className="size-6" />
                   </div>
                   <div>
-                    <p className="text-sm font-bold text-slate-900">Include Tesla Powerwall 3 Battery</p>
-                    <p className="text-xs text-slate-500">13.5 kWh backup · Runs AC during peak 4–7 PM rate windows</p>
+                    <p className="text-sm font-bold text-slate-900">Include Lithium LFP Battery Backup</p>
+                    <p className="text-xs text-slate-500">10 kWh storage · Uninterrupted power during DISCOM outages</p>
                   </div>
                 </div>
                 <Switch
@@ -561,12 +551,12 @@ function HomePage() {
                 <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-xs">
                   <span className="text-xs font-semibold text-slate-500">Recommended System</span>
                   <p className="mt-1 font-display text-2xl font-black text-slate-900">{systemSizeKw} kW</p>
-                  <span className="text-xs text-slate-500">{panelCount} Tier-1 430W Panels</span>
+                  <span className="text-xs text-slate-500">{panelCount} Tier-1 Mono Perc Panels</span>
                 </div>
                 <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-xs">
-                  <span className="text-xs font-semibold text-slate-500">30% Federal Tax Credit</span>
-                  <p className="mt-1 font-display text-2xl font-black text-emerald-600">${federalTaxCreditInCalc.toLocaleString()}</p>
-                  <span className="text-xs text-emerald-600 font-semibold">+ $1,000 AZ State Credit</span>
+                  <span className="text-xs font-semibold text-slate-500">PM Surya Ghar Subsidy</span>
+                  <p className="mt-1 font-display text-2xl font-black text-emerald-600">{formatINR(subsidyInCalc)}</p>
+                  <span className="text-xs text-emerald-600 font-semibold">Direct DBT to Bank Account</span>
                 </div>
               </div>
             </div>
@@ -578,27 +568,27 @@ function HomePage() {
                   Projected Financial ROI
                 </span>
                 <span className="rounded-full bg-emerald-500/20 px-2.5 py-0.5 text-[11px] font-bold text-emerald-400">
-                  Rate-Hike Protected
+                  Tariff-Hike Protected
                 </span>
               </div>
 
               <div className="mt-6 space-y-4 text-sm">
                 <div className="flex items-center justify-between">
-                  <span className="text-slate-300">New Fixed Solar Payment:</span>
+                  <span className="text-slate-300">New Fixed Solar EMI:</span>
                   <span className="font-display font-bold text-white text-base">
-                    ${estimatedSolarPayment}/mo
+                    {formatINR(estimatedSolarPayment)}/mo
                   </span>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-slate-300">Immediate Monthly Savings:</span>
                   <span className="font-display font-extrabold text-emerald-400 text-base">
-                    +${estimatedMonthlySavings}/mo
+                    +{formatINR(estimatedMonthlySavings)}/mo
                   </span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-slate-300">25-Yr Utility Renter Expense:</span>
+                  <span className="text-slate-300">25-Yr DISCOM Grid Expense:</span>
                   <span className="font-mono text-rose-400 text-sm font-bold">
-                    ${utility25YrCumulativeExpense.toLocaleString()}
+                    {formatINR(utility25YrCumulativeExpense)}
                   </span>
                 </div>
 
@@ -607,10 +597,10 @@ function HomePage() {
                     25-Year Cumulative Net Clean Energy Savings:
                   </span>
                   <p className="mt-1 font-display text-4xl font-black text-emerald-400">
-                    ${lifetime25YrSavings.toLocaleString()}
+                    {formatINR(lifetime25YrSavings)}
                   </p>
                   <p className="mt-1 text-xs text-slate-400">
-                    Backed by 25-year equipment, labor, and production guarantee
+                    Backed by 25-year equipment, inverter, and generation guarantee
                   </p>
                 </div>
               </div>
@@ -678,9 +668,9 @@ function HomePage() {
                     <DollarSign className="size-5" />
                   </span>
                   <p className="text-xs font-bold uppercase tracking-wider text-slate-500 mt-4">Monthly Electric Bill</p>
-                  <p className="font-display text-3xl font-black text-emerald-600 mt-1">$14 to $18</p>
+                  <p className="font-display text-3xl font-black text-emerald-600 mt-1">₹350 to ₹650</p>
                   <p className="text-xs text-slate-600 mt-1.5 leading-relaxed">
-                    Fixed utility net meter connection fee only. All household power is supplied by your rooftop panels.
+                    Fixed DISCOM net meter connection charges only. All household daytime & nighttime power supplied by your rooftop panels.
                   </p>
                 </div>
 
@@ -688,10 +678,10 @@ function HomePage() {
                   <span className="grid size-11 place-items-center rounded-2xl bg-emerald-50 text-emerald-600">
                     <BatteryCharging className="size-5" />
                   </span>
-                  <p className="text-xs font-bold uppercase tracking-wider text-slate-500 mt-4">Power Outage Defense</p>
+                  <p className="text-xs font-bold uppercase tracking-wider text-slate-500 mt-4">Power Cut Defense</p>
                   <p className="font-display text-3xl font-black text-emerald-600 mt-1">24/7 Autonomy</p>
                   <p className="text-xs text-slate-600 mt-1.5 leading-relaxed">
-                    Tesla Powerwall 3 seamlessly powers air conditioning, refrigeration, and medical devices through summer monsoons.
+                    Lithium LFP Battery seamlessly powers heavy loads (ACs, lights, refrigerator) during load shedding and summer storms.
                   </p>
                 </div>
 
@@ -699,10 +689,10 @@ function HomePage() {
                   <span className="grid size-11 place-items-center rounded-2xl bg-emerald-50 text-emerald-600">
                     <BadgeCheck className="size-5" />
                   </span>
-                  <p className="text-xs font-bold uppercase tracking-wider text-slate-500 mt-4">Cash Tax Credits</p>
-                  <p className="font-display text-3xl font-black text-emerald-600 mt-1">${federalTaxCreditInCalc.toLocaleString()}</p>
+                  <p className="text-xs font-bold uppercase tracking-wider text-slate-500 mt-4">Government Subsidy</p>
+                  <p className="font-display text-3xl font-black text-emerald-600 mt-1">{formatINR(subsidyInCalc)}</p>
                   <p className="text-xs text-slate-600 mt-1.5 leading-relaxed">
-                    Direct dollar-for-dollar reduction in your federal tax liability + $1,000 Arizona State credit.
+                    PM Surya Ghar Muft Bijli Yojana direct subsidy deposited into your linked bank account.
                   </p>
                 </div>
 
@@ -710,10 +700,10 @@ function HomePage() {
                   <span className="grid size-11 place-items-center rounded-2xl bg-emerald-50 text-emerald-600">
                     <Home className="size-5" />
                   </span>
-                  <p className="text-xs font-bold uppercase tracking-wider text-slate-500 mt-4">Home Appraisal Value</p>
-                  <p className="font-display text-3xl font-black text-emerald-600 mt-1">+$42,000</p>
+                  <p className="text-xs font-bold uppercase tracking-wider text-slate-500 mt-4">Property Value Added</p>
+                  <p className="font-display text-3xl font-black text-emerald-600 mt-1">+₹3,50,000</p>
                   <p className="text-xs text-slate-600 mt-1.5 leading-relaxed">
-                    Owned solar systems appraise significantly higher and sell faster than non-solar comparable homes.
+                    Homes with registered rooftop solar assets appraise higher and offer zero electricity liability for future buyers.
                   </p>
                 </div>
               </>
@@ -724,9 +714,9 @@ function HomePage() {
                     <TrendingUp className="size-5" />
                   </span>
                   <p className="text-xs font-bold uppercase tracking-wider text-slate-500 mt-4">Monthly Electric Bill</p>
-                  <p className="font-display text-3xl font-black text-rose-600 mt-1">${monthlyBill}/mo</p>
+                  <p className="font-display text-3xl font-black text-rose-600 mt-1">{formatINR(monthlyBill)}/mo</p>
                   <p className="text-xs text-slate-600 mt-1.5 leading-relaxed">
-                    Compounding 5.2% annually. In 10 years, a $340 bill becomes over $560/month for the exact same electricity.
+                    Compounding 6.5% annually. In 10 years, a ₹5,000 bill becomes over ₹9,500/month for the exact same power.
                   </p>
                 </div>
 
@@ -737,7 +727,7 @@ function HomePage() {
                   <p className="text-xs font-bold uppercase tracking-wider text-slate-500 mt-4">Grid Reliability</p>
                   <p className="font-display text-3xl font-black text-rose-600 mt-1">100% Vulnerable</p>
                   <p className="text-xs text-slate-600 mt-1.5 leading-relaxed">
-                    Summer grid brownouts and peak-demand throttling leave your home hot and powerless when you need it most.
+                    Summer grid brownouts and peak load shedding leave your home hot and powerless when you need it most.
                   </p>
                 </div>
 
@@ -745,10 +735,10 @@ function HomePage() {
                   <span className="grid size-11 place-items-center rounded-2xl bg-rose-50 text-rose-600">
                     <Percent className="size-5" />
                   </span>
-                  <p className="text-xs font-bold uppercase tracking-wider text-slate-500 mt-4">Federal Incentives</p>
-                  <p className="font-display text-3xl font-black text-rose-600 mt-1">$0 Kept</p>
+                  <p className="text-xs font-bold uppercase tracking-wider text-slate-500 mt-4">Government Subsidy</p>
+                  <p className="font-display text-3xl font-black text-rose-600 mt-1">₹0 Claimed</p>
                   <p className="text-xs text-slate-600 mt-1.5 leading-relaxed">
-                    You receive zero tax deductions and pay 100% retail rates with utility peak-demand surcharges.
+                    You miss out on ₹78,000 national clean energy subsidies and pay 100% DISCOM peak tariff surcharges.
                   </p>
                 </div>
 
@@ -757,9 +747,9 @@ function HomePage() {
                     <Flame className="size-5" />
                   </span>
                   <p className="text-xs font-bold uppercase tracking-wider text-slate-500 mt-4">25-Year Wealth Lost</p>
-                  <p className="font-display text-3xl font-black text-rose-600 mt-1">${utility25YrCumulativeExpense.toLocaleString()}</p>
+                  <p className="font-display text-3xl font-black text-rose-600 mt-1">{formatINR(utility25YrCumulativeExpense)}</p>
                   <p className="text-xs text-slate-600 mt-1.5 leading-relaxed">
-                    Total non-recoverable expense sent to utility shareholders with zero equity or ownership return.
+                    Total non-recoverable expense sent to utility power companies with zero equity or ownership return.
                   </p>
                 </div>
               </>
@@ -775,13 +765,13 @@ function HomePage() {
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="mx-auto max-w-3xl text-center space-y-3">
             <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-600/30 bg-emerald-50 px-3.5 py-1 text-xs font-bold text-emerald-700">
-              Custom System Builder
+              Custom System Builder (INR)
             </span>
             <h2 className="font-display text-3xl font-black sm:text-4xl text-slate-900">
               Build Your Custom Solar & Storage System
             </h2>
             <p className="text-slate-600 text-sm sm:text-base">
-              Customize your hardware configuration and see your live investment, monthly payment, and federal tax credit in real-time.
+              Customize your hardware configuration and see your live investment, monthly EMI, and PM Surya Ghar subsidy in real-time.
             </p>
           </div>
 
@@ -853,7 +843,7 @@ function HomePage() {
                       </div>
                       <div className="text-right">
                         <span className="font-display text-sm font-bold text-slate-900 block">
-                          {tier.priceAdd === 0 ? "Included" : `+$${tier.priceAdd.toLocaleString()}`}
+                          {tier.priceAdd === 0 ? "Included" : `+${formatINR(tier.priceAdd)}`}
                         </span>
                         <span className="text-[10px] text-emerald-700 font-semibold">{tier.backup}</span>
                       </div>
@@ -885,7 +875,7 @@ function HomePage() {
                       >
                         <div className="flex items-center justify-between">
                           <span className="font-bold text-sm text-slate-900">{opt.name}</span>
-                          <span className="font-mono text-xs font-bold text-emerald-700">+${opt.priceAdd}</span>
+                          <span className="font-mono text-xs font-bold text-emerald-700">+{formatINR(opt.priceAdd)}</span>
                         </div>
                         <p className="text-xs text-slate-600 mt-1.5">{opt.desc}</p>
                         <div className="mt-3 flex items-center justify-between border-t border-slate-100 pt-2 text-[11px]">
@@ -923,25 +913,21 @@ function HomePage() {
                 </div>
                 <div className="flex justify-between pb-2 border-b border-white/10">
                   <span className="text-slate-300">Gross Equipment & Labor:</span>
-                  <span className="font-mono text-white text-sm">${studioGrossCost.toLocaleString()}</span>
+                  <span className="font-mono text-white text-sm">{formatINR(studioGrossCost)}</span>
                 </div>
                 <div className="flex justify-between pb-2 border-b border-white/10">
-                  <span className="text-emerald-400 font-semibold">30% Federal ITC Tax Credit:</span>
-                  <span className="font-mono font-bold text-emerald-400 text-sm">-${studioFederalTaxCredit.toLocaleString()}</span>
-                </div>
-                <div className="flex justify-between pb-2 border-b border-white/10">
-                  <span className="text-emerald-400 font-semibold">Arizona State Solar Credit:</span>
-                  <span className="font-mono font-bold text-emerald-400 text-sm">-$1,000</span>
+                  <span className="text-emerald-400 font-semibold">PM Surya Ghar Subsidy:</span>
+                  <span className="font-mono font-bold text-emerald-400 text-sm">-{formatINR(studioSubsidy)}</span>
                 </div>
                 <div className="flex justify-between pb-3 border-b border-white/15">
                   <span className="font-bold text-white text-sm">Net System Investment:</span>
-                  <span className="font-display font-black text-white text-base">${studioNetCost.toLocaleString()}</span>
+                  <span className="font-display font-black text-white text-base">{formatINR(studioNetCost)}</span>
                 </div>
 
                 <div className="rounded-2xl bg-emerald-500/15 border border-emerald-500/30 p-4 space-y-1 text-center">
-                  <span className="text-[11px] text-slate-300 font-medium">Estimated Monthly Solar Payment:</span>
-                  <p className="font-display text-3xl font-black text-emerald-400">${studioMonthlyPayment}/mo</p>
-                  <p className="text-[10px] text-teal-300 font-semibold">Saves you ~${estimatedMonthlySavings}/month from day one</p>
+                  <span className="text-[11px] text-slate-300 font-medium">Estimated Monthly Solar EMI:</span>
+                  <p className="font-display text-3xl font-black text-emerald-400">{formatINR(studioMonthlyPayment)}/mo</p>
+                  <p className="text-[10px] text-teal-300 font-semibold">Saves you ~{formatINR(estimatedMonthlySavings)}/month from day one</p>
                 </div>
               </div>
 
@@ -1088,13 +1074,13 @@ function HomePage() {
         <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
           <div className="text-center space-y-3">
             <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-600/30 bg-emerald-50 px-3.5 py-1 text-xs font-bold text-emerald-700">
-              Arizona Solar FAQs
+              India Solar FAQs
             </span>
             <h2 className="font-display text-3xl font-black sm:text-4xl text-slate-900">
               Frequently Asked Questions
             </h2>
             <p className="text-slate-600 text-sm">
-              Everything you need to know about Arizona solar rights, incentives, warranties, and installation.
+              Everything you need to know about PM Surya Ghar subsidies, DISCOM net metering, warranties, and rooftop installation.
             </p>
           </div>
 
@@ -1102,37 +1088,37 @@ function HomePage() {
             <Accordion type="single" collapsible className="w-full space-y-3">
               <AccordionItem value="itc" className="rounded-2xl border border-slate-200 bg-white px-5 shadow-xs">
                 <AccordionTrigger className="text-sm font-bold text-slate-900 hover:no-underline">
-                  How does the 30% Federal Solar Tax Credit work?
+                  How does the PM Surya Ghar: Muft Bijli Yojana subsidy work?
                 </AccordionTrigger>
                 <AccordionContent className="text-xs text-slate-600 leading-relaxed pt-1">
-                  Under the Federal Inflation Reduction Act (Section 25D), homeowners who purchase solar or battery storage qualify for a 30% tax credit applied directly against their federal income tax liability. Plus, Arizona provides an additional $1,000 State Solar Tax Credit.
+                  Under the Central Government PM Surya Ghar scheme, residential consumers receive direct DBT subsidies into their bank account: ₹30,000 for 1 kW, ₹60,000 for 2 kW, and up to ₹78,000 for 3 kW and higher systems. We handle 100% of the National Portal documentation and DISCOM approvals for you.
                 </AccordionContent>
               </AccordionItem>
 
               <AccordionItem value="hoa" className="rounded-2xl border border-slate-200 bg-white px-5 shadow-xs">
                 <AccordionTrigger className="text-sm font-bold text-slate-900 hover:no-underline">
-                  Can my Arizona HOA legally stop me from installing solar?
+                  How does bidirectional net metering work with my DISCOM?
                 </AccordionTrigger>
                 <AccordionContent className="text-xs text-slate-600 leading-relaxed pt-1">
-                  No. Under Arizona Revised Statutes (A.R.S. § 33-1816), Homeowners Associations cannot effectively restrict or prohibit homeowners from installing solar energy devices on their property.
+                  A bi-directional net meter installed by your local electricity board (e.g., Tata Power, BESCOM, MSEDCL, TSSPDCL) measures power sent to the grid during the day and consumed at night. Surplus units generated roll over to offset your monthly bill.
                 </AccordionContent>
               </AccordionItem>
 
               <AccordionItem value="battery" className="rounded-2xl border border-slate-200 bg-white px-5 shadow-xs">
                 <AccordionTrigger className="text-sm font-bold text-slate-900 hover:no-underline">
-                  Why is Tesla Powerwall 3 recommended for APS & SRP customers?
+                  Why is Lithium LFP battery storage recommended?
                 </AccordionTrigger>
                 <AccordionContent className="text-xs text-slate-600 leading-relaxed pt-1">
-                  Arizona utilities enforce expensive Time-of-Use peak charges during late afternoon and evening hours (4 PM–7 PM). A battery stores daytime solar power to run your AC at night, completely shielding you from high on-peak rates and summer monsoon outages.
+                  A dedicated Lithium battery stores surplus solar energy during sunny daytime hours to run heavy home appliances (like air conditioners, fans, and refrigeration) during grid outages and peak night hours, providing 24/7 power independence.
                 </AccordionContent>
               </AccordionItem>
 
               <AccordionItem value="warranty" className="rounded-2xl border border-slate-200 bg-white px-5 shadow-xs">
                 <AccordionTrigger className="text-sm font-bold text-slate-900 hover:no-underline">
-                  What is included in the 25-Year Production & Roof Warranty?
+                  What is included in the 25-Year Production & Performance Warranty?
                 </AccordionTrigger>
                 <AccordionContent className="text-xs text-slate-600 leading-relaxed pt-1">
-                  Our comprehensive warranty covers solar panel power output (guaranteed at &ge;92% capacity after 25 years), microinverter replacement, roof penetration watertight seal integrity, and live 24/7 mobile app performance monitoring.
+                  Our comprehensive warranty covers Tier-1 solar panel linear power output (guaranteed &ge;92% generation after 25 years), on-grid inverter replacement, waterproof rooftop mounting integrity, and real-time mobile app IoT performance monitoring.
                 </AccordionContent>
               </AccordionItem>
             </Accordion>
@@ -1152,7 +1138,7 @@ function HomePage() {
             See Exactly What Your Roof Can Generate
           </h2>
           <p className="mx-auto mt-4 max-w-xl text-sm leading-relaxed text-slate-300">
-            Answer 5 fast questions with our 24/7 AI Solar Assistant. Get a custom satellite roof pre-design quote with 30% Federal ITC calculations in under 60 seconds.
+            Answer 5 fast questions with our 24/7 AI Solar Assistant. Get a custom satellite rooftop pre-design quote with PM Surya Ghar subsidy calculations in under 60 seconds.
           </p>
 
           <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">

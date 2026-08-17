@@ -24,6 +24,7 @@ import { statusMeta, type Lead, type LeadStatus } from "@/data/mock";
 import { useSolarDB } from "@/hooks/useSolarDB";
 import { solarApi } from "@/lib/api";
 import { cn } from "@/lib/utils";
+import { formatINR } from "@/lib/formatCurrency";
 
 export const Route = createFileRoute("/admin/leads")({
   component: LeadsPage,
@@ -52,20 +53,22 @@ function LeadsPage() {
 
   const [webhookModalOpen, setWebhookModalOpen] = useState(false);
   const [webhookLoading, setWebhookLoading] = useState(false);
-  const [simName, setSimName] = useState("Sarah Jenkins");
-  const [simEmail, setSimEmail] = useState("s.jenkins@example.com");
-  const [simPhone, setSimPhone] = useState("(602) 555-9012");
-  const [simSource, setSimSource] = useState<"Google Ads" | "Meta" | "Website" | "Referral">("Meta");
-  const [simBill, setSimBill] = useState(380);
+  const [simName, setSimName] = useState("");
+  const [simEmail, setSimEmail] = useState("");
+  const [simPhone, setSimPhone] = useState("");
+  const [simSource, setSimSource] = useState<"Google Ads" | "Meta" | "Website" | "Referral">("Website");
+  const [simBill, setSimBill] = useState(250);
   const [simRoof, setSimRoof] = useState<"Asphalt shingle" | "Tile" | "Metal" | "Flat">("Asphalt shingle");
 
-  const rows = leads.filter(
-    (l) =>
-      (status === "all" || l.status === status) &&
-      (l.name.toLowerCase().includes(query.toLowerCase()) ||
-        l.city.toLowerCase().includes(query.toLowerCase()) ||
-        l.id.toLowerCase().includes(query.toLowerCase())),
-  );
+  const rows = [...leads]
+    .sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime())
+    .filter(
+      (l) =>
+        (status === "all" || l.status === status) &&
+        (l.name.toLowerCase().includes(query.toLowerCase()) ||
+          l.city.toLowerCase().includes(query.toLowerCase()) ||
+          l.id.toLowerCase().includes(query.toLowerCase()))
+    );
 
   async function handleSimulateWebhook(e: React.FormEvent) {
     e.preventDefault();
@@ -199,8 +202,8 @@ function LeadsPage() {
                       </span>
                     </td>
                     <td className="px-5 py-3.5">
-                      <StatusPill tone={statusMeta[l.status].tone}>
-                        {statusMeta[l.status].label}
+                      <StatusPill tone={statusMeta[l.status]?.tone || "neutral"}>
+                        {statusMeta[l.status]?.label || l.status || "New"}
                       </StatusPill>
                     </td>
                     <td className="px-5 py-3.5">
@@ -210,7 +213,7 @@ function LeadsPage() {
                         </StatusPill>
                       </div>
                     </td>
-                    <td className="px-5 py-3.5 font-medium">${l.monthlyBill}/mo</td>
+                    <td className="px-5 py-3.5 font-medium">{formatINR(l.monthlyBill)}/mo</td>
                     <td className="px-5 py-3.5 text-muted-foreground">{l.roof}</td>
                     <td className="px-5 py-3.5 text-muted-foreground font-medium">{l.owner}</td>
                     <td className="px-5 py-3.5 text-muted-foreground text-xs">{l.lastTouch}</td>
@@ -265,7 +268,7 @@ function LeadsPage() {
                 </select>
               </div>
               <div>
-                <label className="text-xs font-bold text-muted-foreground">Monthly Bill ($)</label>
+                <label className="text-xs font-bold text-muted-foreground">Monthly Bill (₹)</label>
                 <Input type="number" value={simBill} onChange={(e) => setSimBill(Number(e.target.value))} required />
               </div>
             </div>
@@ -351,7 +354,7 @@ function LeadsPage() {
               <div className="grid grid-cols-2 gap-3 text-xs">
                 <div className="rounded-lg border border-border p-3">
                   <span className="text-muted-foreground block">Monthly Electric Bill</span>
-                  <span className="font-bold text-base text-foreground">${selected.monthlyBill}/mo</span>
+                  <span className="font-bold text-base text-foreground">{formatINR(selected.monthlyBill)}/mo</span>
                 </div>
                 <div className="rounded-lg border border-border p-3">
                   <span className="text-muted-foreground block">Roof & Structure</span>

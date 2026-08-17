@@ -187,7 +187,7 @@ export function UnifiedPropertyMap({
         if (mapProviderRef.current) {
           mapProviderRef.current.setCenter(latitude, longitude, 18); // Zoom in closer
         }
-        handleMapLocationSelected(latitude, longitude, "gps");
+        handleMapLocationSelected(latitude, longitude, "browser-gps");
         toast.success("Location found!");
       },
       (err) => {

@@ -10,6 +10,7 @@ export function useSolarDB() {
   const campaigns = useSyncExternalStore(subscribe, () => db.getCampaigns(), () => db.getCampaigns());
   const calls = useSyncExternalStore(subscribe, () => db.getCalls(), () => db.getCalls());
   const appointments = useSyncExternalStore(subscribe, () => db.getAppointments(), () => db.getAppointments());
+  const tasks = useSyncExternalStore(subscribe, () => db.getTasks(), () => db.getTasks());
   const auditLogs = useSyncExternalStore(subscribe, () => db.getAuditLogs(), () => db.getAuditLogs());
   const portalProject = useSyncExternalStore(subscribe, () => db.getPortalProject(), () => db.getPortalProject());
   const portalMilestones = useSyncExternalStore(subscribe, () => db.getPortalMilestones(), () => db.getPortalMilestones());
@@ -22,6 +23,7 @@ export function useSolarDB() {
     campaigns,
     calls,
     appointments,
+    tasks,
     auditLogs,
     portalProject,
     portalMilestones,

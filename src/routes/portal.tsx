@@ -43,6 +43,7 @@ import { SiteFooter } from "@/components/site/SiteFooter";
 import { StatusPill } from "@/components/common/StatusPill";
 import { portalDocuments } from "@/data/mock";
 import { useSolarDB } from "@/hooks/useSolarDB";
+import { syncConversationToFirestore } from "@/lib/firestoreSync";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/portal")({
@@ -86,8 +87,16 @@ function PortalPage() {
       time: "Just now",
       text: userMsgInput,
       channel: "Portal Chat",
+      sender: "customer" as const,
     };
     setLocalMessages((prev) => [newMsg, ...prev]);
+    syncConversationToFirestore("portal-customer-thread", newMsg, {
+      customer: project?.customer || "Portal Customer",
+      channel: "Web chat",
+      status: "Active",
+      lastMessage: userMsgInput,
+      lastTime: "Just now",
+    });
     setUserMsgInput("");
   };
 
@@ -456,14 +465,14 @@ function PortalPage() {
               <h3 className="font-display text-lg font-bold">Solar Financing & Statement Overview</h3>
               <div className="grid gap-4 sm:grid-cols-3">
                 <div className="rounded-2xl border border-border bg-secondary/30 p-4">
-                  <p className="text-xs text-muted-foreground">Monthly Solar Loan</p>
-                  <p className="mt-1 font-display text-xl font-extrabold text-foreground">$128.00 / mo</p>
-                  <p className="text-[11px] text-primary mt-1">Fixed 2.99% APR · AutoPay Active</p>
+                  <p className="text-xs text-muted-foreground">Monthly Solar EMI</p>
+                  <p className="mt-1 font-display text-xl font-extrabold text-foreground">₹2,450.00 / mo</p>
+                  <p className="text-[11px] text-primary mt-1">Fixed 6.5% Net Metering EMI · Auto-Debit Active</p>
                 </div>
                 <div className="rounded-2xl border border-border bg-secondary/30 p-4">
-                  <p className="text-xs text-muted-foreground">30% ITC Tax Credit Claim</p>
-                  <p className="mt-1 font-display text-xl font-extrabold text-primary">$8,460.00</p>
-                  <p className="text-[11px] text-muted-foreground mt-1">Form 5695 Ready for CPA</p>
+                  <p className="text-xs text-muted-foreground">PM Surya Ghar Subsidy Claim</p>
+                  <p className="mt-1 font-display text-xl font-extrabold text-primary">₹78,000.00</p>
+                  <p className="text-[11px] text-muted-foreground mt-1">National Portal Disbursal Direct to Bank</p>
                 </div>
                 <div className="rounded-2xl border border-border bg-secondary/30 p-4">
                   <p className="text-xs text-muted-foreground">Next Scheduled AutoPay</p>
@@ -487,7 +496,7 @@ function PortalPage() {
           </DialogHeader>
           <div className="space-y-4 py-3 text-sm">
             <p className="text-muted-foreground">
-              This document is officially signed and stamped by licensed Arizona professional engineers and municipal authorities.
+              This document is officially signed and stamped by certified solar engineers and DISCOM municipal authorities.
             </p>
             <div className="rounded-xl border border-border bg-secondary/40 p-4 text-xs space-y-2">
               <div className="flex justify-between">

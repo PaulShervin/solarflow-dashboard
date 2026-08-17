@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from "react";
+import { useState, useEffect, type ReactNode } from "react";
 import { Link, Outlet, useRouterState, useNavigate } from "@tanstack/react-router";
 import {
   Bell,
@@ -38,9 +38,9 @@ const navGroups: { label: string; items: NavItem[] }[] = [
     label: "Operate",
     items: [
       { to: "/admin" as const, label: "Dashboard", icon: LayoutDashboard, exact: true },
-      { to: "/admin/post-sale" as const, label: "Post-Sale Tracking", icon: Compass, badge: "Mod 4" },
-      { to: "/admin/leads" as const, label: "Leads", icon: Users, badge: "23" },
-      { to: "/admin/conversations" as const, label: "Conversations", icon: MessagesSquare, badge: "3" },
+      { to: "/admin/post-sale" as const, label: "Post-Sale Tracking", icon: Compass },
+      { to: "/admin/leads" as const, label: "Leads", icon: Users },
+      { to: "/admin/conversations" as const, label: "Conversations", icon: MessagesSquare },
       { to: "/admin/appointments" as const, label: "Appointments", icon: CalendarDays },
       { to: "/admin/proposals" as const, label: "Proposals", icon: FileText },
       { to: "/admin/customers" as const, label: "Customers", icon: UserSquare2 },
@@ -50,7 +50,7 @@ const navGroups: { label: string; items: NavItem[] }[] = [
     label: "Grow",
     items: [
       { to: "/admin/nurture" as const, label: "Nurture Campaigns", icon: Megaphone },
-      { to: "/admin/tasks" as const, label: "Tasks", icon: ClipboardCheck, badge: "5" },
+      { to: "/admin/tasks" as const, label: "Tasks", icon: ClipboardCheck },
       { to: "/admin/reports" as const, label: "Reports", icon: PieChart },
     ],
   },
@@ -63,12 +63,29 @@ const navGroups: { label: string; items: NavItem[] }[] = [
 export function AdminShell() {
   const [open, setOpen] = useState(false);
   const pathname = useRouterState({ select: (s) => s.location.pathname });
-  const { session, logout, isAuthenticated } = useAuth();
+  const { session, logout, isAuthenticated, isLoading } = useAuth();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!isLoading && !isAuthenticated) {
+      navigate({ to: "/login" });
+    }
+  }, [isLoading, isAuthenticated, navigate]);
 
   async function handleLogout() {
     await logout();
     navigate({ to: "/login" });
+  }
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="flex flex-col items-center gap-3">
+          <div className="size-8 border-3 border-primary border-t-transparent rounded-full animate-spin" />
+          <p className="text-xs font-semibold text-muted-foreground">Verifying Firebase enterprise session...</p>
+        </div>
+      </div>
+    );
   }
 
   const userInitials = session?.name

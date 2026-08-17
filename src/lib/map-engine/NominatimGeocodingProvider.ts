@@ -149,11 +149,14 @@ export class NominatimGeocodingProvider implements IGeocodingProvider {
           const coords: number[][] = el.geometry.map((g: any) => [g.lon, g.lat]);
 
           // Ensure ring closure
+          const first = coords[0];
+          const last = coords[coords.length - 1];
           if (
-            coords[0][0] !== coords[coords.length - 1][0] ||
-            coords[0][1] !== coords[coords.length - 1][1]
+            first &&
+            last &&
+            (first[0] !== last[0] || first[1] !== last[1])
           ) {
-            coords.push([coords[0][0], coords[0][1]]);
+            coords.push([first[0] ?? 0, first[1] ?? 0]);
           }
 
           const area = this.computeArea(coords);
@@ -174,7 +177,7 @@ export class NominatimGeocodingProvider implements IGeocodingProvider {
 
         if (containing.length > 0) {
           // If multiple contain point (e.g. nested sections), pick smallest
-          selected = containing.sort((a, b) => a.area - b.area)[0];
+          selected = containing.sort((a, b) => a.area - b.area)[0] ?? null;
           selectionMethod = "point-in-polygon";
         } else {
           // Strategy 2: Nearest Centroid within 30 meters
@@ -255,8 +258,11 @@ export class NominatimGeocodingProvider implements IGeocodingProvider {
   private pointInPolygon(testLng: number, testLat: number, ring: number[][]): boolean {
     let inside = false;
     for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
-      const xi = ring[i][0], yi = ring[i][1];
-      const xj = ring[j][0], yj = ring[j][1];
+      const ptI = ring[i];
+      const ptJ = ring[j];
+      if (!ptI || !ptJ) continue;
+      const xi = ptI[0] ?? 0, yi = ptI[1] ?? 0;
+      const xj = ptJ[0] ?? 0, yj = ptJ[1] ?? 0;
 
       const intersect =
         yi > testLat !== yj > testLat &&
@@ -270,10 +276,13 @@ export class NominatimGeocodingProvider implements IGeocodingProvider {
   private computeCentroid(coords: number[][]): [number, number] {
     let sumLng = 0, sumLat = 0;
     for (const c of coords) {
-      sumLng += c[0];
-      sumLat += c[1];
+      if (c && typeof c[0] === "number" && typeof c[1] === "number") {
+        sumLng += c[0];
+        sumLat += c[1];
+      }
     }
-    return [sumLng / coords.length, sumLat / coords.length];
+    const len = coords.length || 1;
+    return [sumLng / len, sumLat / len];
   }
 
   private haversineDistance(lat1: number, lng1: number, lat2: number, lng2: number): number {
@@ -293,6 +302,7 @@ export class NominatimGeocodingProvider implements IGeocodingProvider {
     let area = 0;
     for (let i = 0; i < coords.length - 1; i++) {
       const p1 = coords[i], p2 = coords[i + 1];
+      if (!p1 || !p2 || typeof p1[0] !== "number" || typeof p2[0] !== "number" || typeof p1[1] !== "number" || typeof p2[1] !== "number") continue;
       area +=
         ((p2[0] - p1[0]) * Math.PI) / 180 *
         (2 + Math.sin((p1[1] * Math.PI) / 180) + Math.sin((p2[1] * Math.PI) / 180));

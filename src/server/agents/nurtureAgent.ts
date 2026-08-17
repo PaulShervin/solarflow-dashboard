@@ -4,15 +4,15 @@ import type { Lead } from "@/data/mock";
 export class NurtureAgent {
   public compilePersonalizedTemplate(template: string, lead: Lead): string {
     const firstName = (lead.name || "").split(" ")[0] || "Customer";
-    const estSavings = Math.round((lead.monthlyBill || 0) * 8.5).toLocaleString();
+    const estSavings = Math.round((lead.monthlyBill || 3500) * 10).toLocaleString("en-IN");
 
     return template
       .replace(/\{\{first_name\}\}/gi, firstName)
       .replace(/\{\{full_name\}\}/gi, lead.name || "")
-      .replace(/\{\{monthly_bill\}\}/gi, `$${lead.monthlyBill || 0}/mo`)
+      .replace(/\{\{monthly_bill\}\}/gi, `₹${(lead.monthlyBill || 0).toLocaleString("en-IN")}/mo`)
       .replace(/\{\{roof_type\}\}/gi, lead.roof || "")
       .replace(/\{\{city\}\}/gi, lead.city || "")
-      .replace(/\{\{est_savings\}\}/gi, `$${estSavings}`)
+      .replace(/\{\{est_savings\}\}/gi, `₹${estSavings}`)
       .replace(/\{\{rep_name\}\}/gi, lead.owner || "Representative");
   }
 
@@ -26,14 +26,14 @@ export class NurtureAgent {
       if (lead.status === "new" || lead.status === "contacted") {
         executedCount++;
         const msg = this.compilePersonalizedTemplate(
-          "Hi {{first_name}}! Notice your monthly bill is {{monthly_bill}} in {{city}}. Solar Peak can save you ~{{est_savings}}/yr on your {{roof_type}} roof. Reply YES for a 2-min breakdown.",
+          "Hi {{first_name}}! Notice your monthly bill is {{monthly_bill}} in {{city}}. SolarFlow can save you ~{{est_savings}}/yr on your {{roof_type}} roof. Reply YES for a 2-min breakdown.",
           lead,
         );
         logs.push(`Lead ${lead.name} (${lead.id}): Dispatched Drip Step 1 SMS -> "${msg}"`);
       } else if (lead.status === "proposal") {
         executedCount++;
         const msg = this.compilePersonalizedTemplate(
-          "Hi {{first_name}}, {{rep_name}} here. Just checking in on your {{monthly_bill}} solar proposal. Let's make sure you claim your 30% tax credit before Q4.",
+          "Hi {{first_name}}, {{rep_name}} here. Just checking in on your {{monthly_bill}} solar proposal. Let's make sure you claim your PM Surya Ghar subsidy before this quarter.",
           lead,
         );
         logs.push(`Lead ${lead.name} (${lead.id}): Dispatched Proposal Follow-up -> "${msg}"`);

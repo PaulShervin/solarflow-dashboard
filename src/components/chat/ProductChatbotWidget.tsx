@@ -21,6 +21,11 @@ import {
 import { Button } from "@/components/ui/button";
 import { solarApi } from "@/lib/api";
 import { CustomerRooftopParams } from "@/components/chat/CustomerRooftopParams";
+import { syncConversationToFirestore, syncLeadToFirestore } from "@/lib/firestoreSync";
+import { formatINR } from "@/lib/formatCurrency";
+import { db } from "@/lib/db";
+import { useAuth } from "@/lib/authContext";
+import type { Lead } from "@/types/solar";
 
 const UnifiedPropertyMap = React.lazy(() => 
   import("@/components/common/UnifiedPropertyMap").then((mod) => ({ default: mod.UnifiedPropertyMap }))
@@ -46,22 +51,93 @@ interface ProductChatbotWidgetProps {
 
 export function ProductChatbotWidget({
   initialOpen = false,
-  leadId = "LD-4821",
+  leadId,
   embedded = false,
-  initialPrompt,
+  initialPrompt = null,
 }: ProductChatbotWidgetProps) {
+  const { session: authSession } = useAuth();
   const [isOpen, setIsOpen] = useState(initialOpen || embedded);
   const [isExpanded, setIsExpanded] = useState(false);
-  const [sessionId, setSessionId] = useState<string>("");
+  const [sessionId, setSessionId] = useState<string>(leadId || `conv-${Date.now()}`);
+  const [activeLeadId, setActiveLeadId] = useState<string>(
+    leadId || `LD-${Math.floor(1000 + Math.random() * 9000)}`
+  );
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [inputText, setInputText] = useState("");
   const [loading, setLoading] = useState(false);
   const [showMapModal, setShowMapModal] = useState(false);
   const [mapRoofArea, setMapRoofArea] = useState(540);
-  const [mapAddress, setMapAddress] = useState("742 Evergreen Terrace, Chandler, AZ");
+  const [mapAddress, setMapAddress] = useState("Mumbai, Maharashtra");
+
+  const [qualData, setQualData] = useState<{
+    homeowner: boolean;
+    monthlyBill: number;
+    roof: string;
+    address: string;
+    roofAreaSqFt: number;
+    timeline: string;
+  }>({
+    homeowner: true,
+    monthlyBill: 5000,
+    roof: "Flat RCC",
+    address: "Mumbai, Maharashtra",
+    roofAreaSqFt: 540,
+    timeline: "0-1 month",
+  });
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const lastHandledPromptRef = useRef<string | null>(null);
+
+  // Sync lead helper to Firestore, local db, and backend API
+  function syncLeadRecord(partial: Partial<typeof qualData>) {
+    const updated = { ...qualData, ...partial };
+    setQualData(updated);
+
+    const isCustomer = authSession?.role === "customer";
+    const customerName = isCustomer && authSession?.name ? authSession.name : "Website Solar Lead (Chat)";
+    const customerEmail = isCustomer && authSession?.email ? authSession.email : `chat-lead-${(activeLeadId || "8821").slice(-4)}@solarflow.io`;
+    const score = updated.homeowner === false ? 40 : 88;
+
+    const leadRecord: Lead = {
+      id: activeLeadId,
+      name: customerName,
+      email: customerEmail,
+      phone: "+91 98765 43210",
+      city: "Mumbai",
+      state: "MH",
+      source: "Website",
+      monthlyBill: updated.monthlyBill || 5000,
+      score,
+      status: "qualified",
+      timeline: (updated.timeline as any) || "0-1 month",
+      homeType: "Single family",
+      roof: (updated.roof as any) || "Flat RCC",
+      homeowner: updated.homeowner ?? true,
+      owner: "Dana Ruiz",
+      createdAt: new Date().toISOString(),
+      lastTouch: "Just now",
+      tags: ["Chat Qualified", "Website", "High Intent"],
+      aiSummary: `Chatbot Qualification: Homeowner=${updated.homeowner ? "Yes" : "No"}, Monthly Bill=₹${(updated.monthlyBill || 5000).toLocaleString("en-IN")}/mo, Roof=${updated.roof || "Flat RCC"}, Roof Area=${updated.roofAreaSqFt || 540} sq ft, Timeline=${updated.timeline || "0-1 month"}.`,
+      conversationId: sessionId,
+    };
+
+    // 1. Sync to local in-browser DB
+    db.addLead(leadRecord);
+
+    // 2. Sync to Firebase Firestore solar_leads
+    syncLeadToFirestore(leadRecord);
+
+    // 3. Post to backend REST API
+    solarApi.postInboundWebhook({
+      name: leadRecord.name,
+      email: leadRecord.email,
+      phone: leadRecord.phone,
+      monthlyBill: leadRecord.monthlyBill,
+      roof: leadRecord.roof as any,
+      timeline: leadRecord.timeline as any,
+      homeowner: leadRecord.homeowner,
+    }).catch(() => {});
+  }
 
   // Initialize session on mount
   useEffect(() => {
@@ -86,33 +162,58 @@ export function ProductChatbotWidget({
 
   async function initChatSession() {
     try {
-      const res = await solarApi.sendChatMessage(undefined, "", leadId);
+      const res = await solarApi.sendChatMessage(undefined, "", activeLeadId);
       if (res && res.session) {
         setSessionId(res.sessionId);
         setMessages(res.session.messages || []);
       } else {
-        // Fallback default message
-        setMessages([
-          {
-            id: "msg-initial",
-            sender: "bot",
-            text: "👋 Hi! I'm your SolarFlow Assistant. I can answer any product or pricing questions, or walk you through an instant 1-minute solar estimate for your home.\n\nTo get started: **Do you own your home?**",
-            timestamp: new Date().toISOString(),
-            quickReplies: ["Yes, I own it", "No, I rent", "Commercial Property"],
-          },
-        ]);
-      }
-    } catch (err) {
-      console.warn("Failed to initialize remote chat session, using local:", err);
-      setMessages([
-        {
+        const initialMsg: ChatMessage = {
           id: "msg-initial",
           sender: "bot",
           text: "👋 Hi! I'm your SolarFlow Assistant. I can answer any product or pricing questions, or walk you through an instant 1-minute solar estimate for your home.\n\nTo get started: **Do you own your home?**",
           timestamp: new Date().toISOString(),
           quickReplies: ["Yes, I own it", "No, I rent", "Commercial Property"],
-        },
-      ]);
+        };
+        setMessages([initialMsg]);
+        db.addMessage(sessionId, "bot", initialMsg.text, "Webchat");
+        syncConversationToFirestore(sessionId, {
+          id: initialMsg.id,
+          sender: "assistant",
+          text: initialMsg.text,
+          time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+          channel: "Web chat",
+        }, {
+          id: sessionId,
+          leadId: activeLeadId,
+          customer: authSession?.name || "Website Solar Lead (Chat)",
+          channel: "Web chat",
+          status: "Active",
+        });
+      }
+    } catch (err) {
+      console.warn("Failed to initialize remote chat session, using local:", err);
+      const initialMsg: ChatMessage = {
+        id: "msg-initial",
+        sender: "bot",
+        text: "👋 Hi! I'm your SolarFlow Assistant. I can answer any product or pricing questions, or walk you through an instant 1-minute solar estimate for your home.\n\nTo get started: **Do you own your home?**",
+        timestamp: new Date().toISOString(),
+        quickReplies: ["Yes, I own it", "No, I rent", "Commercial Property"],
+      };
+      setMessages([initialMsg]);
+      db.addMessage(sessionId, "bot", initialMsg.text, "Webchat");
+      syncConversationToFirestore(sessionId, {
+        id: initialMsg.id,
+        sender: "assistant",
+        text: initialMsg.text,
+        time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+        channel: "Web chat",
+      }, {
+        id: sessionId,
+        leadId: activeLeadId,
+        customer: authSession?.name || "Website Solar Lead (Chat)",
+        channel: "Web chat",
+        status: "Active",
+      });
     }
   }
 
@@ -121,6 +222,44 @@ export function ProductChatbotWidget({
     if (!text || loading) return;
 
     setInputText("");
+
+    // Parse qualification answers
+    const lower = text.toLowerCase();
+    const partialUpdate: Partial<typeof qualData> = {};
+
+    if (lower.includes("own") || lower.includes("yes")) {
+      partialUpdate.homeowner = true;
+    } else if (lower.includes("rent") || lower.includes("commercial")) {
+      partialUpdate.homeowner = false;
+    }
+
+    const cleanDigits = text.replace(/,/g, "").match(/\d+/);
+    if (cleanDigits) {
+      const parsedNum = parseInt(cleanDigits[0], 10);
+      if (parsedNum >= 500) {
+        partialUpdate.monthlyBill = parsedNum;
+      }
+    }
+
+    if (lower.includes("rcc") || lower.includes("flat")) {
+      partialUpdate.roof = "Flat RCC Roof";
+    } else if (lower.includes("metal")) {
+      partialUpdate.roof = "Sloped Metal Roof";
+    } else if (lower.includes("tile")) {
+      partialUpdate.roof = "Tile Roof";
+    } else if (lower.includes("shingle")) {
+      partialUpdate.roof = "Asphalt Shingle";
+    }
+
+    if (lower.includes("1 month") || lower.includes("within")) {
+      partialUpdate.timeline = "0-1 month";
+    } else if (lower.includes("1-3") || lower.includes("3 months")) {
+      partialUpdate.timeline = "1-3 months";
+    } else if (lower.includes("3-6") || lower.includes("6 months")) {
+      partialUpdate.timeline = "3-6 months";
+    } else if (lower.includes("researching")) {
+      partialUpdate.timeline = "Just researching";
+    }
 
     // Optimistic UI update
     const userMsg: ChatMessage = {
@@ -132,31 +271,68 @@ export function ProductChatbotWidget({
     setMessages((prev) => [...prev, userMsg]);
     setLoading(true);
 
+    const activeSession = sessionId || `conv-${Date.now()}`;
+    if (!sessionId) setSessionId(activeSession);
+
+    // Sync Lead to DB + Firestore + Backend
+    syncLeadRecord(partialUpdate);
+
+    // Sync Message to DB & Firestore
+    db.addMessage(activeSession, "user", text, "Webchat");
+    syncConversationToFirestore(activeSession, {
+      id: userMsg.id,
+      sender: "customer",
+      text: userMsg.text,
+      time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+      channel: "Web chat",
+    }, {
+      id: activeSession,
+      leadId: activeLeadId,
+      customer: authSession?.name || "Website Solar Lead (Chat)",
+      channel: "Web chat",
+      status: "Active",
+      lastMessage: text,
+      lastTime: "Just now",
+    });
+
     try {
-      const res = await solarApi.sendChatMessage(sessionId, text, leadId);
+      const res = await solarApi.sendChatMessage(activeSession, text, activeLeadId);
       if (res && res.botMessage) {
         if (res.sessionId && !sessionId) {
           setSessionId(res.sessionId);
         }
         setMessages((prev) => [...prev, res.botMessage]);
         
+        // Sync bot message to DB & Firestore
+        db.addMessage(activeSession, "bot", res.botMessage.text, "Webchat");
+        syncConversationToFirestore(activeSession, {
+          id: res.botMessage.id,
+          sender: "assistant",
+          text: res.botMessage.text,
+          time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+          channel: "Web chat",
+        }, {
+          lastMessage: res.botMessage.text,
+          lastTime: "Just now",
+        });
+
         // Auto-open map modal if the backend determines it's time for the map prompt
         if (res.botMessage.cardType === "map_prompt") {
           setTimeout(() => setShowMapModal(true), 1000);
         }
       } else {
         // Offline / Local Simulation Fallback
-        handleLocalFallbackReply(text);
+        handleLocalFallbackReply(text, activeSession);
       }
     } catch (err) {
       console.warn("Chat message request failed, using local fallback", err);
-      handleLocalFallbackReply(text);
+      handleLocalFallbackReply(text, activeSession);
     } finally {
       setLoading(false);
     }
   }
 
-  function handleLocalFallbackReply(userText: string) {
+  function handleLocalFallbackReply(userText: string, activeSession: string) {
     const trimmed = (userText || "").trim();
     if (!trimmed) return;
     const lower = trimmed.toLowerCase();
@@ -165,48 +341,76 @@ export function ProductChatbotWidget({
     let cardType: any = undefined;
     let cardData: any = undefined;
 
+    const cleanDigits = userText.replace(/,/g, "").match(/\d+/);
+    const isTimeline = lower.includes("month") || lower.includes("researching") || lower.includes("immediate") || lower.includes("asap");
+    const isArea = lower.includes("sq ft") || lower.includes("sqft") || lower.includes("~500") || lower.includes("~1,000") || lower.includes("~1000");
+    const isRoof = lower.includes("shingle") || lower.includes("tile") || lower.includes("metal") || lower.includes("flat") || lower.includes("rcc") || lower.includes("sloped");
+    const isBill = !isArea && !isTimeline && cleanDigits && (lower.includes("₹") || lower.includes("$") || lower.includes("mo") || lower.includes("bill") || parseInt(cleanDigits[0], 10) >= 500);
+    const isHomeowner = lower.includes("yes") || lower.includes("own") || lower.includes("rent") || lower.includes("commercial");
+
     if (lower.includes("panel") || lower.includes("maxeon") || lower.includes("efficiency")) {
       replyText =
-        "We install premium **Maxeon 6 Black 430W** (22.8% efficiency) and **REC Alpha Pure 400W** panels with a 25-year performance warranty guaranteeing 92% output.";
+        "We install premium **Tier-1 Mono PERC 400W** (22.8% efficiency) panels with a 25-year performance warranty guaranteeing 90%+ output.";
       quickReplies = ["How much does it cost?", "What about battery storage?", "Check my roof"];
-    } else if (lower.includes("battery") || lower.includes("powerwall")) {
+    } else if (lower.includes("battery") || lower.includes("powerwall") || lower.includes("backup")) {
       replyText =
-        "We offer the **Tesla Powerwall 3 (13.5 kWh)** with whole-home backup and 11.5 kW continuous power, providing instant power during grid blackouts.";
+        "We offer certified **Lithium LFP 10 kWh & 20 kWh Battery Storage** with whole-home backup, keeping essential loads running during grid cuts.";
       quickReplies = ["Add battery to quote", "What is the warranty?", "Continue qualification"];
     } else if (lower.includes("warranty")) {
       replyText =
-        "All our solar systems include a **25-year comprehensive warranty** on panels and 10-year roof-penetration protection backed by 24/7 monitoring.";
+        "All our solar systems include a **25-year comprehensive warranty** on panels and 5-year full installation protection backed by 24/7 monitoring.";
       quickReplies = ["Calculate my savings", "What panels do you use?", "Talk to rep"];
-    } else if (lower.includes("yes") || lower.includes("own")) {
-      replyText =
-        "Awesome! Homeowners qualify for the 30% Federal Solar Tax Credit.\n\n**What is your average monthly electricity bill?**";
-      quickReplies = ["$150/mo", "$250/mo", "$350/mo", "$500+/mo"];
-    } else if (lower.includes("$") || lower.includes("150") || lower.includes("250") || lower.includes("350")) {
-      replyText =
-        "Got it! What type of **roof** does your home have?";
-      quickReplies = ["Asphalt Shingle", "Tile Roof", "Metal Roof", "Flat Roof"];
-    } else if (lower.includes("shingle") || lower.includes("tile") || lower.includes("metal") || lower.includes("flat")) {
-      replyText =
-        "Great! Do you know your **roof area**, or would you like to **pin your house on our satellite map**?";
-      cardType = "map_prompt";
-      quickReplies = ["📍 Pin House on Map", "~450 sq ft", "~800 sq ft"];
     } else if (lower.includes("pin") || lower.includes("map")) {
       setShowMapModal(true);
       return;
+    } else if (isTimeline) {
+      replyText =
+        "🎉 **Your Solar Estimate is Ready!**\n\nBased on your home profile, here is your customized solar calculation:";
+      cardType = "estimate";
+      cardData = {
+        systemSizeKw: 5.2,
+        panelModel: "Tier-1 Mono Perc 400W",
+        panelCount: 13,
+        annualProductionKwh: 8580,
+        grossCost: 285000,
+        federalTaxCredit: 78000,
+        netCost: 207000,
+        monthlySavings: 3800,
+        paybackYears: 4.5,
+      };
+      quickReplies = ["📄 Download PDF Proposal", "👤 Talk to an Expert", "What panels do you use?"];
+    } else if (isArea) {
+      const area = cleanDigits ? parseInt(cleanDigits[0], 10) : 540;
+      replyText =
+        `Recorded **${area} sq ft** of usable roof space.\n\nLast question: **When are you looking to install solar?**`;
+      quickReplies = ["Within 1 month", "1-3 months", "3-6 months", "Just researching"];
+    } else if (isRoof) {
+      replyText =
+        "Great! Do you know your **roof area**, or would you like to **pin your house on our satellite map**?";
+      cardType = "map_prompt";
+      quickReplies = ["📍 Pin House on Map", "~500 sq ft", "~1,000 sq ft"];
+    } else if (isBill) {
+      replyText =
+        "Got it! What type of **roof** does your home have?";
+      quickReplies = ["Flat RCC Roof", "Sloped Metal Roof", "Tile Roof", "Asphalt Shingle"];
+    } else if (isHomeowner) {
+      replyText =
+        "Awesome! Homeowners qualify for the **PM Surya Ghar Central Subsidy (up to ₹78,000)**.\n\n**What is your average monthly electricity bill?**";
+      quickReplies = ["₹3,000/mo", "₹5,000/mo", "₹8,000/mo", "₹12,000+/mo"];
     } else {
       replyText =
         "🎉 **Your Solar Estimate is Ready!**\n\nBased on your home profile, here is your customized solar calculation:";
       cardType = "estimate";
       cardData = {
-        systemSizeKw: 8.6,
-        panelModel: "Maxeon 6 Black 430W",
-        panelCount: 20,
-        annualProductionKwh: 13330,
-        grossCost: 24500,
-        federalTaxCredit: 7350,
-        netCost: 17150,
-        monthlySavings: 285,
-        paybackYears: 5.2,
+        systemSizeKw: 5.2,
+        panelModel: "Tier-1 Mono Perc 400W",
+        panelCount: 13,
+        annualProductionKwh: 8580,
+        grossCost: 285000,
+        federalTaxCredit: 78000,
+        netCost: 207000,
+        monthlySavings: 3800,
+        paybackYears: 4.5,
       };
       quickReplies = ["📄 Download PDF Proposal", "👤 Talk to an Expert", "What panels do you use?"];
     }
@@ -221,6 +425,22 @@ export function ProductChatbotWidget({
       cardData,
     };
     setMessages((prev) => [...prev, botMsg]);
+
+    // Sync bot fallback reply to DB and Firestore
+    db.addMessage(activeSession, "bot", replyText, "Webchat");
+    syncConversationToFirestore(activeSession, {
+      id: botMsg.id,
+      sender: "assistant",
+      text: botMsg.text,
+      time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+      channel: "Web chat",
+    }, {
+      id: activeSession,
+      leadId: activeLeadId,
+      customer: authSession?.name || "Website Solar Lead (Chat)",
+      lastMessage: replyText,
+      lastTime: "Just now",
+    });
   }
 
   async function handleConfirmRoofMap(confirmedAreaSqFt?: number, confirmedAddress?: string) {
@@ -229,6 +449,15 @@ export function ProductChatbotWidget({
 
     const finalArea = confirmedAreaSqFt !== undefined ? confirmedAreaSqFt : mapRoofArea;
     const finalAddress = confirmedAddress !== undefined ? confirmedAddress : mapAddress;
+
+    setMapRoofArea(finalArea);
+    setMapAddress(finalAddress);
+
+    // Sync lead with updated roof area and address
+    syncLeadRecord({
+      roofAreaSqFt: finalArea,
+      address: finalAddress,
+    });
 
     try {
       const res = await solarApi.submitRoofData(sessionId, {
@@ -239,14 +468,26 @@ export function ProductChatbotWidget({
       if (res && res.session) {
         setMessages(res.session.messages);
       } else {
+        const botMsgText = `📍 **Map Capture Successful!**\n\nIdentified **${finalArea} sq ft** of usable solar roof area at *${finalAddress}*.\n\nWhen are you looking to install solar?`;
         const botMsg: ChatMessage = {
           id: `bot-${Date.now()}`,
           sender: "bot",
-          text: `📍 **Map Capture Successful!**\n\nIdentified **${finalArea} sq ft** of usable solar roof area at *${finalAddress}*.\n\nWhen are you looking to install solar?`,
+          text: botMsgText,
           timestamp: new Date().toISOString(),
           quickReplies: ["Within 1 month", "1-3 months", "3-6 months", "Just researching"],
         };
         setMessages((prev) => [...prev, botMsg]);
+        db.addMessage(sessionId, "bot", botMsgText, "Webchat");
+        syncConversationToFirestore(sessionId, {
+          id: botMsg.id,
+          sender: "assistant",
+          text: botMsg.text,
+          time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+          channel: "Web chat",
+        }, {
+          lastMessage: botMsgText,
+          lastTime: "Just now",
+        });
       }
     } catch (err) {
       console.warn("Failed to submit roof data", err);
@@ -259,19 +500,31 @@ export function ProductChatbotWidget({
     setLoading(true);
     try {
       await solarApi.escalateChat(sessionId, "User clicked Speak with Expert");
+      const botMsgText = "🤝 **Consultant Assigned!**\n\nOur Senior Solar Advisor **Dana Ruiz** has been notified. She will review your roof sizing and reach out shortly via phone/email.";
       const botMsg: ChatMessage = {
         id: `bot-${Date.now()}`,
         sender: "bot",
-        text: "🤝 **Consultant Assigned!**\n\nOur Senior Solar Advisor **Dana Ruiz** has been notified. She will review your roof sizing and reach out shortly via phone/email.",
+        text: botMsgText,
         timestamp: new Date().toISOString(),
         cardType: "escalation",
         cardData: {
           repName: "Dana Ruiz",
-          phone: "(480) 555-0142",
+          phone: "+91 98765 43210",
           email: "d.ruiz@solarflow.io",
         },
       };
       setMessages((prev) => [...prev, botMsg]);
+      db.addMessage(sessionId, "bot", botMsgText, "Webchat");
+      syncConversationToFirestore(sessionId, {
+        id: botMsg.id,
+        sender: "assistant",
+        text: botMsg.text,
+        time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+        channel: "Web chat",
+      }, {
+        lastMessage: botMsgText,
+        lastTime: "Just now",
+      });
     } finally {
       setLoading(false);
     }
@@ -421,11 +674,11 @@ export function ProductChatbotWidget({
                       </div>
                       <div className="rounded-lg bg-secondary/40 p-2">
                         <span className="text-[10px] text-muted-foreground">Gross Cost</span>
-                        <p className="font-bold">${m.cardData.grossCost?.toLocaleString()}</p>
+                        <p className="font-bold">{formatINR(m.cardData.grossCost)}</p>
                       </div>
                       <div className="rounded-lg bg-emerald-500/10 p-2 text-emerald-700 dark:text-emerald-300">
-                        <span className="text-[10px]">30% Federal ITC</span>
-                        <p className="font-bold">-${m.cardData.federalTaxCredit?.toLocaleString()}</p>
+                        <span className="text-[10px]">PM Surya Ghar</span>
+                        <p className="font-bold">-{formatINR(m.cardData.federalTaxCredit || 78000)}</p>
                       </div>
                     </div>
 
@@ -435,13 +688,13 @@ export function ProductChatbotWidget({
                           Net Investment
                         </span>
                         <p className="font-display text-base font-black text-primary">
-                          ${m.cardData.netCost?.toLocaleString()}
+                          {formatINR(m.cardData.netCost)}
                         </p>
                       </div>
                       <div className="text-right">
                         <span className="text-[10px] text-muted-foreground">Est. Monthly Savings</span>
                         <p className="font-display text-sm font-bold text-emerald-600">
-                          ~${m.cardData.monthlySavings}/mo
+                          ~{formatINR(m.cardData.monthlySavings)}/mo
                         </p>
                       </div>
                     </div>

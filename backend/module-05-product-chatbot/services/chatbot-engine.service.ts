@@ -21,7 +21,7 @@ export class ProductChatbotEngine {
   ): Promise<{ session: ChatSession; botMessage: ChatMessage }> {
     let session = sessionId ? ChatRepository.getSession(sessionId) : undefined;
     if (!session) {
-      session = ChatRepository.createSession(leadId);
+      session = ChatRepository.createSession(leadId, sessionId);
     }
 
     const now = new Date().toISOString();
@@ -129,113 +129,149 @@ export class ProductChatbotEngine {
   ): { updatedSession: ChatSession; botReply: ChatMessage } {
     const t = text.toLowerCase();
     const now = new Date().toISOString();
+    const cleanDigits = text.replace(/,/g, "").match(/\d+/);
 
-    switch (session.currentStep) {
-      case "HOMEOWNER": {
-        const isOwner = !t.includes("rent") && !t.includes("no");
-        session.qualification.isHomeowner = isOwner;
-        session.currentStep = "BILL";
+    // Domain answer classification
+    const isTimelineAnswer =
+      t.includes("month") ||
+      t.includes("researching") ||
+      t.includes("immediate") ||
+      t.includes("asap") ||
+      t.includes("now");
 
-        const botReply: ChatMessage = {
-          id: `MSG-${uuidv4().substring(0, 6)}`,
-          sessionId: session.id,
-          sender: "bot",
-          text: isOwner
-            ? "Awesome! Homeowners get the highest return on investment through federal solar incentives.\n\n**What is your average monthly electricity bill?**"
-            : "Thanks for letting me know! For rental or commercial properties, we also offer custom PPA programs.\n\n**What is the average monthly electric bill?**",
-          timestamp: now,
-          quickReplies: ["$150/mo", "$250/mo", "$350/mo", "$500+/mo"],
-        };
-        return { updatedSession: session, botReply };
-      }
+    const isAreaAnswer =
+      t.includes("pin") ||
+      t.includes("map") ||
+      t.includes("sq ft") ||
+      t.includes("sqft") ||
+      (cleanDigits && (t.includes("500") || t.includes("1000") || t.includes("800") || t.includes("450") || t.includes("area")));
 
-      case "BILL": {
-        const numMatch = text.match(/\d+/);
-        const bill = numMatch ? parseInt(numMatch[0], 10) : 250;
-        session.qualification.monthlyBill = bill;
-        session.currentStep = "ROOF_TYPE";
+    const isRoofAnswer =
+      t.includes("rcc") ||
+      t.includes("flat") ||
+      t.includes("metal") ||
+      t.includes("tile") ||
+      t.includes("shingle") ||
+      t.includes("sloped");
 
-        const botReply: ChatMessage = {
-          id: `MSG-${uuidv4().substring(0, 6)}`,
-          sessionId: session.id,
-          sender: "bot",
-          text: `Got it, about **$${bill}/month** in electric costs.\n\nNext, **what type of roof does your home have?**`,
-          timestamp: now,
-          quickReplies: ["Asphalt Shingle", "Tile Roof", "Metal Roof", "Flat Roof"],
-        };
-        return { updatedSession: session, botReply };
-      }
+    const isBillAnswer =
+      !isAreaAnswer &&
+      !isTimelineAnswer &&
+      cleanDigits &&
+      (t.includes("₹") || t.includes("$") || t.includes("mo") || t.includes("bill") || parseInt(cleanDigits[0], 10) >= 500);
 
-      case "ROOF_TYPE": {
-        session.qualification.roofType = text;
-        session.currentStep = "ROOF_AREA";
+    const isHomeownerAnswer =
+      t.includes("own") ||
+      t.includes("rent") ||
+      t.includes("commercial") ||
+      t === "yes" ||
+      t.startsWith("yes,") ||
+      t === "no" ||
+      t.startsWith("no,");
 
-        const botReply: ChatMessage = {
-          id: `MSG-${uuidv4().substring(0, 6)}`,
-          sessionId: session.id,
-          sender: "bot",
-          text: `Great, **${text}** works great with our mounting hardware.\n\nDo you know your **roof area**, or would you like to **pin your house on our interactive satellite map**?`,
-          timestamp: now,
-          cardType: "map_prompt",
-          cardData: {
-            sessionId: session.id,
-            actionUrl: `/tools/rooftop-picker?session_id=${session.id}`,
-          },
-          quickReplies: [
-            "📍 Pin House on Map",
-            "I know my area (~450 sq ft)",
-            "I know my area (~800 sq ft)",
-            "Calculate from bill size",
-          ],
-        };
-        return { updatedSession: session, botReply };
-      }
+    // 1. Process Timeline -> Estimate Card
+    if (isTimelineAnswer || session.currentStep === "TIMELINE" && !isBillAnswer && !isRoofAnswer) {
+      session.qualification.timeline = text;
+      session.currentStep = "COMPLETED";
+      session.status = "QUALIFIED";
 
-      case "ROOF_AREA": {
-        const numMatch = text.match(/\d+/);
-        const area = numMatch ? parseInt(numMatch[0], 10) : 550;
-        session.qualification.roofAreaSqFt = area;
-        session.currentStep = "TIMELINE";
+      const estimate = this.calculateEstimate(session.qualification);
+      session.estimate = estimate;
 
-        const botReply: ChatMessage = {
-          id: `MSG-${uuidv4().substring(0, 6)}`,
-          sessionId: session.id,
-          sender: "bot",
-          text: `Recorded **${area} sq ft** of usable roof space.\n\nLast question: **When are you looking to install solar?**`,
-          timestamp: now,
-          quickReplies: ["Within 1 month", "1-3 months", "3-6 months", "Just researching"],
-        };
-        return { updatedSession: session, botReply };
-      }
-
-      case "TIMELINE":
-      case "COMPLETED": {
-        session.qualification.timeline = text;
-        session.currentStep = "COMPLETED";
-        session.status = "QUALIFIED";
-
-        // Compute system sizing and economics
-        const estimate = this.calculateEstimate(session.qualification);
-        session.estimate = estimate;
-
-        const botReply: ChatMessage = {
-          id: `MSG-${uuidv4().substring(0, 6)}`,
-          sessionId: session.id,
-          sender: "bot",
-          text: `🎉 **Your Solar Estimate is Ready!**\n\nBased on your $${session.qualification.monthlyBill || 250}/mo bill and roof profile, here is your customized pre-design estimate:`,
-          timestamp: now,
-          cardType: "estimate",
-          cardData: estimate,
-          quickReplies: [
-            "📄 Download PDF Proposal",
-            "👤 Talk to an Expert",
-            "What panels do you use?",
-            "Can I add a battery?",
-          ],
-        };
-        return { updatedSession: session, botReply };
-      }
+      const botReply: ChatMessage = {
+        id: `MSG-${uuidv4().substring(0, 6)}`,
+        sessionId: session.id,
+        sender: "bot",
+        text: `🎉 **Your Solar Estimate is Ready!**\n\nBased on your ₹${(session.qualification.monthlyBill || 5000).toLocaleString("en-IN")}/mo bill and roof profile, here is your customized pre-design estimate:`,
+        timestamp: now,
+        cardType: "estimate",
+        cardData: estimate,
+        quickReplies: [
+          "📄 Download PDF Proposal",
+          "👤 Talk to an Expert",
+          "What panels do you use?",
+          "Can I add a battery?",
+        ],
+      };
+      return { updatedSession: session, botReply };
     }
+
+    // 2. Process Roof Area -> Timeline Question
+    if (isAreaAnswer || session.currentStep === "ROOF_AREA" && !isBillAnswer && !isRoofAnswer) {
+      const area = cleanDigits ? parseInt(cleanDigits[0], 10) : 540;
+      session.qualification.roofAreaSqFt = area;
+      session.currentStep = "TIMELINE";
+
+      const botReply: ChatMessage = {
+        id: `MSG-${uuidv4().substring(0, 6)}`,
+        sessionId: session.id,
+        sender: "bot",
+        text: `Recorded **${area} sq ft** of usable roof space.\n\nLast question: **When are you looking to install solar?**`,
+        timestamp: now,
+        quickReplies: ["Within 1 month", "1-3 months", "3-6 months", "Just researching"],
+      };
+      return { updatedSession: session, botReply };
+    }
+
+    // 3. Process Roof Type -> Roof Area / Map Question
+    if (isRoofAnswer || session.currentStep === "ROOF_TYPE" && !isBillAnswer) {
+      session.qualification.roofType = text;
+      session.currentStep = "ROOF_AREA";
+
+      const botReply: ChatMessage = {
+        id: `MSG-${uuidv4().substring(0, 6)}`,
+        sessionId: session.id,
+        sender: "bot",
+        text: `Great, **${text}** works great with our mounting hardware.\n\nDo you know your **roof area**, or would you like to **pin your house on our interactive satellite map**?`,
+        timestamp: now,
+        cardType: "map_prompt",
+        cardData: {
+          sessionId: session.id,
+          actionUrl: `/tools/rooftop-picker?session_id=${session.id}`,
+        },
+        quickReplies: [
+          "📍 Pin House on Map",
+          "I know my area (~500 sq ft)",
+          "I know my area (~1,000 sq ft)",
+          "Calculate from bill size",
+        ],
+      };
+      return { updatedSession: session, botReply };
+    }
+
+    // 4. Process Monthly Bill -> Roof Type Question
+    if (isBillAnswer || session.currentStep === "BILL") {
+      const bill = cleanDigits ? parseInt(cleanDigits[0], 10) : 5000;
+      session.qualification.monthlyBill = bill;
+      session.currentStep = "ROOF_TYPE";
+
+      const botReply: ChatMessage = {
+        id: `MSG-${uuidv4().substring(0, 6)}`,
+        sessionId: session.id,
+        sender: "bot",
+        text: `Got it, about **₹${bill.toLocaleString("en-IN")}/month** in electric costs.\n\nNext, **what type of roof does your home have?**`,
+        timestamp: now,
+        quickReplies: ["Flat RCC Roof", "Sloped Metal Roof", "Tile Roof", "Asphalt Shingle"],
+      };
+      return { updatedSession: session, botReply };
+    }
+
+    // 5. Process Homeownership -> Bill Question
+    const isOwner = !t.includes("rent") && !t.includes("no");
+    session.qualification.isHomeowner = isOwner;
+    session.currentStep = "BILL";
+
+    const botReply: ChatMessage = {
+      id: `MSG-${uuidv4().substring(0, 6)}`,
+      sessionId: session.id,
+      sender: "bot",
+      text: isOwner
+        ? "Awesome! Homeowners qualify for the highest return on investment through the **PM Surya Ghar Central Subsidy (up to ₹78,000)**.\n\n**What is your average monthly electricity bill?**"
+        : "Thanks for letting me know! For rental or commercial properties, we also offer custom solar solutions.\n\n**What is the average monthly electric bill?**",
+      timestamp: now,
+      quickReplies: ["₹3,000/mo", "₹5,000/mo", "₹8,000/mo", "₹12,000+/mo"],
+    };
+    return { updatedSession: session, botReply };
   }
 
   /**
@@ -246,26 +282,31 @@ export class ProductChatbotEngine {
     roofAreaSqFt?: number;
     roofType?: string;
   }): CalculationEstimate {
-    const monthlyBill = q.monthlyBill || 250;
-    const roofArea = q.roofAreaSqFt || 550;
+    const monthlyBill = q.monthlyBill || 5000;
+    const roofArea = q.roofAreaSqFt || 540;
 
-    // Sizing: ~1 kW per $30/month bill
-    const targetKw = Math.max(4.0, Math.round((monthlyBill / 28) * 10) / 10);
-    const panelWattage = 430; // Maxeon 430W
+    // Sizing: In India ~1 kW per ₹1,000/mo electricity bill
+    const targetKw = Math.max(3.0, Math.min(15.0, Math.round((monthlyBill / 1000) * 10) / 10));
+    const panelWattage = 400; // Tier-1 Mono Perc 400W
     const panelCount = Math.ceil((targetKw * 1000) / panelWattage);
     const actualKw = Math.round(((panelCount * panelWattage) / 1000) * 10) / 10;
 
-    const annualProductionKwh = Math.round(actualKw * 1550);
-    const grossCost = Math.round(actualKw * 1000 * 2.85);
-    const federalTaxCredit = Math.round(grossCost * 0.30);
-    const netCost = grossCost - federalTaxCredit;
-    const monthlySavings = Math.round(monthlyBill * 0.88);
+    const annualProductionKwh = Math.round(actualKw * 1450);
+    const grossCost = Math.round(actualKw * 55000);
+    // PM Surya Ghar Central Subsidy: ₹30,000 for 1kW, ₹60,000 for 2kW, ₹78,000 for 3kW+
+    let federalTaxCredit = 78000;
+    if (actualKw <= 1.2) federalTaxCredit = 30000;
+    else if (actualKw <= 2.2) federalTaxCredit = 60000;
+    else federalTaxCredit = 78000;
+
+    const netCost = Math.max(0, grossCost - federalTaxCredit);
+    const monthlySavings = Math.round(monthlyBill * 0.90);
     const annualSavings = monthlySavings * 12;
     const paybackYears = Math.round((netCost / annualSavings) * 10) / 10;
 
     return {
       systemSizeKw: actualKw,
-      panelModel: "Maxeon 6 Black 430W",
+      panelModel: "Tier-1 Mono Perc 400W",
       panelCount,
       annualProductionKwh,
       grossCost,
@@ -274,8 +315,8 @@ export class ProductChatbotEngine {
       monthlySavings,
       paybackYears,
       proposalPdfUrl: `/api/proposals/PROP-${uuidv4().substring(0, 6)}/pdf`,
-      batteryOption: "Tesla Powerwall 3 (13.5 kWh)",
-      batteryCost: 9800,
+      batteryOption: "Lithium LFP 10 kWh Backup",
+      batteryCost: 180000,
     };
   }
 
@@ -333,9 +374,9 @@ export class ProductChatbotEngine {
       case "HOMEOWNER":
         return t.includes("yes") || t.includes("no") || t.includes("own") || t.includes("rent");
       case "BILL":
-        return /\d+/.test(t) || t.includes("mo") || t.includes("$");
+        return /\d+/.test(t) || t.includes("mo") || t.includes("$") || t.includes("₹") || t.includes("rs");
       case "ROOF_TYPE":
-        return t.includes("shingle") || t.includes("tile") || t.includes("metal") || t.includes("flat");
+        return t.includes("shingle") || t.includes("tile") || t.includes("metal") || t.includes("flat") || t.includes("rcc");
       case "ROOF_AREA":
         return /\d+/.test(t) || t.includes("pin") || t.includes("map");
       case "TIMELINE":

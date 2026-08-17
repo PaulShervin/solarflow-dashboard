@@ -1,13 +1,16 @@
 import { useState } from "react";
-import { createFileRoute } from "@tanstack/react-router";
-import { Eye, FileCheck, FilePlus2, Printer, Sparkles } from "lucide-react";
+import { createFileRoute } from '@tanstack/react-router';
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Switch } from "@/components/ui/switch";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { PageHeader } from "@/components/admin/AdminShell";
 import { StatusPill, toneForText } from "@/components/common/StatusPill";
 import { useSolarDB } from "@/hooks/useSolarDB";
 import { solarApi } from "@/lib/api";
 import type { Proposal } from "@/data/mock";
+import { formatINR } from "@/lib/formatCurrency";
+import { FilePlus2, Eye, Printer, FileCheck } from "lucide-react";
 
 export const Route = createFileRoute("/admin/proposals")({
   component: ProposalsPage,
@@ -16,30 +19,48 @@ export const Route = createFileRoute("/admin/proposals")({
 function ProposalsPage() {
   const { proposals } = useSolarDB();
   const [selectedProp, setSelectedProp] = useState<Proposal | null>(null);
+  const [createModalOpen, setCreateModalOpen] = useState(false);
+
+  // Form state (in INR)
+  const [customerName, setCustomerName] = useState("");
+  const [systemKw, setSystemKw] = useState(5.2);
+  const [includeBattery, setIncludeBattery] = useState(true);
+  const [propValue, setPropValue] = useState(285000);
+  const [repName, setRepName] = useState("Dana Ruiz");
+  const [submitting, setSubmitting] = useState(false);
 
   const total = proposals.reduce((s, p) => s + p.value, 0);
   const signed = proposals.filter((p) => p.status === "Signed").length;
 
-  async function handleCreateQuickProposal() {
-    const created = await solarApi.createProposal({
-      customer: "Elena Rostova",
-      systemKw: 10.4,
-      battery: true,
-      value: 29500,
-      sent: "Just now",
-      rep: "Dana Ruiz",
-      status: "Sent",
-    });
-    setSelectedProp(created);
+  async function handleCreateProposal(e: React.FormEvent) {
+    e.preventDefault();
+    if (!customerName.trim()) return;
+    setSubmitting(true);
+    try {
+      const created = await solarApi.createProposal({
+        customer: customerName.trim(),
+        systemKw: Number(systemKw),
+        battery: includeBattery,
+        value: Number(propValue),
+        sent: "Just now",
+        rep: repName || "Dana Ruiz",
+        status: "Sent",
+      });
+      setCreateModalOpen(false);
+      setSelectedProp(created);
+      setCustomerName("");
+    } finally {
+      setSubmitting(false);
+    }
   }
 
   return (
     <>
       <PageHeader
         title="Same-Day Proposals & Pre-Design PDF Engine"
-        description={`${proposals.length} total proposals · $${total.toLocaleString()} total pipeline value`}
+        description={`${proposals.length} total proposals · ${formatINR(total)} total pipeline value`}
         actions={
-          <Button onClick={handleCreateQuickProposal}>
+          <Button onClick={() => setCreateModalOpen(true)}>
             <FilePlus2 />
             Generate New Proposal
           </Button>
@@ -48,9 +69,9 @@ function ProposalsPage() {
 
       <div className="mb-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {[
-          ["Open pipeline", `$${total.toLocaleString()}`],
+          ["Open pipeline", formatINR(total)],
           ["Signed", `${signed} of ${proposals.length}`],
-          ["Avg. system size", "9.2 kW"],
+          ["Avg. system size", "5.2 kW"],
           ["Turnaround Time", "< 10 minutes"],
         ].map(([k, v]) => (
           <div key={k} className="surface-card p-5">
@@ -83,7 +104,7 @@ function ProposalsPage() {
                 <td className="px-5 py-3.5 text-muted-foreground">
                   {p.systemKw} kW{p.battery ? " + battery" : ""}
                 </td>
-                <td className="px-5 py-3.5 font-semibold">${p.value.toLocaleString()}</td>
+                <td className="px-5 py-3.5 font-semibold">{formatINR(p.value)}</td>
                 <td className="px-5 py-3.5 text-muted-foreground">{p.sent}</td>
                 <td className="px-5 py-3.5 text-muted-foreground">{p.views}</td>
                 <td className="px-5 py-3.5 text-muted-foreground">{p.rep}</td>
@@ -119,7 +140,7 @@ function ProposalsPage() {
               <div className="rounded-xl border border-navy/20 bg-navy text-navy-foreground p-6">
                 <div className="flex justify-between items-start">
                   <div>
-                    <h3 className="font-display text-2xl font-black text-white">SolarPeak</h3>
+                    <h3 className="font-display text-2xl font-black text-white">SolarFlow</h3>
                     <p className="text-xs text-navy-foreground/70">Pre-Design Proposal & Contract Quote</p>
                   </div>
                   <div className="text-right text-xs">
@@ -136,11 +157,11 @@ function ProposalsPage() {
                   </div>
                   <div>
                     <span className="block text-[10px] text-navy-foreground/70">Battery Backup</span>
-                    <span className="font-extrabold text-base text-white">{selectedProp.battery ? "13.5 kWh Included" : "Standard Grid"}</span>
+                    <span className="font-extrabold text-base text-white">{selectedProp.battery ? "10 kWh Included" : "Standard Grid"}</span>
                   </div>
                   <div>
                     <span className="block text-[10px] text-navy-foreground/70">Quote Investment</span>
-                    <span className="font-extrabold text-base text-emerald-400">${selectedProp.value.toLocaleString()}</span>
+                    <span className="font-extrabold text-base text-emerald-400">{formatINR(selectedProp.value)}</span>
                   </div>
                 </div>
               </div>
@@ -152,17 +173,17 @@ function ProposalsPage() {
                 </div>
                 <div className="flex justify-between py-1">
                   <span>{selectedProp.systemKw} kW Tier-1 Monocrystalline Solar Array</span>
-                  <span className="font-medium">${(selectedProp.systemKw * 2200).toLocaleString()}</span>
+                  <span className="font-medium">{formatINR(selectedProp.systemKw * 35000)}</span>
                 </div>
                 {selectedProp.battery ? (
                   <div className="flex justify-between py-1">
-                    <span>13.5 kWh Lithium Ion Battery Storage Unit</span>
-                    <span className="font-medium">$9,500</span>
+                    <span>10 kWh Lithium Ion Battery Storage Unit</span>
+                    <span className="font-medium">{formatINR(180000)}</span>
                   </div>
                 ) : null}
                 <div className="flex justify-between py-1 text-emerald-600 font-semibold">
-                  <span>Estimated Federal 30% Tax Credit Offset</span>
-                  <span>-${Math.round(selectedProp.value * 0.3).toLocaleString()}</span>
+                  <span>Estimated PM Surya Ghar Subsidy Offset</span>
+                  <span>-{formatINR(Math.min(78000, selectedProp.value * 0.3))}</span>
                 </div>
               </div>
 
@@ -176,6 +197,73 @@ function ProposalsPage() {
             </div>
           </DialogContent>
         ) : null}
+      </Dialog>
+
+      {/* Create Proposal Dialog */}
+      <Dialog open={createModalOpen} onOpenChange={setCreateModalOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <FilePlus2 className="size-5 text-primary" />
+              Generate Same-Day Pre-Design Proposal
+            </DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleCreateProposal} className="space-y-4 py-2 text-xs">
+            <div>
+              <label className="font-bold text-foreground block mb-1">Customer Name</label>
+              <Input
+                value={customerName}
+                onChange={(e) => setCustomerName(e.target.value)}
+                placeholder="e.g. Rachel Adams"
+                required
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="font-bold text-foreground block mb-1">System Capacity (kW)</label>
+                <Input
+                  type="number"
+                  step="0.1"
+                  value={systemKw}
+                  onChange={(e) => setSystemKw(Number(e.target.value))}
+                  required
+                />
+              </div>
+              <div>
+                <label className="font-bold text-foreground block mb-1">Total System Value ($)</label>
+                <Input
+                  type="number"
+                  value={propValue}
+                  onChange={(e) => setPropValue(Number(e.target.value))}
+                  required
+                />
+              </div>
+            </div>
+            <div>
+              <label className="font-bold text-foreground block mb-1">Assigned Sales Consultant</label>
+              <Input
+                value={repName}
+                onChange={(e) => setRepName(e.target.value)}
+                placeholder="e.g. Dana Ruiz"
+              />
+            </div>
+            <div className="flex items-center justify-between rounded-xl border border-border bg-secondary/30 p-3">
+              <div>
+                <p className="font-bold text-foreground">Tesla Powerwall Battery</p>
+                <p className="text-[11px] text-muted-foreground">Include 13.5 kWh battery backup storage</p>
+              </div>
+              <Switch checked={includeBattery} onCheckedChange={setIncludeBattery} />
+            </div>
+            <div className="flex gap-2 pt-2">
+              <Button type="button" variant="outline" onClick={() => setCreateModalOpen(false)} className="flex-1">
+                Cancel
+              </Button>
+              <Button type="submit" disabled={submitting} className="flex-1 font-bold">
+                {submitting ? "Generating..." : "Generate Proposal"}
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
       </Dialog>
     </>
   );

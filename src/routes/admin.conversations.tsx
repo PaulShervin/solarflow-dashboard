@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { MessageSquare, PhoneCall, Send, Sparkles, UserCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -22,6 +22,12 @@ function ConversationsPage() {
   const [searchQuery, setSearchQuery] = useState("");
 
   const active = conversations.find((c) => c.id === activeId) || conversations[0];
+
+  useEffect(() => {
+    if (!activeId && conversations.length > 0 && conversations[0]) {
+      setActiveId(conversations[0].id);
+    }
+  }, [conversations, activeId]);
 
   const filteredConversations = conversations.filter(
     (c) =>
@@ -51,9 +57,19 @@ function ConversationsPage() {
 
   if (!active) {
     return (
-      <div className="p-10 text-center text-muted-foreground">
-        No active conversations found.
-      </div>
+      <>
+        <PageHeader
+          title="Conversations & 2-Way CRM Messages"
+          description="Live SMS, Voice Call logs and AI assistant chats writing back into client CRM"
+        />
+        <div className="surface-card p-14 text-center rounded-2xl max-w-xl mx-auto my-8">
+          <MessageSquare className="size-12 text-muted-foreground/40 mx-auto mb-3" />
+          <p className="text-base font-bold text-foreground">No active message threads</p>
+          <p className="text-xs text-muted-foreground mt-1 max-w-sm mx-auto">
+            When customers interact with the AI assistant or reply to SMS notifications, their live conversations will appear here.
+          </p>
+        </div>
+      </>
     );
   }
 

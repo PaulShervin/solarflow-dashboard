@@ -157,13 +157,13 @@ export class InstantResponseAgent {
 
     const homeowner = answers.homeowner === "Yes, I own it" || answers.homeowner === "I'm buying soon";
     const bill =
-      answers.bill === "Over $350"
-        ? 400
-        : answers.bill === "$200 – $350"
-          ? 300
-          : answers.bill === "$100 – $200"
-            ? 150
-            : 90;
+      answers.bill?.includes("10,000") || answers.bill === "Over ₹10,000" || answers.bill === "Over $350"
+        ? 12000
+        : answers.bill?.includes("5,000") || answers.bill === "₹5,000 – ₹10,000" || answers.bill === "$200 – $350"
+          ? 7500
+          : answers.bill?.includes("2,500") || answers.bill === "₹2,500 – ₹5,000" || answers.bill === "$100 – $200"
+            ? 3500
+            : 2000;
     const timeline = normalizeTimeline(answers.timeline);
 
     const score = computeIntentScore({ homeowner, monthlyBill: bill, roof: answers.roof, timeline });

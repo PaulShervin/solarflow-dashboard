@@ -41,7 +41,7 @@ function NurturePage() {
   const [loading, setLoading] = useState(false);
 
   // Inspector state
-  const [selectedLeadId, setSelectedLeadId] = useState<string>("LD-JOHN-01");
+  const [selectedLeadId, setSelectedLeadId] = useState<string>(leads[0]?.id || "");
   const [leadNurtureData, setLeadNurtureData] = useState<any>(null);
   const [actionLoading, setActionLoading] = useState(false);
 
@@ -50,8 +50,8 @@ function NurturePage() {
   const [triggerResults, setTriggerResults] = useState<{ executedCount: number; logs: string[] } | null>(null);
 
   // Simulator state
-  const [simPhone, setSimPhone] = useState("(480) 555-0199");
-  const [simBody, setSimBody] = useState("STOP");
+  const [simPhone, setSimPhone] = useState("");
+  const [simBody, setSimBody] = useState("");
   const [simResult, setSimResult] = useState<any>(null);
   const [simulating, setSimulating] = useState(false);
 
@@ -636,9 +636,9 @@ function NurturePage() {
                 onChange={(e) => setSelectedLeadId(e.target.value)}
                 className="mt-1 w-full rounded-md border border-border bg-background px-3 py-2 text-sm font-semibold"
               >
-                <option value="LD-JOHN-01">John Smith ($340/mo bill, Quote: $23,400)</option>
-                <option value="LD-SARAH-02">Sarah Johnson ($280/mo bill)</option>
-                <option value="LD-MIKE-03">Mike Davis ($410/mo bill, Quote: $28,400)</option>
+                <option value="LD-JOHN-01">Rajesh Sharma (₹5,200/mo bill, Quote: ₹4,50,000)</option>
+                <option value="LD-SARAH-02">Ananya Patel (₹4,200/mo bill)</option>
+                <option value="LD-MIKE-03">Vikram Iyer (₹6,800/mo bill, Quote: ₹5,80,000)</option>
               </select>
             </div>
 

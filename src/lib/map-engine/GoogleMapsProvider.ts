@@ -1,6 +1,12 @@
 import { IMapProvider, MapInitOptions, IGeocodingProvider } from "./interfaces";
 import { NormalizedLocation, NormalizedGeoJSONFeature, MapProviderType, GeocodingProviderType } from "./models";
 
+declare global {
+  interface Window {
+    google: any;
+  }
+}
+
 export class GoogleMapsProvider implements IMapProvider {
   private map: any = null;
   private markers: any[] = [];
@@ -40,7 +46,7 @@ export class GoogleMapsProvider implements IMapProvider {
       script.defer = true;
       script.onload = () => resolve();
       script.onerror = () => {
-        console.warn("Google Maps JS SDK failed to load. Check API Key configuration.");
+        console.warn("Failed to load Google Maps SDK script");
         resolve();
       };
       document.head.appendChild(script);
@@ -54,7 +60,7 @@ export class GoogleMapsProvider implements IMapProvider {
   }
 
   setCenter(lat: number, lng: number, zoom?: number): void {
-    if (!this.map) return;
+    if (!this.map || !window.google) return;
     this.map.setCenter({ lat, lng });
     if (zoom) this.map.setZoom(zoom);
   }
@@ -78,7 +84,8 @@ export class GoogleMapsProvider implements IMapProvider {
     const marker = new window.google.maps.Marker({
       position: { lat, lng },
       map: this.map,
-      title: title || "Property Location",
+      title: title || "Selected Property",
+      animation: window.google.maps.Animation.DROP,
     });
     this.markers.push(marker);
   }
@@ -94,7 +101,8 @@ export class GoogleMapsProvider implements IMapProvider {
     if (!this.map || !window.google || !feature.geometry) return;
 
     const coords = feature.geometry.coordinates[0]; // Exterior ring [lng, lat]
-    const googlePath = coords.map(([lng, lat]) => ({ lat, lng }));
+    if (!coords) return;
+    const googlePath = coords.map(([lng, lat]) => ({ lat: lat ?? 0, lng: lng ?? 0 }));
 
     const polygon = new window.google.maps.Polygon({
       paths: googlePath,
@@ -136,12 +144,14 @@ export class GoogleMapsProvider implements IMapProvider {
         updatedCoords.push([pt.lng(), pt.lat()]);
       }
       // Ensure ring closure
+      const first = updatedCoords[0];
+      const last = updatedCoords[updatedCoords.length - 1];
       if (
-        updatedCoords.length > 0 &&
-        (updatedCoords[0][0] !== updatedCoords[updatedCoords.length - 1][0] ||
-          updatedCoords[0][1] !== updatedCoords[updatedCoords.length - 1][1])
+        first &&
+        last &&
+        (first[0] !== last[0] || first[1] !== last[1])
       ) {
-        updatedCoords.push([updatedCoords[0][0], updatedCoords[0][1]]);
+        updatedCoords.push([first[0] ?? 0, first[1] ?? 0]);
       }
 
       // Calculate area if geometry library available
@@ -155,7 +165,7 @@ export class GoogleMapsProvider implements IMapProvider {
         properties: {
           ...this.activeFeature?.properties,
           source: "customer",
-          areaM2: areaM2 || this.activeFeature?.properties.areaM2,
+          areaM2: areaM2 || this.activeFeature?.properties.areaM2 || 0,
           retrievedAt: new Date().toISOString(),
         },
         geometry: {
